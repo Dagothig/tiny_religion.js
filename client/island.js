@@ -12,19 +12,41 @@ class Island extends PIXI.Container {
         this.people = [];
         this.kingdom = kingdom;
 
-        this.zoneWidth = 320;
+        this.zoneWidth = 300;
         this.zoneHeight = 120;
-
-        this.generateTrees();
     }
     get z() { return -100; }
 
-    generateTrees() {
-        for (let i = 0, n = Math.pow(Math.random(), 4) * 30; i < n; i++) {
-            let pos = this.getRandomPoint(Tree.radius);
-            if (this.buildings.find(b => b.isInRadius(pos, Tree.radius))) continue;
-            let tree = new Building(pos.x, pos.y, Tree, this.kingdom, this, true);
-            this.buildings.add(tree);
+    generateBuilding(type, finished = true, radius = type.radius, attempts = 100) {
+        for (let i = 0; i < attempts; i++) {
+            let pos = this.getRandomPoint(radius);
+            if (this.buildings.find(b =>
+                b.isInRadius(pos, radius))) continue;
+            let b = new Building(pos.x, pos.y, type, this.kingdom, this, finished);
+            this.buildings.add(b);
+            return b;
+        }
+    }
+    generateTrees(n = Math.pow(Math.random(), 3) * 40) {
+        for (let i = 0; i < n; i++) {
+            this.generateBuilding(
+                Math.random() < 0.90 ? Tree : FallingTree,
+                Math.random() < 0.75,
+                Tree.radius * 0.5
+            );
+        }
+    }
+    generateOutpost() {
+        let houses = Math.random() * 3;
+        let barracks = Math.random() * 2;
+        let vils = (Math.random() + 0.5) * (5 + houses * 5) / 2;
+        for (let i = 0; i < houses; i++)
+            this.generateBuilding(House);
+        for (let i = 0; i < barracks; i++)
+            this.generateBuilding(Barracks);
+        for (let i = 0; i < vils; i++) {
+            let job = Person.jobs[(Math.random() * Person.jobs.length)|0];
+            this.people.add(new Person(this.x, this.y, job, this.kingdom, this));
         }
     }
 
@@ -53,10 +75,18 @@ class Island extends PIXI.Container {
         });
         if (!alliedPresence && enemyPresence) this.changeKingdom(enemyPresence);
 
-        this.buildings = this.buildings.filter(p => !p.shouldRemove);
+        let buildingCount = 0, treeCount = 0;
+        this.buildings = this.buildings.filter(b => {
+            if (b.type === Tree) treeCount++;
+            else if (b.type === FallingTree){}
+            else buildingCount++;
+            return !b.shouldRemove;
+        });
+        this.ground.tileX = (Math.bounded((buildingCount)/ 3, 0, 3)|0);
     }
 
     changeKingdom(newKingdom) {
+        this.kingdom = newKingdom;
         this.buildings.forEach(b => {
             b.kingdom = newKingdom;
             b.updateTextureState();

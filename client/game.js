@@ -23,13 +23,10 @@ class Game extends PIXI.Container {
 
         this.player = new Kingdom(0x113996, true);
         this.ai = new Kingdom(0xab1705, false);
+        this.islands = [];
 
-        this.islands = [
-            new Island(0, 0, this.player),
-            new Island(480, 0, this.ai),
-            new Island(960, 0, this.ai)
-        ];
-        let starting = this.islands[0];
+        let starting = new Island(0, 0, this.player);
+        starting.generateTrees();
         this.islandBounds = starting.getLocalBounds();
         starting.people.push(
             new Person(0, 0, Villager, this.player, starting),
@@ -38,7 +35,8 @@ class Game extends PIXI.Container {
             new Person(0, 0, Priest, this.player, starting),
             new Person(0, 0, Builder, this.player, starting)
         );
-        this.islands.forEach(i => this.addChildIsland(i));
+        this.addIsland(starting);
+
         this.skiesMood = 0;
         this.x = -this.islandBounds.left;
     }
@@ -52,6 +50,8 @@ class Game extends PIXI.Container {
         this.y = height - this.islandBounds.bottom;
         this.god.x = -this.x + width / 2;
         this.god.y = -this.y;
+        /*while (this.islands.length * 480 < width)
+            this.generateNewIsland();*/
 
         this.updateColor();
         this.player.count(this);
@@ -63,8 +63,9 @@ class Game extends PIXI.Container {
     }
     updateColor() {
         let feeling = this.god.feeling(this.goal);
-        this.skiesMood += (feeling - this.skiesMood) * 0.01;
+    this.skiesMood += (feeling - this.skiesMood) * 0.01;
         this.skiesMood = Math.bounded(this.skiesMood, -1, 1);
+
         this.backgroundColor = PIXI.Color.interpolate(skyColor,
             this.skiesMood > 0 ? goodSkyColor : darkSkyColor,
             Math.abs(this.skiesMood));
@@ -75,12 +76,20 @@ class Game extends PIXI.Container {
             this.skiesMood > 0 ? goodGlobalColor : darkGlobalColor,
             Math.abs(this.skiesMood));
     }
-    addChildIsland(island) {
+
+    addIsland(island) {
+        this.islands.add(island);
         this.addChild(island);
         if (island.buildings.length)
             this.addChild.apply(this, island.buildings);
         if (island.people.length)
             this.addChild.apply(this, island.people);
+    }
+    generateNewIsland() {
+        let island = new Island(this.islands.length * 480, 0, this.ai);
+        island.generateTrees();
+        if (Math.random() < 0.25) island.generateOutpost();
+        this.addIsland(island);
     }
 }
 Game.tinyGoal = 3000;

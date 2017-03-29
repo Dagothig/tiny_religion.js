@@ -8,14 +8,17 @@ class Kingdom {
             else this.peopleCount++;
             this[x.job.name + 'Count']++;
         };
-        this.addToBuildingCount = x => x.finished ?
-            this[x.type.name + 'Count']++ :
-            this.unfinished++;
+        this.addToBuildingCount = x =>
+            x.finished ? this[x.type.name + 'Count']++ :
+            x.type === Tree ? this.growing++ :
+            x.type !== FallingTree ? this.unfinished++ :
+            null;
     }
 
     count(game) {
         this.islandCount = 0;
         this.unfinished = 0;
+        this.growing = 0;
         Building.types.forEach(this.resetCount);
         this.peopleCount = 0;
         this.summonCount = 0;
@@ -41,15 +44,13 @@ class Kingdom {
 
     build(game, type) {
         if (this.builded) return false;
-        let attempts = 0, found = false, pt = null;
-        while (attempts++ < 20 * this.islandCount && !found) {
-            let island = game.islands[(Math.random() * this.islandCount)|0];
-            let pt = island.getRandomPoint(type.radius);
-            if (island.buildings.find(b => b.isInRadius(pt, type.radius))) continue;
-            let building = new Building(pt.x, pt.y, type, this, island);
+        for (let i = 0; i < game.islands.length * 4; i++) {
+            let island = game.islands.rand();
+            if (island.kingdom !== this) continue;
+            let building = island.generateBuilding(type, true);
+            if (!building) continue;
             game.addChild(building);
-            island.buildings.add(building);
-            for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
                 let person = this.findOfJob(game, Builder);
                 if (!person) break;
                 person.building = building;
@@ -61,14 +62,43 @@ class Kingdom {
     }
 
     buildBridge(game) {
-        let island = game.islands[this.islandCount - 1];
+        let island;
+        for (let i = 0; i < game.islands.length; i++) {
+            island = game.islands[i];
+            if (!island.bridge) {
+                if (island.kingdom !== this) return false;
+                break;
+            }
+        }
         if (island.bridge || this.builded) return false;
-        let bridge = new Building(island.x + island.getLocalBounds().right, island.y, Bridge, this, island);
+        let bridge = new Building(
+            island.x + island.getLocalBounds().right,
+            island.y, Bridge, this, island);
         game.addChild(bridge);
         island.buildings.add(bridge);
         island.bridge = bridge;
+        game.generateNewIsland();
+        for (let j = 0; j < 3; j++) {
+            let person = this.findOfJob(game, Builder);
+            if (!person) break;
+            person.building = bridge;
+            person.movements.length = 0;
+        }
+        return true;
     }
 
+    forestate(game) {
+        if (this.growing) return false;
+        for (let i = 0; i < game.islands.length * 3; i++) {
+            let island = game.islands.rand();
+            if (island.kingdom !== this) continue;
+            let tree = island.generateBuilding(Tree, false);
+            if (!tree) continue;
+            game.addChild(tree);
+            return true;
+        }
+        return false;
+    }
     deforest(game) {
         let islands = game.islands.filter(island => island.kingdom === this);
         if (!this.treeCount) return false;

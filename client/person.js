@@ -17,6 +17,8 @@ class Person extends PIXI.AnimatedSprite {
         this.y = y;
         this.job = job;
 
+        this.health = 100;
+        this.sinceTookDamage = 0;
         this.speed = 0.25;
         this.target = null;
         this.movements = [];
@@ -40,6 +42,7 @@ class Person extends PIXI.AnimatedSprite {
 
     takeDamage(amount, game) {
         this.health -= amount;
+        this.sinceTookDamage = 10;
         if (this.health <= 0) this.die(game);
     }
     die(game) {
@@ -48,7 +51,7 @@ class Person extends PIXI.AnimatedSprite {
     }
 
     update(delta, game) {
-        if (this.health < 100) this.health = Math.min(this.health + 0.65, 100);
+        if (this.health < 100) this.health = Math.min(this.health + 0.1, 100);
         if (this.sinceTookDamage > 0) this.sinceTookDamage--;
         if (this.praying > 0) {
             this.praying--;
@@ -159,8 +162,13 @@ Builder = new Job('builder', 'images/Builder.png', {
             moveTo(game.islands, game.islands.indexOf(this.building.island));
             let x = (Math.random() * 2 - 1) * this.building.radius * 0.75;
             let y = (Math.random() * 2 - 1) * this.building.radius * 0.75;
+            if (this.building.type === Bridge) {
+                x /= 4; y /= 4;
+                x -= 100;
+            }
+            // TODO; clamp movement inside island
             this.movements.push({
-                x: this.building.x + x - ((this.building.type === Bridge) ? 75 : 0),
+                x: this.building.x + x,
                 y: this.building.y + y,
                 island: this.building.island
             });
@@ -171,10 +179,11 @@ Builder = new Job('builder', 'images/Builder.png', {
 Warrior = new Job('warrior', 'images/Warrior.png', {
     update(delta, game) {
         let targets = this.island.people.filter(p => p.kingdom !== this.kingdom
-            && Math.dst2(this.x, this.y, p.x, p.y) < 2304);
+            && p.sinceTookDamage <= 0
+            && Math.dst2(this.x, this.y, p.x, p.y) < 32 * 32);
         let target = targets[(Math.random() * targets.length)|0];
         if (!target) return;
-        target.takeDamage(1 + this.kingdom.barracksCount, game);
+        target.takeDamage(3 + this.kingdom.barracksCount, game);
     }
 }),
 Priest = new Job('priest', 'images/Priest.png', {
@@ -182,7 +191,7 @@ Priest = new Job('priest', 'images/Priest.png', {
     update(delta, game) {
         this.sinceSummon++;
         let targets = this.island.people.filter(p => p.kingdom !== this.kingdom
-            && Math.dst2(this.x, this.y, p.x, p.y) < 4096);
+            && Math.dst2(this.x, this.y, p.x, p.y) < 48 * 48);
         let target = targets[(Math.random() * targets.length)|0];
         if (!target) return;
         if (Math.random() * 1000 < this.templeCount + 1) {

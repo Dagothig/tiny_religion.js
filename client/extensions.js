@@ -22,3 +22,6 @@ Array.prototype.remove = function() {
         this.splice(index, 1);
     }
 }
+Array.prototype.rand = function() {
+    return this[(Math.random() * this.length)|0];
+}
