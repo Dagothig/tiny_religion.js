@@ -1,3 +1,5 @@
+'use strict';
+
 class Kingdom {
     constructor(tint, isPlayer) {
         this.tint = tint;
@@ -31,13 +33,15 @@ class Kingdom {
         });
     }
 
-    findOfJob(game, job) {
+    findOfJob(game, job, filter) {
         for (let i = 0; i < game.islands.length; i++) {
             let island = game.islands[i];
             for (let j = 0; j < island.people.length; j++) {
                 let person = island.people[j];
-                if (person.kingdom === this && person.job === job)
-                    return person;
+                if (person.kingdom === this
+                    && person.job === job
+                    && (!filter || filter(person))
+                ) return person;
             }
         }
     }
@@ -47,11 +51,11 @@ class Kingdom {
         for (let i = 0; i < game.islands.length * 4; i++) {
             let island = game.islands.rand();
             if (island.kingdom !== this) continue;
-            let building = island.generateBuilding(type, true);
+            let building = island.generateBuilding(type, false);
             if (!building) continue;
             game.addChild(building);
             for (let j = 0; j < 3; j++) {
-                let person = this.findOfJob(game, Builder);
+                let person = this.findOfJob(game, Builder, p => !p.building);
                 if (!person) break;
                 person.building = building;
                 person.movements.length = 0;
@@ -79,7 +83,7 @@ class Kingdom {
         island.bridge = bridge;
         game.generateNewIsland();
         for (let j = 0; j < 3; j++) {
-            let person = this.findOfJob(game, Builder);
+            let person = this.findOfJob(game, Builder, p => !p.building);
             if (!person) break;
             person.building = bridge;
             person.movements.length = 0;
@@ -113,20 +117,23 @@ class Kingdom {
         let felled = new Building(tree.x, tree.y, FallingTree, this, island);
         game.addChild(felled);
         island.buildings.add(felled);
+        game.god.event('tree', -1, felled.position);
         return true;
     }
     train(game, job) {
         let person = this.findOfJob(game, Villager);
         if (person) {
-            person.sinceTookDamage = 10;
+            game.addChild(new SFX(person.x, person.y, Summon));
             person.job = job;
+            if (this.isPlayer) game.god.event(job.name, 1, person.position);
         }
     }
     untrain(game, job) {
         let person = this.findOfJob(game, job);
         if (person) {
-            person.sinceTookDamage = 10;
+            game.addChild(new SFX(person.x, person.y, Summon));
             person.job = Villager;
+            if (this.isPlayer) game.god.event(job.name, -1, person.position);
         }
     }
     doBaby(game) {
@@ -139,12 +146,17 @@ class Kingdom {
         game.islands.forEach(island =>
             island.people.forEach(person =>
                 person.kingdom === this && person.job === Priest &&
-                Priest.doBaby.call(person, game)));
+                Priest.doSummon.call(person, game)));
     }
     pray(game) {
+        let p;
         game.islands.forEach(island =>
-            island.people.forEach(person =>
-                person.kingdom === this && person.pray()));
+            island.people.forEach(person =>{
+                if (person.kingdom !== this) return;
+                person.pray();
+                p = person;
+            }));
+        if (this.isPlayer && p) game.god.event('pray', 1, p.position);
     }
     sendAttack(game) {
 

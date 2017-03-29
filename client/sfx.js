@@ -1,3 +1,5 @@
+'use strict';
+
 class SFXType {
     constructor(decalX, decalY, decalZ, frameDuration) {
         this.decalX = decalX;
@@ -9,7 +11,7 @@ class SFXType {
 let Blood = new SFXType(4, 10, 0, 8),
     Summon = new SFXType(4, 10, 0, 8),
     Sparkle = new SFXType(4, 10, 0, 8),
-    Lightning = new SFXType(16, 128, 0, 4);
+    Lightning = new SFXType(16, 128, 0, 8);
 
 class SFX extends PIXI.TiledSprite {
     constructor(x, y, type) {

@@ -1,3 +1,5 @@
+'use strict';
+
 class Island extends PIXI.Container {
     constructor(x, y, kingdom) {
         super();

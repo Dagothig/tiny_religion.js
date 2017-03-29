@@ -1,5 +1,30 @@
 'use strict';
 
+class Overlay extends PIXI.Sprite {
+    constructor(texture) {
+        super(texture);
+        this.flashes = [];
+    }
+    update(delta, game, width, height) {
+        this.x = -game.x;
+        this.y = -game.y;
+        this.width = width;
+        this.height = height;
+        let alpha = 0;
+        for (let i = this.flashes.length; i--;) {
+            let flash = this.flashes[i];
+            alpha = Math.max(flash.time / flash.duration, alpha);
+            flash.time--;
+            if (!flash.time) this.flashes.splice(i, 1);
+        }
+        this.alpha = alpha;
+    }
+    flash(duration) {
+        this.flashes.push({time: duration, duration: duration});
+    }
+    get z() { return 1000; }
+}
+
 let darkSkyColor = 0x241e2f,
     skyColor = 0xa2a8b0,
     goodSkyColor = 0x80c0ff,
@@ -39,6 +64,10 @@ class Game extends PIXI.Container {
 
         this.skiesMood = 0;
         this.x = -this.islandBounds.left;
+
+        this.overlay = new Overlay(PIXI.whitePixel);
+        this.overlay.flash(60);
+        this.addChild(this.overlay);
     }
     update(delta, width, height) {
 
@@ -50,20 +79,21 @@ class Game extends PIXI.Container {
         this.y = height - this.islandBounds.bottom;
         this.god.x = -this.x + width / 2;
         this.god.y = -this.y;
-        /*while (this.islands.length * 480 < width)
-            this.generateNewIsland();*/
+        while (this.islands.length * 480 < width)
+            this.generateNewIsland();
 
         this.updateColor();
         this.player.count(this);
         this.ai.count(this);
 
-        this.children.forEach(child => child.update && child.update(delta, this));
+        this.children.forEach(child =>
+            child.update && child.update(delta, this, width, height));
         this.children = this.children.filter(child => !child.shouldRemove);
         this.children.sort((a, b) => (a.z || 0) - (b.z || 0));
     }
     updateColor() {
         let feeling = this.god.feeling(this.goal);
-    this.skiesMood += (feeling - this.skiesMood) * 0.01;
+        this.skiesMood += (feeling - this.skiesMood) * 0.01;
         this.skiesMood = Math.bounded(this.skiesMood, -1, 1);
 
         this.backgroundColor = PIXI.Color.interpolate(skyColor,

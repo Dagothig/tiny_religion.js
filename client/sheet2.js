@@ -1,3 +1,5 @@
+'use strict';
+
 let sheet2 = new MusicSheet(1/4, (() => {
       let notes = {};
       function note(beat, toAdd) {

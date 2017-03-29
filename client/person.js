@@ -1,3 +1,5 @@
+'use strict';
+
 class Job {
     constructor(name, path, ext) {
         this.name = name;
@@ -135,7 +137,7 @@ let Villager = new Job('villager', 'images/Villager.png', {
         if (this.island.kingdom !== this.kingdom) return;
         this.island.buildings.filter(b =>
             b.type === FallingTree && !b.finished && b.isInRadius(this))
-        .forEach(b => b.progressBuild(1));
+        .forEach(b => b.progressBuild(1, game));
     },
     doBaby(game) {
         if (this.kingdom.housed) return null;
@@ -145,6 +147,7 @@ let Villager = new Job('villager', 'images/Villager.png', {
                 Villager, this.kingdom, this.island);
             game.addChild(baby, new SFX(this.x, this.y, Sparkle));
             this.island.people.add(baby);
+            if (this.kingdom.isPlayer) game.god.event('baby', 1, this.position);
         }
     }
 }),
@@ -155,7 +158,7 @@ Builder = new Job('builder', 'images/Builder.png', {
         this.island.buildings.filter(b =>
             b.type !== FallingTree && b.type !== Tree && !b.finished
             && b.isInRadius(this))
-        .forEach(b => b.progressBuild(this.kingdom.workshopCount + 1));
+        .forEach(b => b.progressBuild(this.kingdom.workshopCount + 1, game));
     },
     findNextTarget(game) {
         if (this.building && !this.building.finished) {
@@ -184,6 +187,10 @@ Warrior = new Job('warrior', 'images/Warrior.png', {
         let target = targets[(Math.random() * targets.length)|0];
         if (!target) return;
         target.takeDamage(3 + this.kingdom.barracksCount, game);
+        if (this.kingdom.isPlayer) {
+            game.god.event('fight', 1, this.position);
+            if (target.health <= 0) game.god.event('kill', 1, target.position);
+        }
     }
 }),
 Priest = new Job('priest', 'images/Priest.png', {
@@ -194,9 +201,11 @@ Priest = new Job('priest', 'images/Priest.png', {
             && Math.dst2(this.x, this.y, p.x, p.y) < 48 * 48);
         let target = targets[(Math.random() * targets.length)|0];
         if (!target) return;
+        if (this.kingdom.isPlayer) game.god.event('converting', 1, this.position);
         if (Math.random() * 1000 < this.templeCount + 1) {
             target.kingom = this.kingdom;
             game.addChild(new SFX(target.x, target.y, Summon));
+            if (this.kingdom.isPlayer) game.god.event('convert', 1, this.position);
         }
     },
     doSummon(game) {
@@ -207,6 +216,7 @@ Priest = new Job('priest', 'images/Priest.png', {
                 Villager, this.kingdom, this.island, true);
             game.addChild(summon, new SFX(this.x, this.y, Summon));
             this.island.people.add(summon);
+            if (this.kingdom.isPlayer) game.god.event('summon', 1, this.position);
         }
     }
 });

@@ -1,7 +1,10 @@
+'use strict;'
+
 class God extends PIXI.Container {
     constructor() {
         super();
         this.mood = this.overallMood = 0;
+        this.lookAtX = this.lookAtY = 0;
 
         this.background = new PIXI.Sprite(God.background);
         this.background.anchor.x = 0.5;
@@ -42,6 +45,27 @@ class God extends PIXI.Container {
             this.leftEyeSocket, this.rightEyeSocket,
             this.leftBrow, this.rightBrow,
             this.mouth);
+
+        this.events = {
+            warrior: () => -this.likesLife,
+            priest: () => this.likesAttention,
+            builder: () => this.likesManMade,
+            baby: () => this.likesLife,
+            bridge: () => this.likesManMade * 4,
+            house: () => this.likesManMade * 2 + this.likesLife * 1.5,
+            barracks: () => this.likesManMade * 3 - this.likesLife * 2,
+            temple: () => this.likesManMade * 3 + this.likesAttention * 2,
+            workshop: () => this.likesManMade * 4,
+            greenhouse: () => -this.likesManMade * 3 + this.likesLife * 2,
+            tree: () => this.likesLife - this.likesManMade,
+            sacrifice: () => this.likesAttention - this.likesLife * 2,
+            fight: () => -this.likesLife / 150,
+            kill: () => -this.likesLife * 2,
+            converting: () => this.likesAttention / 150,
+            convert: () => this.likesAttention + this.likesLife,
+            pray: () => this.likesAttention,
+            summon: () => this.likesAttention / 2 - this.likesLife / 2
+        };
     }
     get z() { return -200; }
     set tint(val) {
@@ -68,19 +92,33 @@ class God extends PIXI.Container {
         let feeling = this.feeling(game.goal);
         this.tileY = Math.bounded(3 - Math.round(feeling * 3), 0, 6);
 
-        if (Math.random() < -feeling / 500) doSacrifice(game);
+        if (Math.random() < -feeling / 500) this.doSacrifice(game);
 
         this.sincePersonality++;
         if (this.sincePersonality > God.personalityLength)
-            this.changePersonality();
+            this.changePersonality(false, game);
+
+        let x = this.x + this.leftEyeSocket.x,
+            y = this.y + this.leftEyeSocket.y;
+        let dstToLeftEye = Math.dst(x, y, this.lookAtX, this.lookAtY);
+        this.leftEye.x = 3 * (this.lookAtX - x) / dstToLeftEye;
+        this.leftEye.y = 3 * (this.lookAtY - y) / dstToLeftEye;
+
+        x = this.x + this.rightEyeSocket.x;
+        y = this.y + this.rightEyeSocket.y;
+        let dstToRightEye = Math.dst(x, y, this.lookAtX, this.lookAtY);
+        this.rightEye.x = 3 * (this.lookAtX - x) / dstToRightEye;
+        this.rightEye.y = 3 * (this.lookAtY - y) / dstToRightEye;
     }
 
     doSacrifice(game) {
-        let islands = game.player.islands;
-        let island = islands[(Math.random() * islands.length)|0];
+        let islands = game.islands.filter(i => i.kingdom.isPlayer);
+        let island = islands.rand();
         let dude = island.people[(Math.random() * island.people.length)|0];
         if (!dude) return;
+        this.event('sacrifice', 1, dude.position);
         game.addChild(new SFX(dude.x, dude.y, Lightning));
+        game.overlay.flash(8);
         dude.die(game);
     }
 
@@ -89,7 +127,8 @@ class God extends PIXI.Container {
             this.overallMood / (this.overallMood < 0 ? goal/4 : goal)) / 2;
     }
 
-    changePersonality(base = false) {
+    changePersonality(base, game) {
+        if (game) game.overlay.flash(60);
         if (base) {
             this.likesLife = God.preferenceModifier;
             this.likesAttention = God.preferenceModifier / 4;
@@ -127,6 +166,17 @@ class God extends PIXI.Container {
             Math.bounded(G|0, 0, 255),
             Math.bounded(B|0, 0, 255)
         );
+    }
+
+    event(what, scalar, where) {
+        if (!this.events[what]) return;
+        this.mood += this.events[what]() * scalar;
+        this.lookAt(where);
+    }
+
+    lookAt(pt) {
+        this.lookAtX = pt.x;
+        this.lookAtY = pt.y;
     }
 }
 God.preferenceModifier = 1;

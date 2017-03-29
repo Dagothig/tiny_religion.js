@@ -113,6 +113,12 @@
         }
     });
 
+    let graphics = new PIXI.Graphics();
+    graphics.beginFill(0xffffff, 1);
+    graphics.drawRect(0, 0, 1, 1);
+    graphics.closePath();
+    PIXI.whitePixel = graphics.generateTexture();
+
     PIXI.Color = {
         interpolate: interpolateColors,
         fromRGB: colorFromRGB

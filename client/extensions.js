@@ -1,3 +1,5 @@
+'use strict';
+
 Math.dst2 = function(a1, a2, b1, b2) {
     let delta1 = b1 - a1, delta2 = b2 - a2;
     return delta1 * delta1 + delta2 * delta2;

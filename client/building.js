@@ -1,3 +1,5 @@
+'use strict';
+
 class BuildingType {
     constructor(
         name, path, decalX, decalY, decalZ, playerColored, radius, buildTime, ext
@@ -49,11 +51,13 @@ class Building extends PIXI.TiledSprite {
         this.tileX = !this.type.playerColored || this.kingdom.isPlayer ? 0 : 1;
         this.tileY = this.finished ? 1 : 0;
     }
-    progressBuild(amount) {
+    progressBuild(amount, game) {
         this.buildTime -= amount;
         if (this.buildTime <= 0) {
             this.finished = true;
             this.updateTextureState();
+            if (this.kingdom.isPlayer)
+                game.god.event(this.type.name, 1, this.position);
             if (this.type.onFinished) this.type.onFinished.call(this);
         }
     }
@@ -78,7 +82,7 @@ GreenHouse = new BuildingType(
     'greenHouse', '/images/GreenHouse.png', 0, 0, 16, true, 40, 10000),
 Tree = new BuildingType(
     'tree', '/images/Tree.png', 0, 4, 0, false, 15, 1000, {
-        update(delta, game) { this.progressBuild(1); }
+        update(delta, game) { this.progressBuild(1, game); }
     }),
 FallingTree = new BuildingType(
     'fallingTree', '/images/FallingTree.png', 0, 4, 0, false, 15, 250, {
