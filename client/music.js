@@ -6,9 +6,10 @@ let fetchSound = (src) => {
     return el;
 }
 let twelthRootOf2 = Math.pow(2, 1/12);
-let table = [];
-let tonalShiftRate = shift => (table[shift] !== undefined && table[shift]) ||
-    (table[shift] = Math.pow(twelthRootOf2, shift));
+let tonalShiftTable = [];
+let tonalShiftRate = shift =>
+    (tonalShiftTable[shift] !== undefined && tonalShiftTable[shift]) ||
+    (tonalShiftTable[shift] = Math.pow(twelthRootOf2, shift));
 
 let NOTE = { DO: 0, RE: 2, MI: 4, FA: 5, SOL: 7, LA: 9, SI: 11 };
 let MOD = { FLAT: -1, NORMAL: 0, SHARP: 1 };
@@ -22,7 +23,9 @@ Sound.prototype = {
     constructor: Sound,
     play: function(octave = 0, note = NOTE.DO, noteMod = MOD.NORMAL) {
         let snd = this._octaves[octave].pop() || this._bases[octave].cloneNode();
-        snd.mozPreservesPitch = false;
+        snd.mozPreservesPitch =
+        snd.webkitPreservesPitched =
+        snd.preservesPitch = false;
         snd.playbackRate = tonalShiftRate(note + noteMod);
         snd.onended = this._onPlayed[octave];
         snd.play();
@@ -37,8 +40,6 @@ function MusicSheet(timeUnit, notes) {
     this.timeUnit = timeUnit;
     this.notes = Object.entries(notes).reduce((n, entry) =>
         (n[entry[0]] = entry[1]) && n, []);
-
-    console.log(this.notes);
 }
 Array._empty = [];
 function Music(sheet, bpm) {

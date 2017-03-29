@@ -1,10 +1,84 @@
+<!DOCTYPE html>
 <html>
     <head>
+        <title>Tiny Religion</title>
+        <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+        <meta name="charset" content="UTF-8">
+
+        <style>
+            html, body, #container {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+            }
+            #container {
+                overflow: hidden;
+                background-color: #000;
+            }
+            canvas {
+                display: block;
+                margin: auto;
+                image-rendering: pixelated;
+            }
+        </style>
+
+        <script src="client/extensions.js"></script>
+        <script src="client/pixi.min.js"></script>
+        <script src="client/pixi-extensions.js"></script>
+
         <script src="client/music.js"></script>
         <script src="client/sheet1.js"></script>
+        <script src="client/sheet2.js"></script>
+
+        <script src="client/sfx.js"></script>
+        <script src="client/god.js"></script>
+        <script src="client/kingdom.js"></script>
+        <script src="client/island.js"></script>
+        <script src="client/building.js"></script>
+        <script src="client/person.js"></script>
+        <script src="client/game.js"></script>
     </head>
     <body>
-        <input type="button" onclick="music1.start()" value="start music1" />
-        <input type="button" onclick="music1.stop()" value="stop music1" />
+        <div id="container"></div>
+        <script>
+            PIXI.scaleModes.DEFAULT = PIXI.scaleModes.NEAREST;
+            let renderer = PIXI.autoDetectRenderer();
+            renderer.roundPixels = true;
+            container.appendChild(renderer.view);
+            let targetWidth = 640, targetHeight = 480;
+            let resize = () => {
+                let w = container.clientWidth, h = container.clientHeight;
+                let scale = Math.min(w / targetWidth, h / targetHeight);
+                if (scale >= 1) scale = Math.round(scale);
+                else scale = Math.pow(2, Math.round(Math.log2(scale)));
+                w = Math.min(w, 2 * targetWidth * scale);
+
+                renderer.resize(w/scale, h/scale);
+                renderer.view.style.height = h + 'px';
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            let keys = [];
+            window.isKeyPressed = key => !!keys[key];
+            window.addEventListener('keydown', ev => keys[ev.keyCode] = true);
+            window.addEventListener('keyup', ev => keys[ev.keyCode] = false);
+
+            let game;
+            PIXI.loader.load(() => {
+                game = new Game();
+                let last = performance.now();
+                let upd = () => {
+                    let time = performance.now();
+                    game.update(time - last, renderer.width, renderer.height);
+                    renderer.backgroundColor = game.backgroundColor;
+                    renderer.render(game);
+                    last = time;
+                    requestAnimationFrame(upd);
+                }
+                upd();
+            });
+        </script>
     </body>
 </html>

@@ -1,0 +1,11 @@
+{
+  "name": "TinyReligion",
+  "preferGlobal": true,
+  "version": "0.0.0",
+  "author": "Dagothig <guillaumenoelmartel@gmail.com>",
+  "description": "Tiny Religion JS port",
+  "main": "server/server.js",
+  "dependencies": {
+    "express": "~3.4.8"
+  }
+}
