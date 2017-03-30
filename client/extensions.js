@@ -24,6 +24,9 @@ Array.prototype.remove = function() {
         this.splice(index, 1);
     }
 }
+Array.prototype.rand_i = function() {
+    return (Math.random() * this.length)|0;
+}
 Array.prototype.rand = function() {
-    return this[(Math.random() * this.length)|0];
+    return this[this.rand_i()];
 }

@@ -38,10 +38,10 @@ let darkSkyColor = 0x241e2f,
     goodGlobalColor = 0xfff0cc;
 
 class Game extends PIXI.Container {
-    constructor(goal = Game.shortGoal) {
+    constructor(onFinished, goal = Game.shortGoal) {
         super();
         this.goal = goal;
-        this.music = music2;
+        this.onFinished = onFinished;
 
         this.god = new God();
         this.addChild(this.god);
@@ -55,15 +55,14 @@ class Game extends PIXI.Container {
         starting.generateTrees();
         this.islandBounds = starting.getLocalBounds();
         starting.people.push(
-            /*new Person(0, 0, Villager, this.player, starting),
-            new Person(0, 0, Villager, this.player, starting),*/
+            new Person(0, 0, Villager, this.player, starting),
+            new Person(0, 0, Villager, this.player, starting),
             new Person(0, 0, Warrior, this.player, starting),
             new Person(0, 0, Priest, this.player, starting),
             new Person(0, 0, Builder, this.player, starting)
         );
         this.addIsland(starting);
-        this.generateNewIsland();
-        this.generateNewIsland();
+        for (let i = 0; i < 2; i++) this.generateNewIsland();
 
         this.skiesMood = 0;
         this.x = -this.islandBounds.left;
@@ -72,10 +71,11 @@ class Game extends PIXI.Container {
         this.overlay.flash(60);
         this.addChild(this.overlay);
     }
-    update(delta, width, height) {
 
-        if (window.isKeyPressed(37)) this.x += 5;
-        if (window.isKeyPressed(39)) this.x -= 5;
+    update(delta, width, height) {
+        if (window.isKeyPressed(37)) this.x += 5 + this.islands.length;
+        if (window.isKeyPressed(39)) this.x -= 5 + this.islands.length;
+        if (this.down) this.updateDown(delta);
         this.x = Math.bounded(this.x,
             -(this.islandBounds.left + this.islandBounds.width * this.islands.length - width),
             -this.islandBounds.left);
@@ -91,6 +91,16 @@ class Game extends PIXI.Container {
             child.update && child.update(delta, this, width, height));
         this.children = this.children.filter(child => !child.shouldRemove);
         this.children.sort((a, b) => (a.z || 0) - (b.z || 0));
+
+        // Check for end
+        if (!this.player.peopleCount && !this.player.summonCount) {
+            sounds.loss.play();
+            this.onFinished(false);
+        }
+        else if (this.god.overallMood > this.goal) {
+            sounds.win.play();
+            this.onFinished(true);
+        }
     }
     updateColor() {
         let feeling = this.god.feeling(this.goal);
@@ -121,6 +131,31 @@ class Game extends PIXI.Container {
         island.generateTrees();
         if (Math.random() < 0.25) island.generateOutpost();
         this.addIsland(island);
+    }
+
+    beginDown(x, y) {
+        this.down = {
+            start: x,
+            last: x,
+            current: x,
+
+            originalPos: this.x,
+            time: performance.now(),
+            velocity: 0
+        };
+    }
+    finishDown(x, y) {
+        if (this.down) this.down.finished = true;
+    }
+    updateDown(delta) {
+        let diff = this.down.current - this.down.last;
+        this.x += diff;
+        this.down.last = this.down.current;
+    }
+    onMove(x, y) {
+        if (this.down && !this.down.finished) {
+            this.down.current = x;
+        }
     }
 }
 Game.tinyGoal = 3000;

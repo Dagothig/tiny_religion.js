@@ -56,8 +56,10 @@ class Building extends PIXI.TiledSprite {
         if (this.buildTime <= 0) {
             this.finished = true;
             this.updateTextureState();
-            if (this.kingdom.isPlayer)
+            if (this.kingdom.isPlayer) {
                 game.god.event(this.type.name, 1, this.position);
+                sounds.done.play();
+            }
             if (this.type.onFinished) this.type.onFinished.call(this);
         }
     }

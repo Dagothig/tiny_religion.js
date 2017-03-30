@@ -6,6 +6,7 @@ class Kingdom {
         this.isPlayer = isPlayer;
         this.resetCount = x => this[x.name + 'Count'] = 0;
         this.addToPersonCount = x => {
+            if (x.kingdom !== this) return;
             if (x.isSummon) this.summonCount++;
             else this.peopleCount++;
             this[x.job.name + 'Count']++;
@@ -60,6 +61,7 @@ class Kingdom {
                 person.building = building;
                 person.movements.length = 0;
             }
+            if (this.isPlayer) sounds.build.play();
             return true;
         }
         return false;
@@ -88,6 +90,7 @@ class Kingdom {
             person.building = bridge;
             person.movements.length = 0;
         }
+        if (this.isPlayer) sounds.build.play();
         return true;
     }
 
@@ -99,6 +102,7 @@ class Kingdom {
             let tree = island.generateBuilding(Tree, false);
             if (!tree) continue;
             game.addChild(tree);
+            if (this.isPlayer) sounds.build.play();
             return true;
         }
         return false;
@@ -118,7 +122,10 @@ class Kingdom {
         let felled = new Building(tree.x, tree.y, FallingTree, this, island);
         game.addChild(felled);
         island.buildings.add(felled);
-        game.god.event('tree', -1, felled.position);
+        if (this.isPlayer) {
+            game.god.event('tree', -1, felled.position);
+            sounds.build.play();
+        }
         return true;
     }
     train(game, job) {
@@ -126,7 +133,10 @@ class Kingdom {
         if (person) {
             game.addChild(new SFX(person.x, person.y, Summon));
             person.job = job;
-            if (this.isPlayer) game.god.event(job.name, 1, person.position);
+            if (this.isPlayer) {
+                game.god.event(job.name, 1, person.position);
+                sounds[job.name + 'Train'].play();
+            }
         }
     }
     untrain(game, job) {
@@ -134,30 +144,39 @@ class Kingdom {
         if (person) {
             game.addChild(new SFX(person.x, person.y, Summon));
             person.job = Villager;
-            if (this.isPlayer) game.god.event(job.name, -1, person.position);
+            if (this.isPlayer) {
+                game.god.event(job.name, -1, person.position);
+                sounds.untrain.play();
+            }
         }
     }
     doBaby(game) {
-        game.islands.forEach(island =>
-            island.people.forEach(person =>
-                person.kingdom === this && person.job === Villager &&
-                Villager.doBaby.call(person, game)));
+        if (game.islands.find(island =>
+                island.people.find(person =>
+                    person.kingdom === this && person.job === Villager &&
+                    Villager.doBaby.call(person, game))) &&
+            this.isPlayer
+        ) sounds.baby.play();
     }
     attemptSummon(game) {
-        game.islands.forEach(island =>
-            island.people.forEach(person =>
+        if (game.islands.find(island =>
+            island.people.find(person =>
                 person.kingdom === this && person.job === Priest &&
-                Priest.doSummon.call(person, game)));
+                Priest.doSummon.call(person, game))) &&
+            this.isPlayer
+        ) sounds.summon.play();
     }
     pray(game) {
         let p;
         game.islands.forEach(island =>
             island.people.forEach(person =>{
                 if (person.kingdom !== this) return;
-                person.pray();
-                p = person;
+                if (person.pray()) p = person;
             }));
-        if (this.isPlayer && p) game.god.event('pray', 1, p.position);
+        if (this.isPlayer && p) {
+            sounds.pray.play();
+            game.god.event('pray', 1, p.position);
+        }
     }
     sendAttack(game) {
 

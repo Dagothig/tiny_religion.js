@@ -21,6 +21,7 @@ class Person extends PIXI.AnimatedSprite {
 
         this.health = 100;
         this.sinceTookDamage = 0;
+        this.praying = 0;
         this.speed = 0.25;
         this.target = null;
         this.movements = [];
@@ -50,6 +51,7 @@ class Person extends PIXI.AnimatedSprite {
     die(game) {
         this.shouldRemove = true;
         game.addChild(new SFX(this.x, this.y, Blood));
+        sounds.death.play();
     }
 
     update(delta, game) {
@@ -126,7 +128,7 @@ class Person extends PIXI.AnimatedSprite {
     }
 
     pray() {
-        this.praying = Math.random() * 50 + 75;
+        return this.praying <= 0 && (this.praying = Math.random() * 50 + 75);
     }
 }
 Person.jobs = [];
@@ -140,7 +142,7 @@ let Villager = new Job('villager', 'images/Villager.png', {
         .forEach(b => b.progressBuild(1, game));
     },
     doBaby(game) {
-        if (this.kingdom.housed) return null;
+        if (this.kingdom.housed) return;
         if (Math.random() * 3000 < this.sinceBaby) {
             this.sinceBaby = 0;
             let baby = new Person(this.x, this.y,
@@ -148,6 +150,7 @@ let Villager = new Job('villager', 'images/Villager.png', {
             game.addChild(baby, new SFX(this.x, this.y, Sparkle));
             this.island.people.add(baby);
             if (this.kingdom.isPlayer) game.god.event('baby', 1, this.position);
+            return baby;
         }
     }
 }),
@@ -189,6 +192,7 @@ Warrior = new Job('warrior', 'images/Warrior.png', {
         target.takeDamage(3 + this.kingdom.barracksCount, game);
         if (this.kingdom.isPlayer) {
             game.god.event('fight', 1, this.position);
+            sounds.hit.play();
             if (target.health <= 0) game.god.event('kill', 1, target.position);
         }
     }
@@ -209,7 +213,7 @@ Priest = new Job('priest', 'images/Priest.png', {
         }
     },
     doSummon(game) {
-        if (this.kingdom.templed) return null;
+        if (this.kingdom.templed) return;
         if (Math.random() * 5000 < this.sinceSummon) {
             this.sinceSummon = 0;
             let summon = new Person(this.x, this.y,
@@ -217,6 +221,7 @@ Priest = new Job('priest', 'images/Priest.png', {
             game.addChild(summon, new SFX(this.x, this.y, Summon));
             this.island.people.add(summon);
             if (this.kingdom.isPlayer) game.god.event('summon', 1, this.position);
+            return summon;
         }
     }
 });

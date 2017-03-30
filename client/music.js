@@ -1,10 +1,5 @@
 ﻿'use strict';
 
-let fetchSound = (src) => {
-    let el = document.createElement('audio');
-    el.src = src;
-    return el;
-}
 let twelthRootOf2 = Math.pow(2, 1/12);
 let tonalShiftTable = [];
 let tonalShiftRate = shift =>
@@ -13,14 +8,14 @@ let tonalShiftRate = shift =>
 
 let NOTE = { DO: 0, RE: 2, MI: 4, FA: 5, SOL: 7, LA: 9, SI: 11 };
 let MOD = { FLAT: -1, NORMAL: 0, SHARP: 1 };
-function Sound(octavePaths) {
+function MusicSound(octavePaths) {
     this._paths = octavePaths;
     this._octaves = new Array(octavePaths.length).fill().map(() => []);
     this._bases = octavePaths.map(path => fetchSound(path));
     this._onPlayed = this._octaves.map(arr => function() { arr.push(this); });
 }
-Sound.prototype = {
-    constructor: Sound,
+MusicSound.prototype = {
+    constructor: MusicSound,
     play: function(octave = 0, note = NOTE.DO, noteMod = MOD.NORMAL) {
         let snd = this._octaves[octave].pop() || this._bases[octave].cloneNode();
         snd.mozPreservesPitch =
@@ -31,7 +26,7 @@ Sound.prototype = {
         snd.play();
     }
 }
-let snd1 = new Sound(new Array(5).fill().map((_, i) =>
+let snd1 = new MusicSound(new Array(5).fill().map((_, i) =>
     './sounds/NoteType1_' + i + '.wav'));
 
 //[snd1, NOTE.DO, MOD, 2]

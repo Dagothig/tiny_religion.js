@@ -7,11 +7,15 @@ html, body {
 body {
     display: flex;
     flex-direction: column;
+    font-family: monospace;
+    font-weight: 800;
 }
+.hidden { visibility: hidden !important; }
 #container {
     width: 100%;
     flex-grow: 1;
     position: relative;
+    cursor: grabbing;
 }
 #container { overflow: hidden; }
 canvas {
@@ -25,7 +29,39 @@ canvas {
     image-rendering: pixelated;
 }
 
-.ui {
+.title {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('images/TitleScreen.png');
+    background-repeat: no-repeat;
+    background-color: #000;
+    background-position: center;
+}
+.title.win, .title.lost { background-color: #4000cc; }
+.title.win {
+    background-image: url('images/GodHappy.png');
+}
+.title.lost {
+    background-image: url('images/GodAngry.png');
+}
+
+.stats {
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: #fff;
+    margin: 8px;
+    pointer-events: none;
+    user-select: none;
+}
+.stats label:after {
+    content: ": ";
+}
+
+.btns {
     width: 100%;
     display: flex;
     flex-direction: row;
@@ -33,7 +69,7 @@ canvas {
     background-color: #333;
     border-top: solid 2px #113996;
 }
-.ui .btn {
+.btn {
     position: relative;
     display: block;
     width: 64px;
@@ -43,16 +79,16 @@ canvas {
     filter: brightness(0.75) grayscale(0.75);
     flex-grow: 1;
 }
-.ui .btn:hover,
-.ui .btn:focus {
+.btn:hover, .btn:focus {
     background-color: rgba(255, 255, 255, 0.5);
     filter: brightness(1) grayscale(0);
 }
-.ui .btn:focus { outline: none; }
-.ui .btn:after,
-.ui .train:before, .ui .untrain:before,
-.ui .baby:before, .ui .summon:before,
-.ui .attack:before, .ui .convert:before {
+.btn:focus { outline: none; }
+
+.btn:after,
+.train:before, .untrain:before,
+.baby:before, .summon:before,
+.attack:before, .convert:before {
     content: "";
     display: block;
     position: absolute;
@@ -61,16 +97,16 @@ canvas {
     image-rendering: pixelated;
 }
 
-.ui .train, .ui .untrain, .ui .attack, .ui .convert {
+.train, .untrain, .attack, .convert {
     background-image: url('images/Arrow.png');
     background-repeat: no-repeat;
     background-position: center;
 }
-.ui .train:before, .ui .untrain:before,
-.ui .baby:before, .ui .summon:before,
-.ui .attack:before, .ui .convert:before,
-.ui .train:after, .ui .untrain:after,
-.ui .attack:after, .ui .convert:after {
+.train:before, .untrain:before,
+.baby:before, .summon:before,
+.attack:before, .convert:before,
+.train:after, .untrain:after,
+.attack:after, .convert:after {
     width: 8px;
     height: 12px;
     margin-top: -6px;
@@ -86,32 +122,32 @@ canvas {
     33% { background-position: 8px 36px; }
     66% { background-position: 16px 36px; }
 }
-.ui .train:before, .ui .untrain:before,
-.ui .attack:before, .ui .convert:before {
+.train:before, .untrain:before,
+.attack:before, .convert:before {
     margin-left: -20px;
 }
-.ui .train:after, .ui .untrain:after,
-.ui .attack:after, .ui .convert:after {
+.train:after, .untrain:after,
+.attack:after, .convert:after {
     margin-left: 12px;
 }
 
-.ui .warrior:before, .ui .warrior:after, .ui .attack:before {
+.warrior:before, .warrior:after, .attack:before {
     background-image: url('images/Warrior.png');
 }
-.ui .priest:before, .ui .priest:after, .ui .convert:before {
+.priest:before, .priest:after, .convert:before {
     background-image: url('images/Priest.png');
 }
-.ui .builder:before, .ui .builder:after {
+.builder:before, .builder:after {
     background-image: url('images/Builder.png');
 }
 
-.ui .train:before, .ui .untrain:after,
-.ui .baby:before, .ui .summon:before,
-.ui .attack:after, .ui .convert:after {
+.train:before, .untrain:after,
+.baby:before, .summon:before,
+.attack:after, .convert:after {
     background-image: url('images/Villager.png');
 }
 
-.ui .build:after {
+.build:after {
     content: "";
     display: block;
     position: absolute;
@@ -119,7 +155,7 @@ canvas {
     top: 50%;
     image-rendering: pixelated;
 }
-.ui .house:after {
+.house:after {
     width: 60px;
     margin-left: -30px;
     height: 110px;
@@ -127,21 +163,21 @@ canvas {
     background-position: 0px 110px;
     background-image: url('images/House.png');
 }
-.ui .barracks:after,
-.ui .workshop:after {
+.barracks:after,
+.workshop:after {
     width: 100px;
     margin-left: -50px;
     height: 110px;
     margin-top: -45px;
     background-position: 0px 110px;
 }
-.ui .barracks:after {
+.barracks:after {
     background-image: url('images/Barracks.png');
 }
-.ui .workshop:after {
+.workshop:after {
     background-image: url('images/Workshop.png');
 }
-.ui .temple:after {
+.temple:after {
     background-image: url('images/Temple.png');
     width: 100px;
     margin-left: -50px;
@@ -149,7 +185,7 @@ canvas {
     margin-top: -52px;
     background-position: 0px 130px;
 }
-.ui .greenHouse:after {
+.greenHouse:after {
     background-image: url('images/GreenHouse.png');
     width: 56px;
     margin-left: -28px;
@@ -158,7 +194,7 @@ canvas {
     background-position: 0px 164px;
 }
 
-.ui .bridge:after {
+.bridge:after {
     background-image: url('images/Bridge.png');
     width: 178px;
     margin-left: -89px;
@@ -167,20 +203,20 @@ canvas {
     background-position: 0px 138px;
 }
 
-.ui .forestate:after, .ui .deforest:after {
+.forestate:after, .deforest:after {
     width: 30px;
     margin-left: -15px;
     height: 90px;
     margin-top: -32px;
     background-position: 0px 90px;
 }
-.ui .forestate:after {
+.forestate:after {
     background-image: url('images/Tree.png');
 }
-.ui .deforest:after {
+.deforest:after {
     background-image: url('images/FallingTree.png');
 }
-.ui .sacrifice:after {
+.sacrifice:after {
     width: 32px;
     margin-left: -16px;
     height: 128px;
@@ -188,7 +224,7 @@ canvas {
     background-image: url('images/Lightning.png');
 }
 
-.ui .baby:after, .ui .summon:after {
+.baby:after, .summon:after {
     background-image: url('images/SpecialEffects.png');
     width: 8px;
     margin-left: -4px;
@@ -196,13 +232,13 @@ canvas {
     margin-top: -6px;
     transform: scale(2);
 }
-.ui .baby:before, .ui .summon:before {
+.baby:before, .summon:before {
     margin-left: -4px;
 }
-.ui .baby:after {
+.baby:after {
     animation: baby 2s steps(1) reverse infinite;
 }
-.ui .summon:after {
+.summon:after {
     animation: summon 2s steps(1) reverse infinite;
 }
 @keyframes baby {
@@ -222,7 +258,7 @@ canvas {
     83% { background-position: 40px 24px; }
 }
 
-.ui .pray:after {
+.pray:after {
     background-image: url('images/Pray.png');
     width: 16px;
     margin-top: -8px;
@@ -231,10 +267,10 @@ canvas {
     transform: scale(2);
 }
 
-.ui .convert:before, .ui .attack:before {
+.convert:before, .attack:before {
     animation-name: goRight;
 }
-.ui .convert:after, .ui .attack:after {
+.convert:after, .attack:after {
     filter: brightness(0.2)
         sepia(100%)
         hue-rotate(350deg)
@@ -246,14 +282,18 @@ canvas {
     66% { background-position: 16px 48px; }
 }
 
-.ui .retreat:after {
+.retreat:after {
     content: "RETREAT";
-    font-family: monospace;
-    font-weight: 800;
     color: #fff;
     width: 100%;
     left: 0;
     top: 0;
     text-align: center;
     line-height: 56px;
+}
+
+.settings {
+    position: absolute;
+    top: 0;
+    right: 0;
 }

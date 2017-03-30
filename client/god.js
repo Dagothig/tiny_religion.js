@@ -112,10 +112,12 @@ class God extends PIXI.Container {
     }
 
     doSacrifice(game) {
-        let islands = game.islands.filter(i => i.kingdom.isPlayer);
+        let islands = game.islands.filter(i =>
+            i.people.find(p => p.kingdom === game.player));
         let island = islands.rand();
-        let dude = island.people[(Math.random() * island.people.length)|0];
-        if (!dude) return;
+        if (!island) return;
+        let dude;
+        do { dude = island.people.rand() } while (!dude.kingdom === game.player);
         this.event('sacrifice', 1, dude.position);
         game.addChild(new SFX(dude.x, dude.y, Lightning));
         game.overlay.flash(8);
@@ -129,6 +131,7 @@ class God extends PIXI.Container {
 
     changePersonality(base, game) {
         if (game) game.overlay.flash(60);
+        sounds.new.play();
         if (base) {
             this.likesLife = God.preferenceModifier;
             this.likesAttention = God.preferenceModifier / 4;

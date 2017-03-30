@@ -89,6 +89,8 @@ class Island extends PIXI.Container {
 
     changeKingdom(newKingdom) {
         this.kingdom = newKingdom;
+        if (this.kingdom.isPlayer) sounds.islandWin.play();
+        else sounds.islandLose.play();
         this.buildings.forEach(b => {
             b.kingdom = newKingdom;
             b.updateTextureState();

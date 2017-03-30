@@ -10,9 +10,11 @@
         <script src="client/pixi.min.js"></script>
         <script src="client/pixi-extensions.js"></script>
 
-        <script src="client/music.js"></script>
+        <script src="client/sound.js"></script>
+        <!-- Doesn't work on a lot of navigators -->
+        <!--script src="client/music.js"></script>
         <script src="client/sheet1.js"></script>
-        <script src="client/sheet2.js"></script>
+        <script src="client/sheet2.js"></script-->
 
         <script src="client/sfx.js"></script>
         <script src="client/god.js"></script>
@@ -25,13 +27,18 @@
         <script src="client/ui.js"></script>
     </head>
     <body>
+        <audio id="music1" loop src="sounds/Music1.mp3"></audio>
+        <audio id="music2" loop src="sounds/Music2.mp3"></audio>
         <div id="container"></div>
         <script>
+            music1.volume = music2.volume = 0.5;
+            let music = music1;
+            music.play();
+
             PIXI.scaleModes.DEFAULT = PIXI.scaleModes.NEAREST;
             let renderer = PIXI.autoDetectRenderer();
             renderer.roundPixels = true;
             container.appendChild(renderer.view);
-            let targetWidth = 640, targetHeight = 480;
             let resize = () => {
                 let w = container.clientWidth, h = container.clientHeight;
                 renderer.resize(w, h);
@@ -46,24 +53,32 @@
 
             renderer.backgroundColor = 0xffffff;
             renderer.render(new PIXI.Container());
-            let game, ui = new UI();
-            document.body.appendChild(ui.tag);
+            let game, ui = new UI(g => game = g);
+            ui.showTitle();
             PIXI.loader.load(() => {
-                game = new Game();
                 let last = performance.now();
                 let upd = () => {
                     let time = performance.now();
                     let delta = time - last;
-                    game.update(delta, renderer.width, renderer.height);
                     ui.update(delta, game);
-                    renderer.backgroundColor = game.backgroundColor;
-                    renderer.render(game);
+                    if (game) game.update(delta, renderer.width, renderer.height);
+                    // since update tick can finish the game, we have to check again
+                    if (game) {
+                        renderer.backgroundColor = game.backgroundColor;
+                        renderer.render(game);
+                    }
                     last = time;
                     requestAnimationFrame(upd);
                 }
                 upd();
                 resize();
             });
+            container.onmousedown = ev => game &&
+                game.beginDown(ev.pageX, ev.pageY);
+            document.onmouseup = ev => game &&
+                game.finishDown(ev.pageX, ev.pageY);
+            document.onmousemove = ev => game &&
+                game.onMove(ev.pageX, ev.pageY);
         </script>
     </body>
 </html>
