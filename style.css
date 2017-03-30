@@ -1,0 +1,217 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+}
+body {
+    display: flex;
+    flex-direction: column;
+}
+#container {
+    width: 100%;
+    flex-grow: 1;
+    position: relative;
+}
+#container { overflow: hidden; }
+canvas {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    display: block;
+    margin: auto;
+    image-rendering: pixelated;
+}
+
+.ui {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    background-color: #333;
+    border-top: solid 2px #113996;
+}
+.ui .btn {
+    position: relative;
+    display: block;
+    width: 64px;
+    height: 56px;
+    background-color: rgba(255, 255, 255, 0.3);
+    overflow: hidden;
+    filter: grayscale(0.75);
+    flex-grow: 1;
+}
+.ui .btn:hover,
+.ui .btn:focus {
+    background-color: rgba(255, 255, 255, 0.5);
+    filter: grayscale(0);
+}
+.ui .btn:focus { outline: none; }
+.ui .btn:after,
+.ui .train:before, .ui .untrain:before,
+.ui .baby:before, .ui .summon:before {
+    content: "";
+    display: block;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    image-rendering: pixelated;
+}
+
+.ui .train, .ui .untrain {
+    background-image: url('/images/Arrow.png');
+    background-repeat: no-repeat;
+    background-position: center;
+}
+.ui .train:before, .ui .untrain:before,
+.ui .train:after, .ui .untrain:after,
+.ui .baby:before, .ui .summon:before {
+    width: 8px;
+    height: 12px;
+    margin-top: -6px;
+    transform: scale(2);
+    animation: jobAnim 1s steps(1) infinite;
+    filter: brightness(0.2)
+        sepia(100%)
+        hue-rotate(180deg)
+        saturate(10);
+}
+@keyframes jobAnim {
+    0% { background-position: 0px 36px; }
+    33% { background-position: 8px 36px; }
+    66% { background-position: 16px 36px; }
+}
+.ui .train:before, .ui .untrain:before {
+    margin-left: -20px;
+}
+.ui .train:after, .ui .untrain:after {
+    margin-left: 12px;
+}
+
+.ui .warrior:before, .ui .warrior:after {
+    background-image: url('/images/Warrior.png');
+}
+.ui .priest:before, .ui .priest:after {
+    background-image: url('/images/Priest.png');
+}
+.ui .builder:before, .ui .builder:after {
+    background-image: url('/images/Builder.png');
+}
+
+.ui .train:before, .ui .untrain:after,
+.ui .baby:before, .ui .summon:before {
+    background-image: url('/images/Villager.png');
+}
+
+.ui .build:after {
+    content: "";
+    display: block;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    image-rendering: pixelated;
+}
+.ui .house:after {
+    width: 60px;
+    margin-left: -30px;
+    height: 110px;
+    margin-top: -48px;
+    background-position: 0px 110px;
+    background-image: url('images/House.png');
+}
+.ui .barracks:after,
+.ui .workshop:after {
+    width: 100px;
+    margin-left: -50px;
+    height: 110px;
+    margin-top: -45px;
+    background-position: 0px 110px;
+}
+.ui .barracks:after {
+    background-image: url('images/Barracks.png');
+}
+.ui .workshop:after {
+    background-image: url('images/Workshop.png');
+}
+.ui .temple:after {
+    background-image: url('images/Temple.png');
+    width: 100px;
+    margin-left: -50px;
+    height: 130px;
+    margin-top: -52px;
+    background-position: 0px 130px;
+}
+.ui .greenHouse:after {
+    background-image: url('images/GreenHouse.png');
+    width: 56px;
+    margin-left: -28px;
+    height: 164px;
+    margin-top: -70px;
+    background-position: 0px 164px;
+}
+
+.ui .bridge:after {
+    background-image: url('images/Bridge.png');
+    width: 178px;
+    margin-left: -89px;
+    height: 138px;
+    margin-top: -28px;
+    background-position: 0px 138px;
+}
+
+.ui .forestate:after, .ui .deforest:after {
+    width: 30px;
+    margin-left: -15px;
+    height: 90px;
+    margin-top: -32px;
+    background-position: 0px 90px;
+}
+.ui .forestate:after {
+    background-image: url('images/Tree.png');
+}
+.ui .deforest:after {
+    background-image: url('images/FallingTree.png');
+}
+.ui .sacrifice:after {
+    width: 32px;
+    margin-left: -16px;
+    height: 128px;
+    margin-top: -96px;
+    background-image: url('images/Lightning.png');
+}
+
+.ui .baby:after, .ui .summon:after {
+    background-image: url('images/SpecialEffects.png');
+    width: 8px;
+    margin-left: -4px;
+    height: 12px;
+    margin-top: -6px;
+    transform: scale(2);
+}
+.ui .baby:before, .ui .summon:before {
+    margin-left: -4px;
+}
+.ui .baby:after {
+    animation: baby 2s steps(1) reverse infinite;
+}
+.ui .summon:after {
+    animation: summon 2s steps(1) reverse infinite;
+}
+@keyframes baby {
+    0% { background-position: 0px 12px; }
+    16% { background-position: 8px 12px; }
+    33% { background-position: 16px 12px; }
+    50% { background-position: 24px 12px; }
+    66% { background-position: 32px 12px; }
+    83% { background-position: 40px 12px; }
+}
+@keyframes summon {
+    0% { background-position: 0px 24px; }
+    16% { background-position: 8px 24px; }
+    33% { background-position: 16px 24px; }
+    50% { background-position: 24px 24px; }
+    66% { background-position: 32px 24px; }
+    83% { background-position: 40px 24px; }
+}

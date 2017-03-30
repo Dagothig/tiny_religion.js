@@ -5,34 +5,7 @@
         <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
         <meta name="charset" content="UTF-8">
 
-        <style>
-            html, body, #container {
-                margin: 0;
-                padding: 0;
-                width: 100%;
-                height: 100%;
-            }
-            #container { overflow: hidden; }
-            canvas {
-                display: block;
-                margin: auto;
-                image-rendering: pixelated;
-            }
-
-            #actions {
-                position: absolute;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                display: flex;
-                flex-direction: row;
-            }
-            #actions a {
-                display: block;
-                flex-grow: 1;
-            }
-        </style>
-
+        <link rel="stylesheet" type="text/css" href="/style.css" />
         <script src="client/extensions.js"></script>
         <script src="client/pixi.min.js"></script>
         <script src="client/pixi-extensions.js"></script>
@@ -48,16 +21,10 @@
         <script src="client/building.js"></script>
         <script src="client/person.js"></script>
         <script src="client/game.js"></script>
+
+        <script src="client/ui.js"></script>
     </head>
     <body>
-        <div id="actions">
-            <a href="#" onclick="game.player.train(game, Warrior)">train warrior</a>
-            <a href="#" onclick="game.player.train(game, Priest)">train priest</a>
-            <a href="#" onclick="game.player.train(game, Builder)">train builder</a>
-            <a href="#" onclick="game.player.untrain(game, Warrior)">untrain warrior</a>
-            <a href="#" onclick="game.player.untrain(game, Priest)">untrain priest</a>
-            <a href="#" onclick="game.player.untrain(game, Builder)">untrain builder</a>
-        </div>
         <div id="container"></div>
         <script>
             PIXI.scaleModes.DEFAULT = PIXI.scaleModes.NEAREST;
@@ -67,12 +34,7 @@
             let targetWidth = 640, targetHeight = 480;
             let resize = () => {
                 let w = container.clientWidth, h = container.clientHeight;
-                let scale = Math.min(w / targetWidth, h / targetHeight);
-                if (scale >= 1) scale = Math.round(scale);
-                else scale = Math.pow(2, Math.round(Math.log2(scale)));
-
-                renderer.resize(w/scale, h/scale);
-                renderer.view.style.height = h + 'px';
+                renderer.resize(w, h);
             }
             window.addEventListener('resize', resize);
             resize();
@@ -84,19 +46,22 @@
 
             renderer.backgroundColor = 0xffffff;
             renderer.render(new PIXI.Container());
-            let game;
+            let game, ui = new UI();
+            document.body.appendChild(ui.tag);
             PIXI.loader.load(() => {
-                game = new Game();
+                game = ui.game = new Game();
                 let last = performance.now();
                 let upd = () => {
                     let time = performance.now();
-                    game.update(time - last, renderer.width, renderer.height);
+                    let delta = time - last;
+                    game.update(delta, renderer.width, renderer.height);
                     renderer.backgroundColor = game.backgroundColor;
                     renderer.render(game);
                     last = time;
                     requestAnimationFrame(upd);
                 }
                 upd();
+                resize();
             });
         </script>
     </body>
