@@ -20,6 +20,8 @@ body {
 #container { overflow: hidden; }
 canvas {
     position: absolute;
+    width: 100%;
+    height: 100%;
     left: 0;
     right: 0;
     top: 0;
@@ -48,17 +50,43 @@ canvas {
     background-image: url('images/GodAngry.png');
 }
 
-.stats {
+.stats, .settings {
     position: absolute;
-    left: 0;
     top: 0;
     color: #fff;
-    margin: 8px;
+    margin: 4px;
+}
+.stats div, .settings label {
+    padding: 2px 4px;
+}
+.stats {
+    left: 0;
     pointer-events: none;
     user-select: none;
 }
 .stats label:after {
     content: ": ";
+}
+
+.settings {
+    right: 0;
+}
+
+.settings label, .settings input {
+    cursor: pointer;
+}
+.settings input {
+    margin: 0;
+    margin-left: 4px;
+    vertical-align: middle;
+}
+.settings label {
+    display: block;
+    user-select: none;
+    padding: 2px 4px;
+}
+.settings label:hover {
+    background-color: rgba(0, 0, 0, 0.1);
 }
 
 .btns {
@@ -290,10 +318,4 @@ canvas {
     top: 0;
     text-align: center;
     line-height: 56px;
-}
-
-.settings {
-    position: absolute;
-    top: 0;
-    right: 0;
 }

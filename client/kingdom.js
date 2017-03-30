@@ -34,6 +34,18 @@ class Kingdom {
         });
     }
 
+    linkedTo(game, other) {
+        for (let i = 0; i < game.islands.length - 1; i++) {
+            let j = i+1;
+            let islI = game.islands[i], islJ = game.islands[j];
+            if (islI.bridge && islI.bridge.finished && (
+                (islI.kingdom === this && islJ.kingdom === other) ||
+                (islI.kingdom === other && islJ.kingdom === this))
+            ) return true;
+        }
+        return false;
+    }
+
     findOfJob(game, job, filter) {
         for (let i = 0; i < game.islands.length; i++) {
             let island = game.islands[i];
@@ -68,22 +80,17 @@ class Kingdom {
     }
 
     buildBridge(game) {
-        let island;
-        for (let i = 0; i < game.islands.length; i++) {
-            island = game.islands[i];
-            if (!island.bridge) {
-                if (island.kingdom !== this) return false;
-                break;
-            }
-        }
-        if (island.bridge || this.builded) return false;
+        if (this.builded) return false;
+        let index = game.islands.findIndex(i => !i.bridge && i.kingdom === this);
+        let island = game.islands[index];
+        if (!island) return false;
         let bridge = new Building(
             island.x + island.getLocalBounds().right,
             island.y, Bridge, this, island);
         game.addChild(bridge);
         island.buildings.add(bridge);
         island.bridge = bridge;
-        game.generateNewIsland();
+        if (index === game.islands.length - 1) game.generateNewIsland();
         for (let j = 0; j < 3; j++) {
             let person = this.findOfJob(game, Builder, p => !p.building);
             if (!person) break;

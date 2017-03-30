@@ -87,9 +87,14 @@ class UI {
         this.settingsTag = document.createElement('div');
         this.settingsTag.classList.add('settings');
         this.settings = [
-            this.createSettings('MUSIC', ev => ev.target.checked ?
-                music.play() : music.pause()),
-            this.createSettings('SOUND', ev => Sound.mute = ev.target.checked),
+            this.createSettings('MUSIC',
+                () => Music.play,
+                ev => Music.toggle(ev.target.checked)
+            ),
+            this.createSettings('SOUND',
+                () => !Sound.mute,
+                ev => Sound.mute = !ev.target.checked
+            ),
         ];
 
         document.body.appendChild(this.titleTag);
@@ -121,7 +126,7 @@ class UI {
             update: onupdate
         };
     }
-    createSettings(name, onchange, ...classes) {
+    createSettings(name, get, set, ...classes) {
         let setting = document.createElement('div');
         setting.classList.add.apply(setting.classList, classes);
 
@@ -131,7 +136,8 @@ class UI {
         let input = document.createElement('input');
         input.type = 'checkbox';
         input.name = name;
-        input.onchange = onchange;
+        input.checked = get();
+        input.onchange = set;
 
         setting.appendChild(lbl);
         lbl.appendChild(input);
@@ -150,7 +156,6 @@ class UI {
         this.titleTag.classList.remove('hidden');
         this.titleTag.classList.remove('win', 'lost');
         if (win !== null) this.titleTag.classList.add(win ? 'win' : 'lost');
-        else sounds.titleScreen.play();
         this.btnsTag.classList.add('hidden');
         this.statsTag.classList.add('hidden');
     }

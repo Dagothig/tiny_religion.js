@@ -4,6 +4,8 @@
         <title>Tiny Religion</title>
         <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
         <meta name="charset" content="UTF-8">
+        <meta name="viewport"
+                content="initial-scale=1">
 
         <link rel="stylesheet" type="text/css" href="style.css" />
         <script src="client/extensions.js"></script>
@@ -32,15 +34,19 @@
         <div id="container"></div>
         <script>
             music1.volume = music2.volume = 0.5;
-            let music = music1;
-            music.play();
+            Music.switchTo(music1);
 
             PIXI.scaleModes.DEFAULT = PIXI.scaleModes.NEAREST;
-            let renderer = PIXI.autoDetectRenderer();
+            let renderer = PIXI.autoDetectRenderer(), scaling = 1;
             renderer.roundPixels = true;
             container.appendChild(renderer.view);
             let resize = () => {
                 let w = container.clientWidth, h = container.clientHeight;
+                scaling = 1;
+                while (h < 320) {
+                    w *= 2; h *= 2;
+                    scaling++;
+                }
                 renderer.resize(w, h);
             }
             window.addEventListener('resize', resize);
@@ -61,11 +67,11 @@
                     let time = performance.now();
                     let delta = time - last;
                     ui.update(delta, game);
-                    if (game) game.update(delta, renderer.width, renderer.height);
-                    // since update tick can finish the game, we have to check again
                     if (game) {
+                        game.update(delta, renderer.width, renderer.height);
                         renderer.backgroundColor = game.backgroundColor;
                         renderer.render(game);
+                        game.checkForEnd();
                     }
                     last = time;
                     requestAnimationFrame(upd);
@@ -73,12 +79,31 @@
                 upd();
                 resize();
             });
-            container.onmousedown = ev => game &&
-                game.beginDown(ev.pageX, ev.pageY);
-            document.onmouseup = ev => game &&
-                game.finishDown(ev.pageX, ev.pageY);
-            document.onmousemove = ev => game &&
-                game.onMove(ev.pageX, ev.pageY);
+
+            let processTouchEvent = ev => {
+                let newEv = Array.from(ev.touches).reduce((obj, touch) => {
+                    obj.pageX += touch.pageX;
+                    obj.pageY += touch.pageY;
+                    return obj;
+                }, { pageX: 0, pageY: 0 });
+                newEv.pageX /= ev.touches.length;
+                newEv.pageY /= ev.touches.length;
+                newEv.pageX *= scaling;
+                newEv.pageY *= scaling;
+                return newEv;
+            }
+            let wrap = (f1, f2) => (...args) => f2(f1.apply(this, args));
+
+            let mousedown = ev => game && game.beginDown(ev.pageX, ev.pageY);
+            container.onmousedown = mousedown;
+            container.ontouchstart = wrap(processTouchEvent, mousedown);
+
+            let mousemove = ev => game && game.onMove(ev.pageX, ev.pageY);
+            document.onmousemove = mousemove;
+            document.ontouchmove = wrap(processTouchEvent, mousemove);
+
+            document.ontouchend = document.onmouseup =
+                ev => game && game.finishDown();
         </script>
     </body>
 </html>

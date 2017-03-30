@@ -56,3 +56,19 @@ let sounds = {
     loss: new Sound('sounds/Loss.wav'),
     win: new Sound('sounds/Win.wav')
 };
+
+let Music = {
+    play: true,
+    music: null,
+    switchTo(music) {
+        if (music === this.music) return;
+        if (this.music) this.music.pause();
+        this.music = music;
+        if (this.play) music.play();
+    },
+    toggle(play) {
+        this.play = play;
+        if (this.play) this.music.play();
+        else this.music.pause();
+    }
+}

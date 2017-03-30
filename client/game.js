@@ -48,6 +48,7 @@ class Game extends PIXI.Container {
 
         this.player = new Kingdom(0x113996, true);
         this.ai = new Kingdom(0xab1705, false);
+        this.gaia = new Kingdom(0x888888, false);
         this.islands = [];
 
         let starting = new Island(0, 0, this.player);
@@ -92,15 +93,8 @@ class Game extends PIXI.Container {
         this.children = this.children.filter(child => !child.shouldRemove);
         this.children.sort((a, b) => (a.z || 0) - (b.z || 0));
 
-        // Check for end
-        if (!this.player.peopleCount && !this.player.summonCount) {
-            sounds.loss.play();
-            this.onFinished(false);
-        }
-        else if (this.god.overallMood > this.goal) {
-            sounds.win.play();
-            this.onFinished(true);
-        }
+        if (this.player.linkedTo(this, this.ai)) Music.switchTo(music2);
+        else Music.switchTo(music1);
     }
     updateColor() {
         let feeling = this.god.feeling(this.goal);
@@ -117,8 +111,19 @@ class Game extends PIXI.Container {
             this.skiesMood > 0 ? goodGlobalColor : darkGlobalColor,
             Math.abs(this.skiesMood));
     }
+    checkForEnd() {
+        if (!this.player.peopleCount && !this.player.summonCount) {
+            sounds.loss.play();
+            this.onFinished(false);
+        }
+        else if (this.god.overallMood > this.goal) {
+            sounds.win.play();
+            this.onFinished(true);
+        }
+    }
 
     addIsland(island) {
+        island.index = this.islands.length;
         this.islands.add(island);
         this.addChild(island);
         if (island.buildings.length)
@@ -127,9 +132,11 @@ class Game extends PIXI.Container {
             this.addChild.apply(this, island.people);
     }
     generateNewIsland() {
-        let island = new Island(this.islands.length * 480, 0, this.ai);
+        let inhabited = Math.random() < 0.25;
+        let kingdom = inhabited ? this.ai : this.gaia;
+        let island = new Island(this.islands.length * 480, 0, kingdom);
         island.generateTrees();
-        if (Math.random() < 0.25) island.generateOutpost();
+        if (inhabited) island.generateOutpost();
         this.addIsland(island);
     }
 
@@ -144,9 +151,7 @@ class Game extends PIXI.Container {
             velocity: 0
         };
     }
-    finishDown(x, y) {
-        if (this.down) this.down.finished = true;
-    }
+    finishDown() { if (this.down) this.down.finished = true; }
     updateDown(delta) {
         let diff = this.down.current - this.down.last;
         this.x += diff;
