@@ -39,7 +39,19 @@ class UI {
                 'btn', 'baby'),
             this.createBtn(
                 () => this.game && this.game.player.attemptSummon(this.game),
-                'btn', 'summon')
+                'btn', 'summon'),
+            this.createBtn(
+                () => this.game && this.game.player.pray(this.game),
+                'btn', 'pray'),
+            this.createBtn(
+                () => this.game && this.game.player.sendAttack(this.game),
+                'btn', 'attack'),
+            this.createBtn(
+                () => this.game && this.game.player.sendConvert(this.game),
+                'btn', 'convert'),
+            this.createBtn(
+                () => this.game && this.game.player.sendRetreat(this.game),
+                'btn', 'retreat')
         ]);
         this.btns.forEach(btn => this.tag.appendChild(btn));
     }
@@ -49,5 +61,11 @@ class UI {
         btn.classList.add.apply(btn.classList, classes);
         btn.onclick = onclick;
         return btn;
+    }
+    update(delta, game) {
+        this.game = game;
+        this.btns.forEach(btn => {
+
+        });
     }
 }

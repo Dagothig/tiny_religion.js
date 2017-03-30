@@ -28,7 +28,6 @@ class Person extends PIXI.AnimatedSprite {
         this.island = island;
         this.kingdom = kingdom;
         this.isSummon = isSummon;
-        if (this.job.person) this.job.person.apply(this, arguments);
     }
     get z() { return this.y; }
 
@@ -39,6 +38,7 @@ class Person extends PIXI.AnimatedSprite {
     get job() { return this._job; }
     set job(val) {
         this._job = val;
+        if (val.person) val.person.apply(this, arguments);
         this.setTiledTexture(val.texture);
     }
 

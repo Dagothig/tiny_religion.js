@@ -51,16 +51,19 @@ class Game extends PIXI.Container {
         this.islands = [];
 
         let starting = new Island(0, 0, this.player);
+        starting.generateBuilding(House, true);
         starting.generateTrees();
         this.islandBounds = starting.getLocalBounds();
         starting.people.push(
-            new Person(0, 0, Villager, this.player, starting),
-            new Person(0, 0, Villager, this.player, starting),
+            /*new Person(0, 0, Villager, this.player, starting),
+            new Person(0, 0, Villager, this.player, starting),*/
             new Person(0, 0, Warrior, this.player, starting),
             new Person(0, 0, Priest, this.player, starting),
             new Person(0, 0, Builder, this.player, starting)
         );
         this.addIsland(starting);
+        this.generateNewIsland();
+        this.generateNewIsland();
 
         this.skiesMood = 0;
         this.x = -this.islandBounds.left;
@@ -79,8 +82,6 @@ class Game extends PIXI.Container {
         this.y = height - this.islandBounds.bottom;
         this.god.x = -this.x + width / 2;
         this.god.y = -this.y;
-        while (this.islands.length * 480 < width)
-            this.generateNewIsland();
 
         this.updateColor();
         this.player.count(this);

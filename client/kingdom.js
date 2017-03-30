@@ -107,11 +107,12 @@ class Kingdom {
         let islands = game.islands.filter(island => island.kingdom === this);
         if (!this.treeCount) return false;
         let trees = null, island = null, maxTries = 10000;
-        while (!trees) {
+        while (!trees || !trees.length) {
             island = islands[(Math.random() * islands.length)|0];
             trees = island.buildings.filter(b => b.type === Tree);
             if (!maxTries--) return false;
         }
+        if (!trees || !trees.length) return false;
         let tree = trees[(Math.random() * trees.length)|0];
         tree.shouldRemove = true;
         let felled = new Building(tree.x, tree.y, FallingTree, this, island);

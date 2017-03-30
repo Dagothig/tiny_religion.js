@@ -40,18 +40,19 @@ canvas {
     height: 56px;
     background-color: rgba(255, 255, 255, 0.3);
     overflow: hidden;
-    filter: grayscale(0.75);
+    filter: brightness(0.75) grayscale(0.75);
     flex-grow: 1;
 }
 .ui .btn:hover,
 .ui .btn:focus {
     background-color: rgba(255, 255, 255, 0.5);
-    filter: grayscale(0);
+    filter: brightness(1) grayscale(0);
 }
 .ui .btn:focus { outline: none; }
 .ui .btn:after,
 .ui .train:before, .ui .untrain:before,
-.ui .baby:before, .ui .summon:before {
+.ui .baby:before, .ui .summon:before,
+.ui .attack:before, .ui .convert:before {
     content: "";
     display: block;
     position: absolute;
@@ -60,14 +61,16 @@ canvas {
     image-rendering: pixelated;
 }
 
-.ui .train, .ui .untrain {
+.ui .train, .ui .untrain, .ui .attack, .ui .convert {
     background-image: url('images/Arrow.png');
     background-repeat: no-repeat;
     background-position: center;
 }
 .ui .train:before, .ui .untrain:before,
+.ui .baby:before, .ui .summon:before,
+.ui .attack:before, .ui .convert:before,
 .ui .train:after, .ui .untrain:after,
-.ui .baby:before, .ui .summon:before {
+.ui .attack:after, .ui .convert:after {
     width: 8px;
     height: 12px;
     margin-top: -6px;
@@ -83,17 +86,19 @@ canvas {
     33% { background-position: 8px 36px; }
     66% { background-position: 16px 36px; }
 }
-.ui .train:before, .ui .untrain:before {
+.ui .train:before, .ui .untrain:before,
+.ui .attack:before, .ui .convert:before {
     margin-left: -20px;
 }
-.ui .train:after, .ui .untrain:after {
+.ui .train:after, .ui .untrain:after,
+.ui .attack:after, .ui .convert:after {
     margin-left: 12px;
 }
 
-.ui .warrior:before, .ui .warrior:after {
+.ui .warrior:before, .ui .warrior:after, .ui .attack:before {
     background-image: url('images/Warrior.png');
 }
-.ui .priest:before, .ui .priest:after {
+.ui .priest:before, .ui .priest:after, .ui .convert:before {
     background-image: url('images/Priest.png');
 }
 .ui .builder:before, .ui .builder:after {
@@ -101,7 +106,8 @@ canvas {
 }
 
 .ui .train:before, .ui .untrain:after,
-.ui .baby:before, .ui .summon:before {
+.ui .baby:before, .ui .summon:before,
+.ui .attack:after, .ui .convert:after {
     background-image: url('images/Villager.png');
 }
 
@@ -214,4 +220,40 @@ canvas {
     50% { background-position: 24px 24px; }
     66% { background-position: 32px 24px; }
     83% { background-position: 40px 24px; }
+}
+
+.ui .pray:after {
+    background-image: url('images/Pray.png');
+    width: 16px;
+    margin-top: -8px;
+    height: 16px;
+    margin-left: -8px;
+    transform: scale(2);
+}
+
+.ui .convert:before, .ui .attack:before {
+    animation-name: goRight;
+}
+.ui .convert:after, .ui .attack:after {
+    filter: brightness(0.2)
+        sepia(100%)
+        hue-rotate(350deg)
+        saturate(75);
+}
+@keyframes goRight {
+    0% { background-position: 0px 48px; }
+    33% { background-position: 8px 48px; }
+    66% { background-position: 16px 48px; }
+}
+
+.ui .retreat:after {
+    content: "RETREAT";
+    font-family: monospace;
+    font-weight: 800;
+    color: #fff;
+    width: 100%;
+    left: 0;
+    top: 0;
+    text-align: center;
+    line-height: 56px;
 }

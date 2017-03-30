@@ -19,7 +19,7 @@ class Island extends PIXI.Container {
     }
     get z() { return -100; }
 
-    generateBuilding(type, finished = true, radius = type.radius, attempts = 100) {
+    generateBuilding(type, finished = true, radius = type.radius, attempts = 200) {
         for (let i = 0; i < attempts; i++) {
             let pos = this.getRandomPoint(radius);
             if (this.buildings.find(b =>

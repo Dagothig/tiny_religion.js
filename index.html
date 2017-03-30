@@ -49,12 +49,13 @@
             let game, ui = new UI();
             document.body.appendChild(ui.tag);
             PIXI.loader.load(() => {
-                game = ui.game = new Game();
+                game = new Game();
                 let last = performance.now();
                 let upd = () => {
                     let time = performance.now();
                     let delta = time - last;
                     game.update(delta, renderer.width, renderer.height);
+                    ui.update(delta, game);
                     renderer.backgroundColor = game.backgroundColor;
                     renderer.render(game);
                     last = time;
