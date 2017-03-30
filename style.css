@@ -61,7 +61,7 @@ canvas {
 }
 
 .ui .train, .ui .untrain {
-    background-image: url('/images/Arrow.png');
+    background-image: url('images/Arrow.png');
     background-repeat: no-repeat;
     background-position: center;
 }
@@ -91,18 +91,18 @@ canvas {
 }
 
 .ui .warrior:before, .ui .warrior:after {
-    background-image: url('/images/Warrior.png');
+    background-image: url('images/Warrior.png');
 }
 .ui .priest:before, .ui .priest:after {
-    background-image: url('/images/Priest.png');
+    background-image: url('images/Priest.png');
 }
 .ui .builder:before, .ui .builder:after {
-    background-image: url('/images/Builder.png');
+    background-image: url('images/Builder.png');
 }
 
 .ui .train:before, .ui .untrain:after,
 .ui .baby:before, .ui .summon:before {
-    background-image: url('/images/Villager.png');
+    background-image: url('images/Villager.png');
 }
 
 .ui .build:after {
