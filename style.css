@@ -108,7 +108,7 @@ canvas {
     display: flex;
     flex-direction: row;
     background-color: #113996;
-    padding-top: 2px;
+    padding-top: 1px;
     overflow: auto;
 }
 .btn {
@@ -136,7 +136,7 @@ canvas {
 }
 .btn:focus { outline: none; }
 .btn+.btn {
-    margin-left: 2px;
+    margin-left: 1px;
 }
 
 .btn:after,
@@ -164,13 +164,17 @@ canvas {
 .attack:after, .convert:after {
     width: 8px;
     height: 12px;
-    margin-top: -6px;
+    margin-top: -10px;
     transform: scale(2);
     animation: jobAnim 1s steps(1) infinite;
     filter: brightness(0.2)
         sepia(100%)
         hue-rotate(180deg)
         saturate(10);
+}
+.attack:before, .convert:before,
+.attack:after, .convert:after {
+    margin-top: -6px;
 }
 @keyframes jobAnim {
     0% { background-position: 0px 36px; }
@@ -281,7 +285,7 @@ canvas {
     width: 8px;
     margin-left: -4px;
     height: 12px;
-    margin-top: -6px;
+    margin-top: -10px;
     transform: scale(2);
 }
 .baby:before, .summon:before {
