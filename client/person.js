@@ -108,7 +108,7 @@ class Person extends PIXI.AnimatedSprite {
             this.moveTo(game.islands, wantsToLeave);
     }
     moveTo(islands, index) {
-        let currentIndex = islands.indexOf(this.island);
+        let currentIndex = this.island.index;
         let dir = Math.sign(index - currentIndex);
 
         for (let i = currentIndex; i !== index; i += dir) {
@@ -165,7 +165,7 @@ Builder = new Job('builder', 'images/Builder.png', {
     },
     findNextTarget(game) {
         if (this.building && !this.building.finished) {
-            moveTo(game.islands, game.islands.indexOf(this.building.island));
+            moveTo(game.islands, this.building.island.index);
             let x = (Math.random() * 2 - 1) * this.building.radius * 0.75;
             let y = (Math.random() * 2 - 1) * this.building.radius * 0.75;
             if (this.building.type === Bridge) {
