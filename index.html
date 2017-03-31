@@ -44,10 +44,11 @@
         <script src="client/ui.js"></script>
     </head>
     <body>
-        <audio id="music1" loop src="sounds/Music1.mp3"></audio>
-        <audio id="music2" loop src="sounds/Music2.mp3"></audio>
         <div id="container"></div>
         <script>
+            let music1 = fetchSound('sounds/Music1.mp3'),
+                music2 = fetchSound('sounds/Music2.mp3');
+            music1.loop = music2.loop= true;
             music1.volume = music2.volume = 0.5;
             Music.switchTo(music1);
 
@@ -57,6 +58,7 @@
             container.appendChild(renderer.view);
             let resize = () => {
                 let w = container.clientWidth, h = container.clientHeight;
+                if (!h) return;
                 scaling = 1;
                 while (h < 320) {
                     w *= 2; h *= 2;

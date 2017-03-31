@@ -37,16 +37,30 @@ canvas {
     top: 0;
     right: 0;
     bottom: 0;
+    background-color: #002;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.title:after {
+    content: "";
+    display: block;
+    width: 640px;
+    height: 480px;
+    max-width: 100%;
+    max-height: 100%;
     background-image: url('images/TitleScreen.png');
     background-repeat: no-repeat;
-    background-color: #000;
     background-position: center;
+    background-size: contain;
 }
-.title.win, .title.lost { background-color: #4000cc; }
-.title.win {
+.title.win, .title.lost {
+    background-color: #193bcb;
+}
+.title.win:after {
     background-image: url('images/GodHappy.png');
 }
-.title.lost {
+.title.lost:after {
     background-image: url('images/GodAngry.png');
 }
 
@@ -93,9 +107,9 @@ canvas {
     width: 100%;
     display: flex;
     flex-direction: row;
-    flex-wrap: wrap;
-    background-color: #333;
-    border-top: solid 2px #113996;
+    background-color: #113996;
+    padding-top: 2px;
+    overflow: auto;
 }
 .btn {
     position: relative;
@@ -106,12 +120,24 @@ canvas {
     overflow: hidden;
     filter: brightness(0.75) grayscale(0.75);
     flex-grow: 1;
+    flex-shrink: 0;
+    color: white;
+    text-align: center;
+    line-height: 94px;
+    padding: 0;
+    border: none;
+    cursor: pointer;
+    font-family: monospace;
+    font-weight: 800;
 }
 .btn:hover, .btn:focus {
     background-color: rgba(255, 255, 255, 0.5);
     filter: brightness(1) grayscale(0);
 }
 .btn:focus { outline: none; }
+.btn+.btn {
+    margin-left: 2px;
+}
 
 .btn:after,
 .train:before, .untrain:before,
@@ -123,6 +149,7 @@ canvas {
     left: 50%;
     top: 50%;
     image-rendering: pixelated;
+    z-index: -1;
 }
 
 .train, .untrain, .attack, .convert {
@@ -175,13 +202,10 @@ canvas {
     background-image: url('images/Villager.png');
 }
 
-.build:after {
-    content: "";
-    display: block;
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    image-rendering: pixelated;
+.build, .forestate {
+    text-align: right;
+    padding-right: 8px;
+    box-sizing: border-box;
 }
 .house:after {
     width: 60px;

@@ -9,28 +9,8 @@ class UI {
         PIXI.loader.load(() => this.titleTag.onclick = () => {
             onnewGame(new Game(win => this.showTitle(win)));
             this.titleTag.classList.add('hidden');
-            this.statsTag.classList.remove('hidden');
             this.btnsTag.classList.remove('hidden');
         });
-
-        this.statsTag = document.createElement('div');
-        this.statsTag.classList.add('stats', 'hidden');
-        this.stats = [
-            this.createStat('PEOPLE', (delta, game) =>
-                game.player.peopleCount + '/' + game.player.maxPop),
-            this.createStat('SUMMONS', (delta, game) =>
-                game.player.summonCount + '/' + game.player.maxSummon),
-            this.createStat('PROJECTS', (delta, game) =>
-                game.player.unfinished + '/' + game.player.maxUnfinished),
-            this.createStat('BARRACKS', (delta, game) =>
-                game.player.barracksCount),
-            this.createStat('TEMPLES', (delta, game) =>
-                game.player.templeCount),
-            this.createStat('WORKSHOPS', (delta, game) =>
-                game.player.workshopCount),
-            this.createStat('GREENHOUSES', (delta, game) =>
-                game.player.greenHouseCount)
-        ];
 
         this.btnsTag = document.createElement('div');
         this.btnsTag.classList.add('btns', 'hidden');
@@ -38,50 +18,60 @@ class UI {
         ['train', 'untrain'].reduce((btns, act) =>
             Person.jobs.reduce((btns, job) => {
                 if (job === Villager) return btns;
+                let v = () => this.game.player.villagerCount;
+                let j = () => this.game.player[job.name + 'Count'];
                 btns.add(this.createBtn(
                     () => this.game && this.game.player[act](this.game, job),
-                    'btn', act, job.name)
+                    act === 'train' ?
+                        () => this.game && (v() + '   ' + j()) :
+                        () => this.game && (j() + '   ' + v()),
+                    act, job.name)
                 );
                 return btns;
             }, btns), [])
         .concat([House, Barracks, Workshop, Temple, GreenHouse]
-        .reduce((btns, type) => {
-            btns.add(this.createBtn(
-                () => this.game && this.game.player.build(this.game, type),
-                'btn', 'build', type.name
-            ));
-            return btns;
-        }, [])).concat([
+            .reduce((btns, type) => {
+                btns.add(this.createBtn(
+                    () => this.game && this.game.player.build(this.game, type),
+                    () => this.game && this.game.player[type.name + 'Count'],
+                    'build', type.name
+                ));
+                return btns;
+            }, []))
+        .concat([
             this.createBtn(
                 () => this.game && this.game.player.buildBridge(this.game),
-                'btn', 'build', 'bridge'),
+                null, 'build', 'bridge'),
             this.createBtn(
                 () => this.game && this.game.player.forestate(this.game),
-                'btn', 'forestate'),
+                () => this.game && this.game.player.treeCount,
+                'forestate'),
             this.createBtn(
                 () => this.game && this.game.player.deforest(this.game),
-                'btn', 'deforest'),
+                null, 'deforest'),
             this.createBtn(
                 () => this.game && this.game.god.doSacrifice(this.game),
-                'btn', 'sacrifice'),
+                null, 'sacrifice'),
             this.createBtn(
                 () => this.game && this.game.player.doBaby(this.game),
-                'btn', 'baby'),
+                () => (game.player.peopleCount + '/' + game.player.maxPop),
+                'baby'),
             this.createBtn(
                 () => this.game && this.game.player.attemptSummon(this.game),
-                'btn', 'summon'),
+                () => (game.player.summonCount + '/' + game.player.maxSummon),
+                'summon'),
             this.createBtn(
                 () => this.game && this.game.player.pray(this.game),
-                'btn', 'pray'),
+                null, 'pray'),
             this.createBtn(
                 () => this.game && this.game.player.sendAttack(this.game),
-                'btn', 'attack'),
+                null, 'attack'),
             this.createBtn(
                 () => this.game && this.game.player.sendConvert(this.game),
-                'btn', 'convert'),
+                null, 'convert'),
             this.createBtn(
                 () => this.game && this.game.player.sendRetreat(this.game),
-                'btn', 'retreat')
+                null, 'retreat')
         ]);
 
         this.settingsTag = document.createElement('div');
@@ -99,16 +89,20 @@ class UI {
 
         document.body.appendChild(this.titleTag);
         document.body.appendChild(this.btnsTag);
-        document.body.appendChild(this.statsTag);
         document.body.appendChild(this.settingsTag);
     }
-    createBtn(onclick, ...classes) {
-        let btn = document.createElement('a');
-        btn.href = '#';
+    createBtn(onclick, onupdate, ...classes) {
+        let btn = document.createElement('button');
+        btn.classList.add('btn');
         btn.classList.add.apply(btn.classList, classes);
         btn.onclick = onclick;
         this.btnsTag.appendChild(btn);
-        return btn;
+
+        return {
+            tag: btn,
+            text: '',
+            update: onupdate
+        };
     }
     createStat(name, onupdate, ...classes) {
         let stat = document.createElement('div');
@@ -123,6 +117,7 @@ class UI {
             tag: stat,
             label: lbl,
             span: txt,
+            text: '',
             update: onupdate
         };
     }
@@ -147,9 +142,10 @@ class UI {
     }
     update(delta, game) {
         this.game = game;
-        if (game)
-            this.stats.forEach(stat =>
-                stat.span.innerHTML = stat.update(delta, game));
+        if (game) this.btns.forEach(btn => {
+            let text = btn.update && btn.update(delta, game);
+            if (btn.text !== text) btn.text = btn.tag.innerHTML = text;
+        });
     }
     showTitle(win = null) {
         game = null;
@@ -157,6 +153,5 @@ class UI {
         this.titleTag.classList.remove('win', 'lost');
         if (win !== null) this.titleTag.classList.add(win ? 'win' : 'lost');
         this.btnsTag.classList.add('hidden');
-        this.statsTag.classList.add('hidden');
     }
 }

@@ -120,7 +120,7 @@ class Kingdom {
         let trees = null, island = null, maxTries = 10000;
         while (!trees || !trees.length) {
             island = islands[(Math.random() * islands.length)|0];
-            trees = island.buildings.filter(b => b.type === Tree);
+            trees = island.buildings.filter(b => b.type === Tree && b.finished);
             if (!maxTries--) return false;
         }
         if (!trees || !trees.length) return false;
