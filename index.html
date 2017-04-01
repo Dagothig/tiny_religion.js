@@ -11,7 +11,7 @@
 
                 <!-- for Facebook -->
         <meta name="og:title" property="og:title" content="Tiny Religion" />
-        <meta name="og:url" property="og:url" href="http://tiny-religion.dagothig.com/" />
+        <meta name="og:url" property="og:url" content="http://tiny-religion.dagothig.com/" />
         <meta name="og:type" property="og:type" content="game" />
         <meta name="og:image" property="og:image" content="http://tiny-religion.dagothig.com/images/TitleScreen.png" />
         <meta name="og:image:width" property="og:image:width" content="640" />
@@ -24,7 +24,7 @@
         <meta name="twitter:description" property="twitter:description" content="A simple game about making your god happy by doing stuff which mostly consists of making babies and build bridges. This is a rewrite of the game that was made for the Ludum Dare 23." />
         <meta name="twitter:image" property="twitter:image" content="tiny-religion.dagothig.com/images/TitleScreen.png" />
 
-        <link rel="icon" type="image/x-icon" href="favicon.ico?ver=2.0" />
+        <link rel="icon" type="image/x-icon" href="favicon.ico?ver=3.0" />
         <link rel="stylesheet" type="text/css" href="style.css" />
         <script src="client/extensions.js"></script>
         <script src="client/pixi.min.js"></script>
@@ -53,7 +53,6 @@
                 music2 = fetchSound('sounds/Music2.mp3');
             music1.loop = music2.loop= true;
             music1.volume = music2.volume = 0.5;
-            Music.switchTo(music1);
 
             PIXI.scaleModes.DEFAULT = PIXI.scaleModes.NEAREST;
             let renderer = PIXI.autoDetectRenderer(), scaling = 1;
@@ -82,6 +81,7 @@
             let game, ui = new UI(g => game = g);
             ui.showTitle();
             PIXI.loader.load(() => {
+                sounds.titleScreen.play(() => ui.startGame());
                 let last = performance.now();
                 let upd = () => {
                     let time = performance.now();

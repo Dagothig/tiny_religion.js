@@ -15,7 +15,9 @@ body {
     width: 100%;
     flex-grow: 1;
     position: relative;
-    cursor: grabbing;
+}
+#container:active {
+    cursor: move;
 }
 #container { overflow: hidden; }
 canvas {
@@ -37,31 +39,45 @@ canvas {
     top: 0;
     right: 0;
     bottom: 0;
-    background-color: #002;
+    background-color: #193bcb;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-direction: column;
+    cursor: pointer;
+    text-align: center;
+    overflow: hidden;
 }
-.title:after {
+.title:before, .title:after {
     content: "";
     display: block;
-    width: 640px;
-    height: 480px;
     max-width: 100%;
     max-height: 100%;
-    background-image: url('images/TitleScreen.png');
     background-repeat: no-repeat;
-    background-position: center;
     background-size: contain;
+    background-position: center;
+    image-rendering: pixelated;
 }
-.title.win, .title.lost {
-    background-color: #193bcb;
+.title:before {
+    width: 640px;
+    height: 480px;
+    background-image: url('images/TitleScreen.png');
 }
-.title.win:after {
+.title.win:before {
     background-image: url('images/GodHappy.png');
 }
-.title.lost:after {
+.title.lost:before {
     background-image: url('images/GodAngry.png');
+}
+.title:after {
+    width: 480px;
+    height: 120px;
+    background-image: url('images/Title.png');
+}
+@media (max-width:640px) {
+    .title:before, .title:after { height: 0; }
+    .title:before { padding-top: 75%; }
+    .title:after { padding-top: 18.75%; }
 }
 
 .stats, .settings {

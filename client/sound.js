@@ -3,6 +3,7 @@
 let fetchSound = (src) => {
     let el = document.createElement('audio');
     el.src = src;
+    el.volume = 1;
     return el;
 }
 
@@ -17,7 +18,7 @@ class Sound {
         });
         this.available = this.sounds.map(s => [s]);
     }
-    play() {
+    play(onended) {
         if (Sound.mute) return;
         let i = this.sounds.rand_i();
         let sound = this.available[i].pop();
@@ -25,6 +26,13 @@ class Sound {
             let base = this.sounds[i];
             sound = base.cloneNode();
             sound.onended = base.onended;
+        }
+        if (onended) {
+            let handler = () => {
+                onended();
+                sound.removeEventListener('ended', handler);
+            }
+            sound.addEventListener('ended', handler);
         }
         sound.play();
     }

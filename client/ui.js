@@ -6,11 +6,7 @@ class UI {
 
         this.titleTag = document.createElement('div');
         this.titleTag.classList.add('title', 'hidden');
-        PIXI.loader.load(() => this.titleTag.onclick = () => {
-            onnewGame(new Game(win => this.showTitle(win)));
-            this.titleTag.classList.add('hidden');
-            this.btnsTag.classList.remove('hidden');
-        });
+        PIXI.loader.load(() => this.titleTag.onclick = () => this.startGame());
 
         this.btnsTag = document.createElement('div');
         this.btnsTag.classList.add('btns', 'hidden');
@@ -153,5 +149,10 @@ class UI {
         this.titleTag.classList.remove('win', 'lost');
         if (win !== null) this.titleTag.classList.add(win ? 'win' : 'lost');
         this.btnsTag.classList.add('hidden');
+    }
+    startGame() {
+        this.onnewGame(new Game(win => this.showTitle(win)));
+        this.titleTag.classList.add('hidden');
+        this.btnsTag.classList.remove('hidden');
     }
 }
