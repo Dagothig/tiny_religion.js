@@ -147,7 +147,16 @@ class UI {
         game = null;
         this.titleTag.classList.remove('hidden');
         this.titleTag.classList.remove('win', 'lost');
-        if (win !== null) this.titleTag.classList.add(win ? 'win' : 'lost');
+        Music.stop();
+        if (win !== null) {
+            if (win) {
+                sounds.win.play();
+                this.titleTag.classList.add('win');
+            } else {
+                sounds.loss.play();
+                this.titleTag.classList.add('lost');
+            }
+        } else sounds.titleScreen.play();
         this.btnsTag.classList.add('hidden');
     }
     startGame() {

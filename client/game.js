@@ -112,14 +112,10 @@ class Game extends PIXI.Container {
             Math.abs(this.skiesMood));
     }
     checkForEnd() {
-        if (!this.player.peopleCount && !this.player.summonCount) {
-            sounds.loss.play();
+        if (!this.player.peopleCount && !this.player.summonCount)
             this.onFinished(false);
-        }
-        else if (this.god.overallMood > this.goal) {
-            sounds.win.play();
+        else if (this.god.overallMood > this.goal)
             this.onFinished(true);
-        }
     }
 
     addIsland(island) {

@@ -81,7 +81,6 @@
             let game, ui = new UI(g => game = g);
             ui.showTitle();
             PIXI.loader.load(() => {
-                sounds.titleScreen.play(() => ui.startGame());
                 let last = performance.now();
                 let upd = () => {
                     let time = performance.now();

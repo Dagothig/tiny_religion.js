@@ -120,6 +120,7 @@ class God extends PIXI.Container {
         do { dude = island.people.rand() } while (!dude.kingdom === game.player);
         this.event('sacrifice', 1, dude.position);
         game.addChild(new SFX(dude.x, dude.y, Lightning));
+        sounds.lightning.play();
         game.overlay.flash(8);
         dude.die(game);
     }
@@ -173,7 +174,8 @@ class God extends PIXI.Container {
 
     event(what, scalar, where) {
         if (!this.events[what]) return;
-        this.mood += this.events[what]() * scalar;
+        let change = this.events[what]() * scalar;
+        this.mood += change;
         this.lookAt(where);
     }
 

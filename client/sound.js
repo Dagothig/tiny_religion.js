@@ -18,7 +18,7 @@ class Sound {
         });
         this.available = this.sounds.map(s => [s]);
     }
-    play(onended) {
+    play(onended, volume = 1) {
         if (Sound.mute) return;
         let i = this.sounds.rand_i();
         let sound = this.available[i].pop();
@@ -34,6 +34,7 @@ class Sound {
             }
             sound.addEventListener('ended', handler);
         }
+        sound.volume = volume;
         sound.play();
     }
 }
@@ -56,9 +57,13 @@ let sounds = {
     hit: new Sound('sounds/Hit1.wav', 'sounds/Hit2.wav', 'sounds/Hit3.wav'),
     convert: new Sound('sounds/Convert.wav'),
     death: new Sound('sounds/Death.wav'),
+    lightning: new Sound('sounds/Lightning.wav'),
 
     islandLose: new Sound('sounds/IslandLose.wav'),
     islandWin: new Sound('sounds/IslandWin.wav'),
+
+    angry: new Sound('sounds/Angry.wav'),
+    happy: new Sound('sounds/Happy.wav'),
 
     new: new Sound('sounds/New.wav'),
     loss: new Sound('sounds/Loss.wav'),
@@ -72,11 +77,17 @@ let Music = {
         if (music === this.music) return;
         if (this.music) this.music.pause();
         this.music = music;
+        this.music.currentTime = 0;
         if (this.play) music.play();
     },
     toggle(play) {
         this.play = play;
         if (this.play) this.music.play();
         else this.music.pause();
+    },
+    stop() {
+        if (!this.music) return;
+        this.music.pause();
+        this.music = null;
     }
 }

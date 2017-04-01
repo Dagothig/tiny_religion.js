@@ -174,15 +174,19 @@ class Kingdom {
         ) sounds.summon.play();
     }
     pray(game) {
-        let p;
+        let c = 0, p;
         game.islands.forEach(island =>
             island.people.forEach(person =>{
                 if (person.kingdom !== this) return;
-                if (person.pray()) p = person;
+                if (person.pray()) {
+                    c++;
+                    if (!p) p = person;
+                }
             }));
         if (this.isPlayer && p) {
-            sounds.pray.play();
-            game.god.event('pray', 1, p.position);
+            let prop = c/(this.peopleCount + this.summonCount);
+            sounds.pray.play(null, prop);
+            game.god.event('pray', prop, p.position);
         }
     }
     sendAttack(game) {
