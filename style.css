@@ -10,6 +10,9 @@ body {
     font-family: monospace;
     font-weight: 800;
 }
+a {
+    color: white;
+}
 .hidden { visibility: hidden !important; }
 #container {
     width: 100%;
@@ -87,7 +90,7 @@ canvas {
     margin: 4px;
     text-shadow: 0 1px #000;
 }
-.stats div, .settings label {
+.stats div, .settings label, .settings a {
     padding: 2px 4px;
 }
 .stats {
@@ -111,12 +114,14 @@ canvas {
     margin-left: 4px;
     vertical-align: middle;
 }
+.settings a {
+    display: block;
+}
 .settings label {
     display: block;
     user-select: none;
-    padding: 2px 4px;
 }
-.settings label:hover {
+.settings label:hover, .settings a:hover {
     background-color: rgba(0, 0, 0, 0.1);
 }
 

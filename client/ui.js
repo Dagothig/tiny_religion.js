@@ -72,6 +72,11 @@ class UI {
 
         this.settingsTag = document.createElement('div');
         this.settingsTag.classList.add('settings');
+        let sourceLink = document.createElement('a');
+        sourceLink.href = 'https://github.com/Dagothig/tiny_religion.js/';
+        sourceLink.target = 'blank';
+        sourceLink.innerHTML = 'SOURCE';
+        this.settingsTag.appendChild(sourceLink);
         this.settings = [
             this.createSettings('MUSIC',
                 () => Music.play,
