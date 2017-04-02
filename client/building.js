@@ -65,6 +65,7 @@ class Building extends PIXI.TiledSprite {
     }
     update(delta, game) {
         this.tint = game.globalColor;
+        if (this.type.update) this.type.update.apply(this, arguments);
     }
 }
 Building.types = [];
@@ -75,16 +76,19 @@ let Bridge = new BuildingType(
 House = new BuildingType(
     'house', 'images/House.png', 0, 0, 16, true, 20, 2000),
 Barracks = new BuildingType(
-    'barracks', 'images/Barracks.png', 0, 0, 16, true, 40, 10000),
+    'barracks', 'images/Barracks.png', 0, 0, 16, true, 35, 10000),
 Workshop = new BuildingType(
-    'workshop', 'images/Workshop.png', 0, 0, 16, true, 40, 10000),
+    'workshop', 'images/Workshop.png', 0, 0, 16, true, 35, 10000),
 Temple = new BuildingType(
-    'temple', 'images/Temple.png', 0, 0, 16, true, 40, 10000),
+    'temple', 'images/Temple.png', 0, 0, 16, true, 35, 10000),
 GreenHouse = new BuildingType(
-    'greenHouse', 'images/GreenHouse.png', 0, 0, 16, true, 40, 10000),
+    'greenHouse', 'images/GreenHouse.png', 0, 0, 16, true, 35, 10000),
 Tree = new BuildingType(
     'tree', 'images/Tree.png', 0, 4, 0, false, 15, 1000, {
-        update(delta, game) { this.progressBuild(1, game); }
+        update(delta, game) {
+            if (!this.finished)
+                this.progressBuild(3 + this.kingdom.greenHouseCount, game);
+        }
     }),
 FallingTree = new BuildingType(
     'fallingTree', 'images/FallingTree.png', 0, 4, 0, false, 15, 250, {

@@ -190,13 +190,36 @@ class Kingdom {
         }
     }
     sendAttack(game) {
-
+        let mean = game.islands.filter(isl => isl.kingdom !== this).rand();
+        if (!mean) return false;
+        game.islands.forEach(island =>
+            island.kingdom === this &&
+            island.people.forEach(person =>
+                person.kingdom === this &&
+                person.job === Warrior &&
+                person.moveTo(game.islands, mean.index)));
+        return true;
     }
     sendConvert(game) {
-
+        let mean = game.islands.filter(isl => isl.kingdom !== this).rand();
+        if (!mean) return false;
+        game.islands.forEach(island =>
+            island.kingdom === this &&
+            island.people.forEach(person =>
+                person.kingdom === this &&
+                person.job === Priest &&
+                person.moveTo(game.islands, mean.index)));
+        return true;
     }
     sendRetreat(game) {
-
+        let ally = game.islands.filter(isl => isl.kingdom === this).rand();
+        if (!ally) return false;
+        game.islands.forEach(island =>
+            island.kingdom !== this &&
+            island.people.forEach(person =>
+                person.kingdom === this &&
+                person.moveTo(game.islands, ally.index)));
+        return true;
     }
 
     get maxPop() {

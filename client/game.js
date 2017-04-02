@@ -53,7 +53,7 @@ class Game extends PIXI.Container {
 
         let starting = new Island(0, 0, this.player);
         starting.generateBuilding(House, true);
-        starting.generateTrees();
+        starting.generatePlain();
         this.islandBounds = starting.getLocalBounds();
         starting.people.push(
             new Person(0, 0, Villager, this.player, starting),
@@ -63,10 +63,19 @@ class Game extends PIXI.Container {
             new Person(0, 0, Builder, this.player, starting)
         );
         this.addIsland(starting);
-        for (let i = 0; i < 2; i++) this.generateNewIsland();
+
+        this.cloudStart = new PIXI.Sprite(Island.cloudStart);
+        this.cloudStart.x = this.islandBounds.left;
+
+        this.cloudEnd = new PIXI.Sprite(Island.cloudStart);
+        this.cloudEnd.scale.x = -1;
+        this.cloudEnd.x = this.islandBounds.right;
+
+        this.cloudStart.anchor.x = this.cloudEnd.anchor.x = 1;
+        this.cloudStart.anchor.y = this.cloudEnd.anchor.y = 0.3;
+        this.addChild(this.cloudStart, this.cloudEnd);
 
         this.skiesMood = 0;
-        this.x = -this.islandBounds.left;
 
         this.overlay = new Overlay(PIXI.whitePixel);
         this.overlay.flash(60);
@@ -77,9 +86,13 @@ class Game extends PIXI.Container {
         if (window.isKeyPressed(37)) this.x += 5 + this.islands.length;
         if (window.isKeyPressed(39)) this.x -= 5 + this.islands.length;
         if (this.down) this.updateDown(delta);
-        this.x = Math.bounded(this.x,
-            -(this.islandBounds.left + this.islandBounds.width * this.islands.length - width),
-            -this.islandBounds.left);
+        let totalWidth = this.islands.length * this.islandBounds.width;
+        if (width > totalWidth) {
+            this.x = (width - totalWidth + this.islandBounds.width) / 2;
+        } else
+            this.x = Math.bounded(this.x,
+                -(this.islandBounds.left + totalWidth - width),
+                -this.islandBounds.left);
         this.y = height - this.islandBounds.bottom;
         this.god.x = -this.x + width / 2;
         this.god.y = -this.y;
@@ -110,6 +123,8 @@ class Game extends PIXI.Container {
         this.globalColor = PIXI.Color.interpolate(globalColor,
             this.skiesMood > 0 ? goodGlobalColor : darkGlobalColor,
             Math.abs(this.skiesMood));
+
+        this.cloudStart.tint = this.cloudEnd.tint = this.cloudColor;
     }
     checkForEnd() {
         if (!this.player.peopleCount && !this.player.summonCount)
@@ -126,13 +141,41 @@ class Game extends PIXI.Container {
             this.addChild.apply(this, island.buildings);
         if (island.people.length)
             this.addChild.apply(this, island.people);
+        if (this.cloudEnd)
+            this.cloudEnd.x = this.islandBounds.width * (this.islands.length - 1) +
+                this.islandBounds.right;
     }
     generateNewIsland() {
-        let inhabited = Math.random() < 0.25;
-        let kingdom = inhabited ? this.ai : this.gaia;
-        let island = new Island(this.islands.length * 480, 0, kingdom);
-        island.generateTrees();
-        if (inhabited) island.generateOutpost();
+        if (Math.random() < 0.25) this.generateInhabited();
+        else this.generateUninhabited();
+    }
+    generateInhabited() {
+        let count = Math.random() * this.islands.length;
+        for (let i = 0; i < count; i++) {
+            let island = new Island(this.islands.length * 480, 0, this.ai);
+            if (i === 0) island.generateOutpost();
+            else {
+                let rnd = Math.random();
+                if (rnd < 0.33) {
+                    island.generateOutpost();
+                } else if (rnd < 0.66) {
+                    island.generateTemple();
+                } else {
+                    island.generateCity();
+                }
+            }
+            if (i + 1 < count)
+                island.buildings.add(island.bridge = new Building(
+                    island.x + island.getLocalBounds().right, island.y,
+                    Bridge, this.ai, island, true
+                ));
+            this.addIsland(island);
+        }
+    }
+    generateUninhabited() {
+        let island = new Island(this.islands.length * 480, 0, this.gaia);
+        if (Math.random() < 0.5) island.generatePlain();
+        else island.generateForest();
         this.addIsland(island);
     }
 

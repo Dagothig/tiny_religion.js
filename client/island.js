@@ -19,7 +19,12 @@ class Island extends PIXI.Container {
     }
     get z() { return -100; }
 
-    generateBuilding(type, finished = true, radius = type.radius, attempts = 200) {
+    generateBuilding(
+        type,
+        finished = true,
+        radius = type.radius,
+        attempts = 10 * radius
+    ) {
         for (let i = 0; i < attempts; i++) {
             let pos = this.getRandomPoint(radius);
             if (this.buildings.find(b =>
@@ -29,26 +34,54 @@ class Island extends PIXI.Container {
             return b;
         }
     }
-    generateTrees(n = Math.pow(Math.random(), 3) * 40) {
-        for (let i = 0; i < n; i++) {
-            this.generateBuilding(
-                Math.random() < 0.90 ? Tree : FallingTree,
-                Math.random() < 0.75,
-                Tree.radius * 0.5
-            );
-        }
+    generateBuildings(count, ...args) {
+        for (let i = 0; i < count; i++)
+            this.generateBuilding.apply(this, args);
+    }
+    generateForest() {
+        this.generateBuildings(Math.random() * 20 + 10, Tree);
+    }
+    generatePlain() {
+        this.generateBuildings(Math.random() * 10, Tree);
     }
     generateOutpost() {
         let houses = Math.random() * 3;
-        let barracks = Math.random() * 2;
-        let vils = (Math.random() + 0.5) * (5 + houses * 5) / 2;
-        for (let i = 0; i < houses; i++)
-            this.generateBuilding(House);
-        for (let i = 0; i < barracks; i++)
-            this.generateBuilding(Barracks);
-        for (let i = 0; i < vils; i++) {
-            let job = Person.jobs[(Math.random() * Person.jobs.length)|0];
-            this.people.add(new Person(this.x, this.y, job, this.kingdom, this));
+        this.generatePlain();
+        this.generateBuildings(houses, House);
+        this.generateBuilding(Barracks);
+        this.people.add(
+            new Person(this.x, this.y, Builder, this.kingdom, this),
+            new Person(this.x, this.y, Priest, this.kingdom, this),
+            new Person(this.x, this.y, Villager, this.kingdom, this),
+            new Person(this.x, this.y, Villager, this.kingdom, this)
+        );
+        let extra = 5 + houses * 4;
+        for (let i = 4; i < extra; i++)
+            this.people.add(new Person(
+                this.x, this.y, Warrior, this.kingdom, this));
+    }
+    generateCity() {
+        let houses = 10 + Math.random() * 10;
+        let special = Math.random() * 3;
+        let trees = Math.random() * 10;
+        let types = [Barracks, Temple, Workshop];
+        for (let i = 0; i < special; i++)
+            this.generateBuilding(types.rand());
+        this.generateBuildings(houses, House);
+        this.generateBuildings(trees, Tree);
+        for (let i = 0; i < 5 + houses * 4; i++) {
+            this.people.add(new Person(
+                this.x, this.y, Person.jobs.rand(), this.kingdom, this));
+        }
+    }
+    generateTemple() {
+        let temples = Math.random() * 3;
+        let trees = Math.random() * 20;
+        this.generateBuildings(temples, Temple);
+        this.generateBuildings(trees, Tree);
+        for (let i = 0; i < temples * 5; i++) {
+            this.people.add(new Person(
+                this.x, this.y, Priest, this.kingdom, this));
         }
     }
 
@@ -101,4 +134,6 @@ PIXI.loader
 .add('island', 'images/Island.png', null, res =>
     Island.ground = new PIXI.TiledTexture(res.texture, 480, 240))
 .add('cloud', 'images/Cloud.png', null, res =>
-    Island.cloud = res.texture);
+    Island.cloud = res.texture)
+.add('cloudStart', 'images/CloudStart.png', null, res =>
+    Island.cloudStart = res.texture);

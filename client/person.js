@@ -55,7 +55,7 @@ class Person extends PIXI.AnimatedSprite {
     }
 
     update(delta, game) {
-        if (this.health < 100) this.health = Math.min(this.health + 0.1, 100);
+        if (this.health < 100) this.health = Math.min(this.health + 0.025, 100);
         if (this.sinceTookDamage > 0) this.sinceTookDamage--;
         if (this.praying > 0) {
             this.praying--;
@@ -127,6 +127,17 @@ class Person extends PIXI.AnimatedSprite {
         }
     }
 
+    findTarget(game, dst2, predicate = () => true) {
+        let filter = p => p.kingdom !== this.kingdom
+            && predicate(p)
+            && Math.dst2(this.x, this.y, p.x, p.y) < dst2;
+        return this.island.people.filter(filter).rand()
+            || (this.island.index - 1 >= 0 &&
+                game.islands[this.island.index - 1].people.filter(filter).rand())
+            || (this.island.index + 1 < game.islands.length &&
+                game.islands[this.island.index + 1].people.filter(filter).rand());
+    }
+
     pray() {
         return this.praying <= 0 && (this.praying = Math.random() * 50 + 75);
     }
@@ -161,7 +172,7 @@ Builder = new Job('builder', 'images/Builder.png', {
         this.island.buildings.filter(b =>
             b.type !== FallingTree && b.type !== Tree && !b.finished
             && b.isInRadius(this))
-        .forEach(b => b.progressBuild(this.kingdom.workshopCount + 1, game));
+        .forEach(b => b.progressBuild(3 + this.kingdom.workshopCount, game));
     },
     findNextTarget(game) {
         if (this.building && !this.building.finished) {
@@ -184,10 +195,7 @@ Builder = new Job('builder', 'images/Builder.png', {
 }),
 Warrior = new Job('warrior', 'images/Warrior.png', {
     update(delta, game) {
-        let targets = this.island.people.filter(p => p.kingdom !== this.kingdom
-            && p.sinceTookDamage <= 0
-            && Math.dst2(this.x, this.y, p.x, p.y) < 32 * 32);
-        let target = targets[(Math.random() * targets.length)|0];
+        let target = this.findTarget(game, 32 * 32, p => p.sinceTookDamage <= 0);
         if (!target) return;
         target.takeDamage(3 + this.kingdom.barracksCount, game);
         if (this.kingdom.isPlayer) {
@@ -201,12 +209,10 @@ Priest = new Job('priest', 'images/Priest.png', {
     person() { this.sinceSummon = 0; },
     update(delta, game) {
         this.sinceSummon++;
-        let targets = this.island.people.filter(p => p.kingdom !== this.kingdom
-            && Math.dst2(this.x, this.y, p.x, p.y) < 48 * 48);
-        let target = targets[(Math.random() * targets.length)|0];
+        let target = this.findTarget(game, 48 * 48);
         if (!target) return;
         if (this.kingdom.isPlayer) game.god.event('converting', 1, this.position);
-        if (Math.random() * 1000 < this.templeCount + 1) {
+        if (Math.random() * 1000 < 3 + this.templeCount) {
             target.kingom = this.kingdom;
             game.addChild(new SFX(target.x, target.y, Summon));
             if (this.kingdom.isPlayer) game.god.event('convert', 1, this.position);
