@@ -1,4 +1,11 @@
-'use strict;'
+'use strict';
+
+// personalityColors[life][manMade]
+let personalityColors = [
+    [, 0x00ff00, ],
+    [, 0xffffff, ],
+    [, 0xff0088, ]
+];
 
 class God extends PIXI.Container {
     constructor() {
@@ -75,6 +82,10 @@ class God extends PIXI.Container {
         = this.rightBrow.tint
         = val;
     }
+    get tint() {
+        return this.head.tint;
+    }
+
     get tileY() {
         return this.mouth.tileY;
     }
@@ -133,52 +144,47 @@ class God extends PIXI.Container {
     changePersonality(base, game) {
         if (game) game.overlay.flash(60);
         sounds.new.play();
+
+        let min = -God.preferenceModifier,
+            max = God.preferenceModifier;
+        let range = max - min;
         if (base) {
-            this.likesLife = God.preferenceModifier;
-            this.likesAttention = God.preferenceModifier / 4;
-            this.likesManMade = -God.preferenceModifier / 4;
+            this.likesLife = max;
+            this.likesAttention = max / 4;
+            this.likesManMade = min / 4;
             this.sincePersonality = God.personalityLength * 4 / 5;
         } else {
-            let range = God.preferenceModifier * 2;
-            let min = God.preferenceModifier;
-            this.likesLife = Math.random() * range - min;
-            this.likesAttention = Math.random() * range - min;
-            this.likesManMade = Math.random() * range - min;
+            this.likesLife = min + Math.random() * range;
+            this.likesAttention = min + Math.random() * range;
+            this.likesManMade = min + Math.random() * range;
             this.sincePersonality = 0;
         }
-        let life = this.likesLife / God.preferenceModifier * 200,
-            manMade = this.likesManMade / God.preferenceModifier * 200,
-            attention = this.likesAttention / God.preferenceModifier * 200;
+        this.updateColor(
+            (this.likesLife - min) / range * 2 - 1,
+            (this.likesManMade - min) / range * 2 - 1,
+            (this.likesAttention - min) / range * 2 - 1
+        );
+    }
+    updateColor(life = 0, man = 0, attention = 0) {
+        // Get the angle into the range [0, 4[
+        let angle = 2 * Math.atan2(man, life) / Math.PI;
+        if (angle < 0) angle = 4 + angle;
 
-        let R = 0, G = 0, B = 0;
-        if (life < 0) R -= (life / 200) * 255;
-        else B += (life / 200) * 255;
-        if (manMade <= 0) G -= (manMade / 200) * 255;
-        else {
-            if (R < 128) R = 128 - ((128 - R) / ((manMade + 50) / 50));
-            else R = (R - 128) / ((manMade + 50) / 50) + 128;
-            if (G < 128) G = 128 - ((128 - G) / ((manMade + 50) / 50));
-            else G = (G - 128) / ((manMade + 50) / 50) + 128;
-            if (B < 128) B = 128 - ((128 - B) / ((manMade + 50) / 50));
-            else B = (B - 128) / ((manMade + 50) / 50) + 128;
-        }
-
-        R *= (Math.pow(2, attention / 200));
-        G *= (Math.pow(2, attention / 200));
-        B *= (Math.pow(2, attention / 200));
-
-        R = Math.bounded(R, 0, 255);
-        G = Math.bounded(G, 0, 255);
-        B = Math.bounded(B, 0, 255);
-
-        let hsl = PIXI.Color.RGBtoHSL(R, G, B);
-        hsl[1] = Math.bounded(hsl[1], 0.25, 0.5);
-        hsl[2] = Math.bounded(hsl[2], 0.25, 0.35);
-        ui.btnsTag.style.backgroundColor = '#' +
-            PIXI.Color.fromRGB.apply(null,
-                PIXI.Color.HSLtoRGB.apply(null, hsl))
-                    .toString('16').padStart(6, '0');
-        this.tint = PIXI.Color.fromRGB(R|0, G|0, B|0);
+        let hue = Math.shift(
+            // From 0 to 1; +life+man; from teal-ish blue to purple
+            angle <= 1 ? (11/16 + angle * 3/16) :
+            // From 1 to 2; -life+man; from purple to orange-ish
+            angle <= 2 ? (14/16 + (angle - 1) * 3/16) :
+            // From 2 to 3; -life-man; from orange-ish to green
+            angle <= 3 ? (1/16 + (angle - 2) * 3/16) :
+            // From 3 to 5; -life+man; from green to teal-ish blue
+            (4/16 + (angle - 3) * 7/16), 0, 1);
+        let saturation = Math.max(Math.abs(life), Math.abs(man));
+        let lightness = attention / (attention < 0 ? 6 : 4) + 0.5;
+        this.tint = PIXI.Color.fromHSL(hue, saturation, lightness);
+        ui.btnsTag.style.backgroundColor =
+            '#' + PIXI.Color.fromHSL(hue, saturation * 0.5, lightness * 0.5)
+            .toString('16').padStart(6, '0');
     }
 
     event(what, scalar, where) {

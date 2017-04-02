@@ -76,7 +76,6 @@
             window.addEventListener('keydown', ev => keys[ev.keyCode] = true);
             window.addEventListener('keyup', ev => keys[ev.keyCode] = false);
 
-            renderer.backgroundColor = 0xffffff;
             renderer.render(new PIXI.Container());
             let game, ui = new UI(g => game = g);
             ui.showTitle();

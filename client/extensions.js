@@ -6,6 +6,11 @@ Math.dst2 = function(a1, a2, b1, b2) {
 };
 Math.dst = function() { return Math.sqrt(Math.dst2.apply(this, arguments)); };
 Math.bounded = (v, m, M) => Math.min(Math.max(v, m), M);
+Math.shift = (v, m, M) => {
+    let range = M - m;
+    while (v < m) v += range;
+    return v % range;
+};
 Object.merge = function merge(to) {
     Array.from(arguments).slice(1).forEach(src => {
         if (!src) return;

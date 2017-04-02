@@ -17,6 +17,9 @@
     function colorFromRGB(r, g, b) {
         return (r << rShift) | (g << gShift) | (b << bShift);
     }
+    function colorFromHSL(h, s, l) {
+        return colorFromRGB.apply(null, HSLtoRGB(h, s, l));
+    }
 
     /**
      * Converts an HSL color value to RGB. Conversion formula
@@ -191,6 +194,7 @@
     PIXI.Color = {
         interpolate: interpolateColors,
         fromRGB: colorFromRGB,
+        fromHSL: colorFromHSL,
         RGBtoHSL: RGBtoHSL,
         HSLtoRGB: HSLtoRGB
     };

@@ -149,7 +149,6 @@ canvas {
     font-weight: 800;
 }
 .btn:hover, .btn:focus {
-    background-color: rgba(255, 255, 255, 0.5);
     filter: brightness(1) grayscale(0);
 }
 .btn:focus { outline: none; }

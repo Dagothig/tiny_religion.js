@@ -25,9 +25,9 @@ class Overlay extends PIXI.Sprite {
     get z() { return 1000; }
 }
 
-let darkSkyColor = 0x241e2f,
-    skyColor = 0xa2a8b0,
-    goodSkyColor = 0x80c0ff,
+let darkSkyColor = 0x28162f,
+    skyColor = 0xb2b8c0,
+    goodSkyColor = 0x40c0ff,
 
     darkCloudColor = 0xa81c50,
     cloudColor = 0x8ca0a4,
