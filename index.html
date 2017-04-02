@@ -62,8 +62,9 @@
                 let w = container.clientWidth, h = container.clientHeight;
                 if (!h) return;
                 scaling = 1;
-                while (h < 320) {
-                    w *= 2; h *= 2;
+                if (h < 420) {
+                    w *= 420 / h;
+                    h = 420;
                     scaling++;
                 }
                 renderer.resize(w, h);

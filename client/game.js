@@ -87,12 +87,14 @@ class Game extends PIXI.Container {
         if (window.isKeyPressed(39)) this.x -= 5 + this.islands.length;
         if (this.down) this.updateDown(delta);
         let totalWidth = this.islands.length * this.islandBounds.width;
-        if (width > totalWidth) {
-            this.x = (width - totalWidth + this.islandBounds.width) / 2;
+        let target;
+        if (this.islands.length === 1 || width > totalWidth) {
+            target = (width - totalWidth + this.islandBounds.width) / 2;
         } else
-            this.x = Math.bounded(this.x,
+            target = Math.bounded(this.x,
                 -(this.islandBounds.left + totalWidth - width),
                 -this.islandBounds.left);
+        this.x = target * 0.05 + this.x * 0.95;
         this.y = height - this.islandBounds.bottom;
         this.god.x = -this.x + width / 2;
         this.god.y = -this.y;

@@ -7,7 +7,7 @@ class Island extends PIXI.Container {
         this.y = y;
         this.ground = new PIXI.TiledSprite(Island.ground);
         this.cloud = new PIXI.Sprite(Island.cloud);
-        this.ground.anchor.x = this.cloud.anchor.x = 0.5;
+        this.ground.anchor.x = this.cloud.anchor.x = 0.525;
         this.ground.anchor.y = this.cloud.anchor.y = 0.3;
         this.addChild(this.ground, this.cloud);
         this.buildings = [];
