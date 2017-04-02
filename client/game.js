@@ -104,6 +104,7 @@ class Game extends PIXI.Container {
         this.children.forEach(child =>
             child.update && child.update(delta, this, width, height));
         this.children = this.children.filter(child => !child.shouldRemove);
+        this.children.forEach((child, i) => child.__i__ = i);
         this.children.sort((a, b) => (a.z || 0) - (b.z || 0));
 
         if (this.player.linkedTo(this, this.ai)) Music.switchTo(music2);
@@ -193,8 +194,16 @@ class Game extends PIXI.Container {
     finishDown() { if (this.down) this.down.finished = true; }
     updateDown(delta) {
         let diff = this.down.current - this.down.last;
-        this.x += diff;
+        if (!this.down.finished) {
+            this.down.velocity = this.down.velocity * 0.5 + diff * 0.75;
+            this.x += diff;
+        } else {
+            this.down.velocity *= 0.90;
+            this.x += this.down.velocity;
+        }
+
         this.down.last = this.down.current;
+        if (this.down.finished && !this.down.velocity) this.down = null;
     }
     onMove(x, y) {
         if (this.down && !this.down.finished) {
