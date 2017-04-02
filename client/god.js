@@ -162,14 +162,23 @@ class God extends PIXI.Container {
             if (B < 128) B = 128 - ((128 - B) / ((manMade + 50) / 50));
             else B = (B - 128) / ((manMade + 50) / 50) + 128;
         }
-        R = R * (Math.pow(2, attention / 200));
-        G = G * (Math.pow(2, attention / 200));
-        B = B * (Math.pow(2, attention / 200));
-        this.tint = PIXI.Color.fromRGB(
-            Math.bounded(R|0, 0, 255),
-            Math.bounded(G|0, 0, 255),
-            Math.bounded(B|0, 0, 255)
-        );
+
+        R *= (Math.pow(2, attention / 200));
+        G *= (Math.pow(2, attention / 200));
+        B *= (Math.pow(2, attention / 200));
+
+        R = Math.bounded(R, 0, 255);
+        G = Math.bounded(G, 0, 255);
+        B = Math.bounded(B, 0, 255);
+
+        let hsl = PIXI.Color.RGBtoHSL(R, G, B);
+        hsl[1] = Math.bounded(hsl[1], 0.25, 0.5);
+        hsl[2] = Math.bounded(hsl[2], 0.25, 0.35);
+        ui.btnsTag.style.backgroundColor = '#' +
+            PIXI.Color.fromRGB.apply(null,
+                PIXI.Color.HSLtoRGB.apply(null, hsl))
+                    .toString('16').padStart(6, '0');
+        this.tint = PIXI.Color.fromRGB(R|0, G|0, B|0);
     }
 
     event(what, scalar, where) {

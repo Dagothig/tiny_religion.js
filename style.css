@@ -85,6 +85,7 @@ canvas {
     top: 0;
     color: #fff;
     margin: 4px;
+    text-shadow: 0 1px #000;
 }
 .stats div, .settings label {
     padding: 2px 4px;
@@ -138,6 +139,7 @@ canvas {
     flex-grow: 1;
     flex-shrink: 0;
     color: white;
+    text-shadow: 0 1px #000;
     text-align: center;
     line-height: 94px;
     padding: 0;
