@@ -104,6 +104,12 @@ canvas {
 
 .settings {
     right: 0;
+    text-align: right;
+    opacity: 0.5;
+    text-shadow: none;
+}
+.settings:hover {
+    opacity: 1;
 }
 
 .settings label, .settings input {
@@ -133,6 +139,22 @@ canvas {
     padding-top: 1px;
     overflow: auto;
 }
+.btns>div+div { margin-left: 1px; }
+
+.tooltip {
+    display: none;
+    width: 100%;
+    font-size: 10px;
+    margin-top: 1px;
+    text-transform: uppercase;
+    color: white;
+    padding: 4px 0;
+    text-align: center;
+    text-shadow: 0 1px #000;
+    background-color: rgba(0, 0, 0, 0.3);
+}
+.tooltips .tooltip { display: block; }
+
 .btn {
     position: relative;
     display: block;
@@ -153,13 +175,8 @@ canvas {
     font-family: monospace;
     font-weight: 800;
 }
-.btn:hover, .btn:focus {
-    filter: brightness(1) grayscale(0);
-}
+.btn:hover, .btn:focus { filter: brightness(1) grayscale(0); }
 .btn:focus { outline: none; }
-.btn+.btn {
-    margin-left: 1px;
-}
 
 .btn:after,
 .train:before, .untrain:before,

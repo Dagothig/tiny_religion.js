@@ -9,7 +9,7 @@ class UI {
         PIXI.loader.load(() => this.titleTag.onclick = () => this.startGame());
 
         this.btnsTag = document.createElement('div');
-        this.btnsTag.classList.add('btns', 'hidden');
+        this.btnsTag.classList.add('btns', 'tooltips', 'hidden');
         this.btns =
         ['train', 'untrain'].reduce((btns, act) =>
             Person.jobs.reduce((btns, job) => {
@@ -21,7 +21,7 @@ class UI {
                     act === 'train' ?
                         () => this.game && (v() + '   ' + j()) :
                         () => this.game && (j() + '   ' + v()),
-                    act, job.name)
+                    act[0] + '.' + job.name, act, job.name)
                 );
                 return btns;
             }, btns), [])
@@ -30,44 +30,44 @@ class UI {
                 btns.add(this.createBtn(
                     () => this.game && this.game.player.build(this.game, type),
                     () => this.game && this.game.player[type.name + 'Count'],
-                    'build', type.name
+                    type.name, 'build', type.name
                 ));
                 return btns;
             }, []))
         .concat([
             this.createBtn(
                 () => this.game && this.game.player.buildBridge(this.game),
-                null, 'build', 'bridge'),
+                null, 'bridge', 'build', 'bridge'),
             this.createBtn(
                 () => this.game && this.game.player.forestate(this.game),
                 () => this.game && this.game.player.treeCount,
-                'forestate'),
+                'forestate', 'forestate'),
             this.createBtn(
                 () => this.game && this.game.player.deforest(this.game),
-                null, 'deforest'),
+                null, 'deforest', 'deforest'),
             this.createBtn(
                 () => this.game && this.game.god.doSacrifice(this.game),
-                null, 'sacrifice'),
+                null, 'sacrifice', 'sacrifice'),
             this.createBtn(
                 () => this.game && this.game.player.doBaby(this.game),
                 () => (game.player.peopleCount + '/' + game.player.maxPop),
-                'baby'),
+                'baby', 'baby'),
             this.createBtn(
                 () => this.game && this.game.player.attemptSummon(this.game),
                 () => (game.player.summonCount + '/' + game.player.maxSummon),
-                'summon'),
+                'summon', 'summon'),
             this.createBtn(
                 () => this.game && this.game.player.pray(this.game),
-                null, 'pray'),
+                null, 'pray', 'pray'),
             this.createBtn(
                 () => this.game && this.game.player.sendAttack(this.game),
-                null, 'attack'),
+                null, 'attack', 'attack'),
             this.createBtn(
                 () => this.game && this.game.player.sendConvert(this.game),
-                null, 'convert'),
+                null, 'convert', 'convert'),
             this.createBtn(
                 () => this.game && this.game.player.sendRetreat(this.game),
-                null, 'retreat')
+                null, 'retreat', 'retreat')
         ]);
 
         this.settingsTag = document.createElement('div');
@@ -78,6 +78,15 @@ class UI {
         sourceLink.innerHTML = 'SOURCE';
         this.settingsTag.appendChild(sourceLink);
         this.settings = [
+            this.createSettings('TOOLTIPS',
+                () => this.btnsTag.classList.contains('tooltips'),
+                ev => {
+                    this.btnsTag.classList
+                        [ev.target.checked ? 'add' : 'remove']
+                        ('tooltips');
+                    resize();
+                }
+            ),
             this.createSettings('MUSIC',
                 () => Music.play,
                 ev => Music.toggle(ev.target.checked)
@@ -92,15 +101,26 @@ class UI {
         document.body.appendChild(this.btnsTag);
         document.body.appendChild(this.settingsTag);
     }
-    createBtn(onclick, onupdate, ...classes) {
+    createBtn(onclick, onupdate, name, ...classes) {
+        let tag = document.createElement('div');
+
         let btn = document.createElement('button');
         btn.classList.add('btn');
         btn.classList.add.apply(btn.classList, classes);
         btn.onclick = onclick;
-        this.btnsTag.appendChild(btn);
+        tag.appendChild(btn);
+
+        let tooltip = document.createElement('div');
+        tooltip.innerHTML = name;
+        tooltip.classList.add('tooltip');
+        tag.appendChild(tooltip);
+
+        this.btnsTag.appendChild(tag);
 
         return {
-            tag: btn,
+            tag: tag,
+            btn: btn,
+            tooltip: tooltip,
             text: '',
             update: onupdate
         };
@@ -145,7 +165,7 @@ class UI {
         this.game = game;
         if (game) this.btns.forEach(btn => {
             let text = btn.update && btn.update(delta, game);
-            if (btn.text !== text) btn.text = btn.tag.innerHTML = text;
+            if (btn.text !== text) btn.text = btn.btn.innerHTML = text;
         });
     }
     showTitle(win = null) {
