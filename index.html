@@ -124,10 +124,7 @@
             document.ontouchend = document.onmouseup =
                 ev => game && game.finishDown();
 
-            container.onmousewheel = ev => {
-                if (!game) return;
-                game.x -= ev.deltaX;
-            }
+            container.onmousewheel = ev => game && (game.x -= ev.deltaX);
         </script>
     </body>
 </html>
