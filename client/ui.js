@@ -9,7 +9,10 @@ class UI {
         PIXI.loader.load(() => this.titleTag.onclick = () => this.startGame());
 
         this.btnsTag = document.createElement('div');
-        this.btnsTag.classList.add('btns', 'tooltips', 'hidden');
+        this.btnsTag.classList.add('btns', 'hidden');
+        if (settings.tooltips) ;
+        settings.bind('tooltips', t =>
+            this.btnsTag.classList[t ? 'add' : 'remove']('tooltips'))
         this.btns =
         ['train', 'untrain'].reduce((btns, act) =>
             Person.jobs.reduce((btns, job) => {
@@ -77,25 +80,7 @@ class UI {
         sourceLink.target = 'blank';
         sourceLink.innerHTML = 'SOURCE';
         this.settingsTag.appendChild(sourceLink);
-        this.settings = [
-            this.createSettings('TOOLTIPS',
-                () => this.btnsTag.classList.contains('tooltips'),
-                ev => {
-                    this.btnsTag.classList
-                        [ev.target.checked ? 'add' : 'remove']
-                        ('tooltips');
-                    resize();
-                }
-            ),
-            this.createSettings('MUSIC',
-                () => Music.play,
-                ev => Music.toggle(ev.target.checked)
-            ),
-            this.createSettings('SOUND',
-                () => !Sound.mute,
-                ev => Sound.mute = !ev.target.checked
-            ),
-        ];
+        this.settings = settings.all.map(n => this.createSettings(n));
 
         document.body.appendChild(this.titleTag);
         document.body.appendChild(this.btnsTag);
@@ -125,26 +110,8 @@ class UI {
             update: onupdate
         };
     }
-    createStat(name, onupdate, ...classes) {
-        let stat = document.createElement('div');
-        stat.classList.add.apply(stat.classList, classes);
-        let lbl = document.createElement('label');
-        lbl.innerHTML = name;
-        stat.appendChild(lbl);
-        let txt = document.createElement('span');
-        stat.appendChild(txt);
-        this.statsTag.appendChild(stat);
-        return {
-            tag: stat,
-            label: lbl,
-            span: txt,
-            text: '',
-            update: onupdate
-        };
-    }
-    createSettings(name, get, set, ...classes) {
+    createSettings(name) {
         let setting = document.createElement('div');
-        setting.classList.add.apply(setting.classList, classes);
 
         let lbl = document.createElement('label');
         lbl.innerHTML = name;
@@ -152,8 +119,9 @@ class UI {
         let input = document.createElement('input');
         input.type = 'checkbox';
         input.name = name;
-        input.checked = get();
-        input.onchange = set;
+        input.checked = settings[name];
+        input.onchange = ev => ev.target.checked !== settings[name] &&
+            (settings[name] = ev.target.checked);
 
         setting.appendChild(lbl);
         lbl.appendChild(input);

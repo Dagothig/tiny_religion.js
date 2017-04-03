@@ -38,7 +38,7 @@ class Sound {
         sound.play();
     }
 }
-Sound.mute = false;
+settings.bind('sound', m => Sound.mute = !m);
 let sounds = {
     titleScreen: new Sound('sounds/TitleScreen.wav'),
 
@@ -71,7 +71,6 @@ let sounds = {
 };
 
 let Music = {
-    play: true,
     music: null,
     switchTo(music) {
         if (music === this.music) return;
@@ -82,8 +81,10 @@ let Music = {
     },
     toggle(play) {
         this.play = play;
-        if (this.play) this.music.play();
-        else this.music.pause();
+        if (this.music) {
+            if (this.play) this.music.play();
+            else this.music.pause();
+        }
     },
     stop() {
         if (!this.music) return;
@@ -91,3 +92,4 @@ let Music = {
         this.music = null;
     }
 }
+settings.bind('music', p => Music.toggle(p));
