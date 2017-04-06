@@ -150,7 +150,7 @@ class Game extends PIXI.Container {
                 this.islandBounds.right;
     }
     generateNewIsland() {
-        if (Math.random() < 0.25) this.generateInhabited();
+        if (Math.random() < 1/(3+this.islands.length)) this.generateInhabited();
         else this.generateUninhabited();
     }
     generateInhabited() {

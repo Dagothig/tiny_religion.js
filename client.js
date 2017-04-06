@@ -2132,7 +2132,7 @@ var Game = function (_PIXI$Container) {
     }, {
         key: 'generateNewIsland',
         value: function generateNewIsland() {
-            if (Math.random() < 0.25) this.generateInhabited();else this.generateUninhabited();
+            if (Math.random() < 1 / (3 + this.islands.length)) this.generateInhabited();else this.generateUninhabited();
         }
     }, {
         key: 'generateInhabited',
@@ -2276,17 +2276,18 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var UI = function () {
-    function UI(onTitle) {
+    function UI(gameContainer, onTitle) {
         var _this = this;
 
         _classCallCheck(this, UI);
 
+        this.gameContainer = gameContainer;
         this.titleTag = document.createElement('div');
-        this.titleTag.classList.add('title', 'hidden');
+        this.titleTag.classList.add('title');
         this.titleTag.onclick = onTitle;
 
         this.btnsTag = document.createElement('div');
-        this.btnsTag.classList.add('btns', 'hidden');
+        this.btnsTag.classList.add('btns');
         settings.bind('tooltips', function (t) {
             return _this.btnsTag.classList[t ? 'add' : 'remove']('tooltips');
         });
@@ -2430,6 +2431,7 @@ var UI = function () {
 
             this.titleTag.classList.remove('hidden', 'win', 'lost');
             this.btnsTag.classList.add('hidden');
+            this.gameContainer.classList.add('hidden');
             if (win !== null) {
                 if (win) {
                     sounds.win.play();
@@ -2445,6 +2447,7 @@ var UI = function () {
         value: function hideTitle() {
             this.titleTag.classList.add('hidden');
             this.btnsTag.classList.remove('hidden');
+            this.gameContainer.classList.remove('hidden');
         }
     }]);
 
@@ -2453,58 +2456,59 @@ var UI = function () {
 'use strict';
 
 var scaling = 1;
-document.addEventListener('DOMContentLoaded', function () {
-    // Setup renderer
-    PIXI.scaleModes.DEFAULT = PIXI.scaleModes.NEAREST;
-    var renderer = PIXI.autoDetectRenderer();
-    renderer.roundPixels = true;
-    container.appendChild(renderer.view);
-    var resize = function resize() {
-        var w = container.clientWidth,
-            h = container.clientHeight;
-        if (!h) return;
-        scaling = 1;
-        if (h < 420) {
-            w *= 420 / h;
-            h = 420;
-            scaling++;
+var container = document.createElement('div');
+container.id = 'container';
+document.body.appendChild(container);
+// Setup renderer
+PIXI.scaleModes.DEFAULT = PIXI.scaleModes.NEAREST;
+var renderer = PIXI.autoDetectRenderer();
+renderer.roundPixels = true;
+container.appendChild(renderer.view);
+var resize = function resize() {
+    var w = container.clientWidth,
+        h = container.clientHeight;
+    if (!h) return;
+    scaling = 1;
+    if (h < 420) {
+        w *= 420 / h;
+        h = 420;
+        scaling++;
+    }
+    renderer.resize(w, h);
+};
+window.addEventListener('resize', resize);
+resize();
+
+PIXI.loader.load(function () {
+    return Game.loaded = true;
+});
+var game = void 0;
+var ui = new UI(container, function () {
+    ui.hideTitle();
+    game = new Game(function (win) {
+        ui.showTitle(win);
+        game.detachEvents();
+        game = null;
+    });
+    game.attachEvents(container);
+});
+ui.showTitle();
+
+Game.onLoad(function () {
+    var last = performance.now();
+    var upd = function upd() {
+        var time = performance.now();
+        var delta = time - last;
+        ui.update(delta, game);
+        if (game) {
+            game.update(delta, renderer.width, renderer.height);
+            renderer.backgroundColor = game.backgroundColor;
+            renderer.render(game);
+            game.checkForEnd();
         }
-        renderer.resize(w, h);
+        last = time;
+        requestAnimationFrame(upd);
     };
-    window.addEventListener('resize', resize);
+    upd();
     resize();
-
-    PIXI.loader.load(function () {
-        return Game.loaded = true;
-    });
-    var game = void 0;
-    var ui = new UI(function () {
-        ui.hideTitle();
-        game = new Game(function (win) {
-            ui.showTitle(win);
-            game.detachEvents();
-            game = null;
-        });
-        game.attachEvents(container);
-    });
-    ui.showTitle();
-
-    Game.onLoad(function () {
-        var last = performance.now();
-        var upd = function upd() {
-            var time = performance.now();
-            var delta = time - last;
-            ui.update(delta, game);
-            if (game) {
-                game.update(delta, renderer.width, renderer.height);
-                renderer.backgroundColor = game.backgroundColor;
-                renderer.render(game);
-                game.checkForEnd();
-            }
-            last = time;
-            requestAnimationFrame(upd);
-        };
-        upd();
-        resize();
-    });
 });

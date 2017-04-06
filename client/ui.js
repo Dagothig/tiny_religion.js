@@ -1,13 +1,14 @@
 'use strict';
 
 class UI {
-    constructor(onTitle) {
+    constructor(gameContainer, onTitle) {
+        this.gameContainer = gameContainer;
         this.titleTag = document.createElement('div');
-        this.titleTag.classList.add('title', 'hidden');
+        this.titleTag.classList.add('title');
         this.titleTag.onclick = onTitle;
 
         this.btnsTag = document.createElement('div');
-        this.btnsTag.classList.add('btns', 'hidden');
+        this.btnsTag.classList.add('btns');
         settings.bind('tooltips', t =>
             this.btnsTag.classList[t ? 'add' : 'remove']('tooltips'));
         this.btns =
@@ -146,6 +147,7 @@ class UI {
     showTitle(win = null) {
         this.titleTag.classList.remove('hidden', 'win', 'lost');
         this.btnsTag.classList.add('hidden');
+        this.gameContainer.classList.add('hidden');
         if (win !== null) {
             if (win) {
                 sounds.win.play();
@@ -159,5 +161,6 @@ class UI {
     hideTitle() {
         this.titleTag.classList.add('hidden');
         this.btnsTag.classList.remove('hidden');
+        this.gameContainer.classList.remove('hidden');
     }
 }

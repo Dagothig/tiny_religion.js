@@ -9,6 +9,7 @@ body {
     flex-direction: column;
     font-family: monospace;
     font-weight: 800;
+    background-color: #193bcb;
 }
 a {
     color: white;
@@ -42,7 +43,6 @@ canvas {
     top: 0;
     right: 0;
     bottom: 0;
-    background-color: #193bcb;
     display: flex;
     align-items: center;
     justify-content: center;
