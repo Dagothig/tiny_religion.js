@@ -107,4 +107,4 @@ let musics = {
 };
 Object.keys(musics)
     .map(k => musics[k])
-    .forEach(m => { m.volume = 0.5; m.loop = false; });
+    .forEach(m => { m.volume = 0.5; m.loop = true; });

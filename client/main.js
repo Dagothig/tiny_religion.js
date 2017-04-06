@@ -9,6 +9,7 @@ renderer.roundPixels = true;
 container.appendChild(renderer.view);
 let resize = () => {
     let w = container.clientWidth, h = container.clientHeight;
+    console.log(w, h);
     if (!h) return;
     scaling = 1;
     if (h < 420) {
@@ -25,14 +26,17 @@ PIXI.loader.load(() => Game.loaded = true);
 let game;
 let ui = new UI(container, () => {
     ui.hideTitle();
-    game = new Game(win => {
-        ui.showTitle(win);
-        game.detachEvents();
-        game = null;
+    Game.onLoad(() => {
+        game = new Game(win => {
+            ui.showTitle(win);
+            game.detachEvents();
+            game = null;
+        });
+        game.attachEvents(container);
     });
-    game.attachEvents(container);
 });
 ui.showTitle();
+settings.bind('tooltips', resize);
 
 function resume() {
     paused = false;

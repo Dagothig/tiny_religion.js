@@ -671,7 +671,7 @@ var musics = {
 Object.keys(musics).map(function (k) {
     return musics[k];
 }).forEach(function (m) {
-    m.volume = 0.5;m.loop = false;
+    m.volume = 0.5;m.loop = true;
 });
 'use strict';
 
@@ -2475,6 +2475,7 @@ container.appendChild(renderer.view);
 var resize = function resize() {
     var w = container.clientWidth,
         h = container.clientHeight;
+    console.log(w, h);
     if (!h) return;
     scaling = 1;
     if (h < 420) {
@@ -2493,14 +2494,17 @@ PIXI.loader.load(function () {
 var game = void 0;
 var ui = new UI(container, function () {
     ui.hideTitle();
-    game = new Game(function (win) {
-        ui.showTitle(win);
-        game.detachEvents();
-        game = null;
+    Game.onLoad(function () {
+        game = new Game(function (win) {
+            ui.showTitle(win);
+            game.detachEvents();
+            game = null;
+        });
+        game.attachEvents(container);
     });
-    game.attachEvents(container);
 });
 ui.showTitle();
+settings.bind('tooltips', resize);
 
 function resume() {
     paused = false;
