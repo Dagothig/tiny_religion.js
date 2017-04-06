@@ -90,6 +90,14 @@ let Music = {
         if (!this.music) return;
         this.music.pause();
         this.music = null;
+    },
+    resume() {
+        if (!this.music || !this.play) return;
+        this.music.play();
+    },
+    pause() {
+        if (!this.music) return;
+        this.music.pause();
     }
 }
 settings.bind('music', p => Music.toggle(p));

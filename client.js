@@ -651,6 +651,14 @@ var Music = {
         if (!this.music) return;
         this.music.pause();
         this.music = null;
+    },
+    resume: function resume() {
+        if (!this.music || !this.play) return;
+        this.music.play();
+    },
+    pause: function pause() {
+        if (!this.music) return;
+        this.music.pause();
     }
 };
 settings.bind('music', function (p) {
@@ -2494,17 +2502,28 @@ var ui = new UI(container, function () {
 });
 ui.showTitle();
 
+function resume() {
+    paused = false;
+    Music.resume();
+}
+function pause() {
+    paused = true;
+    Music.pause();
+}
+var paused = false;
 Game.onLoad(function () {
     var last = performance.now();
     var upd = function upd() {
         var time = performance.now();
         var delta = time - last;
-        ui.update(delta, game);
-        if (game) {
-            game.update(delta, renderer.width, renderer.height);
-            renderer.backgroundColor = game.backgroundColor;
-            renderer.render(game);
-            game.checkForEnd();
+        if (!paused) {
+            ui.update(delta, game);
+            if (game) {
+                game.update(delta, renderer.width, renderer.height);
+                renderer.backgroundColor = game.backgroundColor;
+                renderer.render(game);
+                game.checkForEnd();
+            }
         }
         last = time;
         requestAnimationFrame(upd);

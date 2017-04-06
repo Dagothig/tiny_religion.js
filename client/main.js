@@ -34,17 +34,28 @@ let ui = new UI(container, () => {
 });
 ui.showTitle();
 
+function resume() {
+    paused = false;
+    Music.resume();
+}
+function pause() {
+    paused = true;
+    Music.pause();
+}
+let paused = false;
 Game.onLoad(() => {
     let last = performance.now();
     let upd = () => {
         let time = performance.now();
         let delta = time - last;
-        ui.update(delta, game);
-        if (game) {
-            game.update(delta, renderer.width, renderer.height);
-            renderer.backgroundColor = game.backgroundColor;
-            renderer.render(game);
-            game.checkForEnd();
+        if (!paused) {
+            ui.update(delta, game);
+            if (game) {
+                game.update(delta, renderer.width, renderer.height);
+                renderer.backgroundColor = game.backgroundColor;
+                renderer.render(game);
+                game.checkForEnd();
+            }
         }
         last = time;
         requestAnimationFrame(upd);
