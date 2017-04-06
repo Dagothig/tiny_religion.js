@@ -187,13 +187,14 @@ class Game extends PIXI.Container {
         if (this.container) this.detachEvents();
         else {
             this.events = {};
-
             this.events.mousedown = ev => this.beginDown(ev.pageX, ev.pageY);
-            this.events.touchstart = Misc.wrap(Misc.touchToMouseEv, this.mousedown);
+            this.events.touchstart =
+                Misc.wrap(Misc.touchToMouseEv, this.events.mousedown);
             this.events.mousemove = ev => this.onMove(ev.pageX, ev.pageY);
-            this.events.touchmove = Misc.wrap(Misc.touchToMouseEv, this.mousemove);
+            this.events.touchmove =
+                Misc.wrap(Misc.touchToMouseEv, this.events.mousemove);
             this.events.mouseup = ev => this.finishDown();
-            this.events.touchend = ev => this.events.mouseup;
+            this.events.touchend = this.events.mouseup;
             this.events.mousewheel = ev => this.x -= ev.deltaX;
         }
         this.container = container;
@@ -201,8 +202,8 @@ class Game extends PIXI.Container {
         container.addEventListener('mousedown', this.events.mousedown);
         container.addEventListener('touchstart', this.events.touchstart);
         document.addEventListener('mousemove', this.events.mousemove);
-        document.addEventListener('touchmove', this.events.touchmove);
-        document.addEventListener('touchend', this.events.touchend);
+        container.addEventListener('touchmove', this.events.touchmove);
+        container.addEventListener('touchend', this.events.touchend);
         document.addEventListener('mouseup', this.events.mouseup);
         container.addEventListener('mousewheel', this.events.mousewheel);
     }
@@ -210,9 +211,9 @@ class Game extends PIXI.Container {
         this.container.removeEventListener('mousedown', this.events.mousedown);
         this.container.removeEventListener('touchstart', this.events.touchstart);
         document.removeEventListener('mousemove', this.events.mousemove);
-        document.removeEventListener('touchmove', this.events.touchmove);
+        this.container.removeEventListener('touchmove', this.events.touchmove);
         document.removeEventListener('mouseup', this.events.mouseup);
-        document.removeEventListener('touchend', this.events.touchend);
+        this.container.removeEventListener('touchend', this.events.touchend);
         this.container.removeEventListener('mousewheel', this.events.mousewheel);
         this.container = null;
     }
@@ -230,17 +231,18 @@ class Game extends PIXI.Container {
     }
     finishDown() { if (this.down) this.down.finished = true; }
     updateDown(delta) {
-        let diff = this.down.current - this.down.last;
         if (!this.down.finished) {
+            let diff = this.down.current - this.down.last;
             this.down.velocity = this.down.velocity * 0.5 + diff * 0.75;
             this.x += diff;
+            this.down.last = this.down.current;
         } else {
             this.down.velocity *= 0.90;
             this.x += this.down.velocity;
         }
 
-        this.down.last = this.down.current;
-        if (this.down.finished && !this.down.velocity) this.down = null;
+        if (this.down.finished && Math.abs(this.down.velocity) < 0.01)
+            this.down = null;
     }
     onMove(x, y) {
         if (this.down && !this.down.finished) {

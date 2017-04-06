@@ -1,7 +1,8 @@
+let scaling = 1;
 document.addEventListener('DOMContentLoaded', () => {
     // Setup renderer
     PIXI.scaleModes.DEFAULT = PIXI.scaleModes.NEAREST;
-    let renderer = PIXI.autoDetectRenderer(), scaling = 1;
+    let renderer = PIXI.autoDetectRenderer();
     renderer.roundPixels = true;
     container.appendChild(renderer.view);
     let resize = () => {
