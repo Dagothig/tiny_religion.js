@@ -182,9 +182,7 @@ class God extends PIXI.Container {
         let saturation = Math.max(Math.abs(life), Math.abs(man));
         let lightness = attention / (attention < 0 ? 6 : 4) + 0.5;
         this.tint = PIXI.Color.fromHSL(hue, saturation, lightness);
-        ui.btnsTag.style.backgroundColor =
-            '#' + PIXI.Color.fromHSL(hue, saturation * 0.5, lightness * 0.5)
-            .toString('16').padStart(6, '0');
+        this.offTint = PIXI.Color.fromHSL(hue, saturation * 0.5, lightness * 0.5);
     }
 
     event(what, scalar, where) {

@@ -40,34 +40,34 @@ class Sound {
 }
 settings.bind('sound', m => Sound.mute = !m);
 let sounds = {
-    titleScreen: new Sound('sounds/TitleScreen.wav'),
+    titleScreen: new Sound('sounds/TitleScreen.mp3'),
 
-    build: new Sound('sounds/Build.wav'),
-    done: new Sound('sounds/Done.wav'),
+    build: new Sound('sounds/Build.mp3'),
+    done: new Sound('sounds/Done.mp3'),
 
-    builderTrain: new Sound('sounds/BuilderTrain.wav'),
-    warriorTrain: new Sound('sounds/WarriorTrain.wav'),
-    priestTrain: new Sound('sounds/PriestTrain.wav'),
-    untrain: new Sound('sounds/VillagerTrain.wav'),
+    builderTrain: new Sound('sounds/BuilderTrain.mp3'),
+    warriorTrain: new Sound('sounds/WarriorTrain.mp3'),
+    priestTrain: new Sound('sounds/PriestTrain.mp3'),
+    untrain: new Sound('sounds/VillagerTrain.mp3'),
 
-    baby: new Sound('sounds/DoBabies.wav'),
-    summon: new Sound('sounds/Summon.wav'),
-    pray: new Sound('sounds/Pray.wav'),
+    baby: new Sound('sounds/DoBabies.mp3'),
+    summon: new Sound('sounds/Summon.mp3'),
+    pray: new Sound('sounds/Pray.mp3'),
 
-    hit: new Sound('sounds/Hit1.wav', 'sounds/Hit2.wav', 'sounds/Hit3.wav'),
-    convert: new Sound('sounds/Convert.wav'),
-    death: new Sound('sounds/Death.wav'),
-    lightning: new Sound('sounds/Lightning.wav'),
+    hit: new Sound('sounds/Hit1.mp3', 'sounds/Hit2.mp3', 'sounds/Hit3.mp3'),
+    convert: new Sound('sounds/Convert.mp3'),
+    death: new Sound('sounds/Death.mp3'),
+    lightning: new Sound('sounds/Lightning.mp3'),
 
-    islandLose: new Sound('sounds/IslandLose.wav'),
-    islandWin: new Sound('sounds/IslandWin.wav'),
+    islandLose: new Sound('sounds/IslandLose.mp3'),
+    islandWin: new Sound('sounds/IslandWin.mp3'),
 
-    angry: new Sound('sounds/Angry.wav'),
-    happy: new Sound('sounds/Happy.wav'),
+    angry: new Sound('sounds/Angry.mp3'),
+    happy: new Sound('sounds/Happy.mp3'),
 
-    new: new Sound('sounds/New.wav'),
-    loss: new Sound('sounds/Loss.wav'),
-    win: new Sound('sounds/Win.wav')
+    new: new Sound('sounds/New.mp3'),
+    loss: new Sound('sounds/Loss.mp3'),
+    win: new Sound('sounds/Win.mp3')
 };
 
 let Music = {
@@ -93,3 +93,10 @@ let Music = {
     }
 }
 settings.bind('music', p => Music.toggle(p));
+let musics = {
+    regular: fetchSound('sounds/Music1.ogg'),
+    combat: fetchSound('sounds/Music2.ogg')
+};
+Object.keys(musics)
+    .map(k => musics[k])
+    .forEach(m => { m.volume = 0.5; m.loop = false; });

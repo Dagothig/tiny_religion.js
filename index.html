@@ -9,7 +9,7 @@
         <link rel="author" href="https://dagothig.com" />
         <link rel="canonical" href="http://tiny-religion.dagothig.com/" />
 
-                <!-- for Facebook -->
+        <!-- for Facebook -->
         <meta name="og:title" property="og:title" content="Tiny Religion" />
         <meta name="og:url" property="og:url" content="http://tiny-religion.dagothig.com/" />
         <meta name="og:type" property="og:type" content="game" />
@@ -26,106 +26,10 @@
 
         <link rel="icon" type="image/x-icon" href="favicon.ico?ver=3.0" />
         <link rel="stylesheet" type="text/css" href="style.css" />
-        <script src="client/extensions.js"></script>
         <script src="client/pixi.min.js"></script>
-        <script src="client/pixi-extensions.js"></script>
-        <script src="client/settings.js"></script>
-
-        <script src="client/sound.js"></script>
-        <!-- Doesn't work on a lot of navigators -->
-        <!--script src="client/music.js"></script>
-        <script src="client/sheet1.js"></script>
-        <script src="client/sheet2.js"></script-->
-
-        <script src="client/sfx.js"></script>
-        <script src="client/god.js"></script>
-        <script src="client/kingdom.js"></script>
-        <script src="client/island.js"></script>
-        <script src="client/building.js"></script>
-        <script src="client/person.js"></script>
-        <script src="client/game.js"></script>
-
-        <script src="client/ui.js"></script>
+        <script src="client.js"></script>
     </head>
     <body>
         <div id="container"></div>
-        <script>
-            let music1 = fetchSound('sounds/Music1.mp3'),
-                music2 = fetchSound('sounds/Music2.mp3');
-            music1.loop = music2.loop= true;
-            music1.volume = music2.volume = 0.5;
-
-            PIXI.scaleModes.DEFAULT = PIXI.scaleModes.NEAREST;
-            let renderer = PIXI.autoDetectRenderer(), scaling = 1;
-            renderer.roundPixels = true;
-            container.appendChild(renderer.view);
-            let resize = () => {
-                let w = container.clientWidth, h = container.clientHeight;
-                if (!h) return;
-                scaling = 1;
-                if (h < 420) {
-                    w *= 420 / h;
-                    h = 420;
-                    scaling++;
-                }
-                renderer.resize(w, h);
-            }
-            window.addEventListener('resize', resize);
-            resize();
-
-            let keys = [];
-            window.isKeyPressed = key => !!keys[key];
-            window.addEventListener('keydown', ev => keys[ev.keyCode] = true);
-            window.addEventListener('keyup', ev => keys[ev.keyCode] = false);
-
-            renderer.render(new PIXI.Container());
-            let game, ui = new UI(g => game = g);
-            ui.showTitle();
-            PIXI.loader.load(() => {
-                let last = performance.now();
-                let upd = () => {
-                    let time = performance.now();
-                    let delta = time - last;
-                    ui.update(delta, game);
-                    if (game) {
-                        game.update(delta, renderer.width, renderer.height);
-                        renderer.backgroundColor = game.backgroundColor;
-                        renderer.render(game);
-                        game.checkForEnd();
-                    }
-                    last = time;
-                    requestAnimationFrame(upd);
-                }
-                upd();
-                resize();
-            });
-
-            let processTouchEvent = ev => {
-                let newEv = Array.from(ev.touches).reduce((obj, touch) => {
-                    obj.pageX += touch.pageX;
-                    obj.pageY += touch.pageY;
-                    return obj;
-                }, { pageX: 0, pageY: 0 });
-                newEv.pageX /= ev.touches.length;
-                newEv.pageY /= ev.touches.length;
-                newEv.pageX *= scaling;
-                newEv.pageY *= scaling;
-                return newEv;
-            }
-            let wrap = (f1, f2) => (...args) => f2(f1.apply(this, args));
-
-            let mousedown = ev => game && game.beginDown(ev.pageX, ev.pageY);
-            container.onmousedown = mousedown;
-            container.ontouchstart = wrap(processTouchEvent, mousedown);
-
-            let mousemove = ev => game && game.onMove(ev.pageX, ev.pageY);
-            document.onmousemove = mousemove;
-            document.ontouchmove = wrap(processTouchEvent, mousemove);
-
-            document.ontouchend = document.onmouseup =
-                ev => game && game.finishDown();
-
-            container.onmousewheel = ev => game && (game.x -= ev.deltaX);
-        </script>
     </body>
 </html>

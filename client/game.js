@@ -41,7 +41,10 @@ class Game extends PIXI.Container {
     constructor(onFinished, goal = Game.shortGoal) {
         super();
         this.goal = goal;
-        this.onFinished = onFinished;
+        this.onFinished = win => {
+            Music.stop();
+            onFinished(win);
+        };
 
         this.god = new God();
         this.addChild(this.god);
@@ -83,8 +86,6 @@ class Game extends PIXI.Container {
     }
 
     update(delta, width, height) {
-        if (window.isKeyPressed(37)) this.x += 5 + this.islands.length;
-        if (window.isKeyPressed(39)) this.x -= 5 + this.islands.length;
         if (this.down) this.updateDown(delta);
         let totalWidth = this.islands.length * this.islandBounds.width;
         let target;
@@ -109,8 +110,8 @@ class Game extends PIXI.Container {
         this.children.forEach((child, i) => child.__i__ = i);
         this.children.sort((a, b) => (a.z || 0) - (b.z || 0));
 
-        if (this.player.linkedTo(this, this.ai)) Music.switchTo(music2);
-        else Music.switchTo(music1);
+        if (this.player.linkedTo(this, this.ai)) Music.switchTo(musics.combat);
+        else Music.switchTo(musics.regular);
     }
     updateColor() {
         let feeling = this.god.feeling(this.goal);
@@ -182,6 +183,40 @@ class Game extends PIXI.Container {
         this.addIsland(island);
     }
 
+    attachEvents(container) {
+        if (this.container) this.detachEvents();
+        else {
+            this.events = {};
+
+            this.events.mousedown = ev => this.beginDown(ev.pageX, ev.pageY);
+            this.events.touchstart = Misc.wrap(Misc.touchToMouseEv, this.mousedown);
+            this.events.mousemove = ev => this.onMove(ev.pageX, ev.pageY);
+            this.events.touchmove = Misc.wrap(Misc.touchToMouseEv, this.mousemove);
+            this.events.mouseup = ev => this.finishDown();
+            this.events.touchend = ev => this.events.mouseup;
+            this.events.mousewheel = ev => this.x -= ev.deltaX;
+        }
+        this.container = container;
+
+        container.addEventListener('mousedown', this.events.mousedown);
+        container.addEventListener('touchstart', this.events.touchstart);
+        document.addEventListener('mousemove', this.events.mousemove);
+        document.addEventListener('touchmove', this.events.touchmove);
+        document.addEventListener('touchend', this.events.touchend);
+        document.addEventListener('mouseup', this.events.mouseup);
+        container.addEventListener('mousewheel', this.events.mousewheel);
+    }
+    detachEvents() {
+        this.container.removeEventListener('mousedown', this.events.mousedown);
+        this.container.removeEventListener('touchstart', this.events.touchstart);
+        document.removeEventListener('mousemove', this.events.mousemove);
+        document.removeEventListener('touchmove', this.events.touchmove);
+        document.removeEventListener('mouseup', this.events.mouseup);
+        document.removeEventListener('touchend', this.events.touchend);
+        this.container.removeEventListener('mousewheel', this.events.mousewheel);
+        this.container = null;
+    }
+
     beginDown(x, y) {
         this.down = {
             start: x,
@@ -217,3 +252,16 @@ Game.tinyGoal = 3000;
 Game.shortGoal = 6000;
 Game.mediumGoal = 12000;
 Game.longGoal = 24000;
+Game.loadedHandlers = [];
+Object.defineProperty(Game, 'loaded', {
+    get () { return this._loaded; },
+    set(val) {
+        while (Game.loadedHandlers.length)
+            Game.loadedHandlers.shift()();
+        this._loaded = val;
+    }
+})
+Game.onLoad = function(handler) {
+    if (Game.loaded) handler();
+    else Game.loadedHandlers.push(handler);
+}

@@ -38,19 +38,34 @@ Array.prototype.rand = function() {
 
 // https://github.com/uxitten/polyfill/blob/master/string.polyfill.js
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/padStart
-if (!String.prototype.padStart) {
-    String.prototype.padStart = function padStart(targetLength,padString) {
-        targetLength = targetLength>>0; //floor if number or convert non-number to 0;
-        padString = String(padString || ' ');
-        if (this.length > targetLength) {
-            return String(this);
+String.prototype.padStart = String.prototype.padStart
+|| function padStart(targetLength,padString) {
+    targetLength = targetLength >> 0; //floor if number or convert non-number to 0;
+    padString = String(padString || ' ');
+    if (this.length > targetLength) {
+        return String(this);
+    }
+    else {
+        targetLength = targetLength-this.length;
+        if (targetLength > padString.length) {
+            padString += padString.repeat(targetLength/padString.length); //append to original to ensure we are longer than needed
         }
-        else {
-            targetLength = targetLength-this.length;
-            if (targetLength > padString.length) {
-                padString += padString.repeat(targetLength/padString.length); //append to original to ensure we are longer than needed
-            }
-            return padString.slice(0,targetLength) + String(this);
-        }
-    };
-}
+        return padString.slice(0,targetLength) + String(this);
+    }
+};
+
+let Misc = {
+    touchToMouseEv(ev) {
+        let newEv = Array.from(ev.touches).reduce((obj, touch) => {
+            obj.pageX += touch.pageX;
+            obj.pageY += touch.pageY;
+            return obj;
+        }, { pageX: 0, pageY: 0 });
+        newEv.pageX /= ev.touches.length;
+        newEv.pageY /= ev.touches.length;
+        newEv.pageX *= scaling;
+        newEv.pageY *= scaling;
+        return newEv;
+    },
+    wrap(f1, f2) { return (...args) => f2(f1.apply(this, args)); }
+};
