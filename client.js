@@ -2768,9 +2768,9 @@ var ui = new UI(container, function () {
         game.attachEvents(container);
     });
 });
-ui.showTitle();
 settings.bind('tooltips', resize);
 
+var paused = false;
 function resume() {
     paused = false;
     Music.resume();
@@ -2779,7 +2779,23 @@ function pause() {
     paused = true;
     Music.pause();
 }
-var paused = false;
+
+var state = JSON.parse(localStorage.getItem('save'));
+function save() {
+    state = game.outputState();
+    localStorage.setItem('save', JSON.stringify(state));
+}
+function restore() {
+    if (!state) return;
+    if (game) game.detachEvents();
+    game = new Game(function (win) {
+        ui.showTitle(win);
+        game.detachEvents();
+        game = null;
+    }, state);
+    game.attachEvents(container);
+}
+
 Game.onLoad(function () {
     var last = performance.now();
     var upd = function upd() {
@@ -2801,18 +2817,4 @@ Game.onLoad(function () {
     resize();
 });
 
-var state = JSON.parse(localStorage.getItem('save'));
-function save() {
-    state = game.outputState();
-    localStorage.setItem('save', JSON.stringify(state));
-}
-function restore() {
-    if (!state) return;
-    if (game) game.detachEvents();
-    game = new Game(function (win) {
-        ui.showTitle(win);
-        game.detachEvents();
-        game = null;
-    }, state);
-    game.attachEvents(container);
-}
+if (state) restore();else ui.showTitle();

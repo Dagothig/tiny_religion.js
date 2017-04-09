@@ -37,9 +37,9 @@ let ui = new UI(container, () => {
         game.attachEvents(container);
     });
 });
-ui.showTitle();
 settings.bind('tooltips', resize);
 
+let paused = false;
 function resume() {
     paused = false;
     Music.resume();
@@ -48,7 +48,23 @@ function pause() {
     paused = true;
     Music.pause();
 }
-let paused = false;
+
+let state = JSON.parse(localStorage.getItem('save'));
+function save() {
+    state = game.outputState();
+    localStorage.setItem('save', JSON.stringify(state));
+}
+function restore() {
+    if (!state) return;
+    if (game) game.detachEvents();
+    game = new Game(win => {
+        ui.showTitle(win);
+        game.detachEvents();
+        game = null;
+    }, state);
+    game.attachEvents(container);
+}
+
 Game.onLoad(() => {
     let last = performance.now();
     let upd = () => {
@@ -70,18 +86,5 @@ Game.onLoad(() => {
     resize();
 });
 
-let state = JSON.parse(localStorage.getItem('save'));
-function save() {
-    state = game.outputState();
-    localStorage.setItem('save', JSON.stringify(state));
-}
-function restore() {
-    if (!state) return;
-    if (game) game.detachEvents();
-    game = new Game(win => {
-        ui.showTitle(win);
-        game.detachEvents();
-        game = null;
-    }, state);
-    game.attachEvents(container);
-}
+if (state) restore();
+else ui.showTitle();
