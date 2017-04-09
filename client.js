@@ -2817,4 +2817,7 @@ Game.onLoad(function () {
     resize();
 });
 
-if (state) restore();else ui.showTitle();
+if (!state) ui.showTitle();else {
+    ui.hideTitle();
+    Game.onLoad(restore);
+}
