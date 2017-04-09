@@ -87,7 +87,4 @@ Game.onLoad(() => {
 });
 
 if (!state) ui.showTitle();
-else {
-    ui.hideTitle();
-    Game.onLoad(restore);
-}
+else Game.onLoad(() => { ui.hideTitle(); restore(); });

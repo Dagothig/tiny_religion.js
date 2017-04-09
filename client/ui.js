@@ -3,12 +3,13 @@
 class UI {
     constructor(gameContainer, onTitle) {
         this.gameContainer = gameContainer;
+        this.gameContainer.classList.add('hidden');
         this.titleTag = document.createElement('div');
-        this.titleTag.classList.add('title');
+        this.titleTag.classList.add('hidden', 'title');
         this.titleTag.onclick = onTitle;
 
         this.btnsTag = document.createElement('div');
-        this.btnsTag.classList.add('btns');
+        this.btnsTag.classList.add('hidden', 'btns');
         settings.bind('tooltips', t =>
             this.btnsTag.classList[t ? 'add' : 'remove']('tooltips'));
         this.btns =
