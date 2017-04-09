@@ -46,17 +46,15 @@ class God extends PIXI.Container {
         this.mouth.anchor.x = this.mouth.anchor.y = 0.5;
         this.mouth.x = -2; this.mouth.y = 112;
 
-        this.changePersonality(true);
-
         this.addChild(this.background, this.head,
             this.leftEyeSocket, this.rightEyeSocket,
             this.leftBrow, this.rightBrow,
             this.mouth);
 
         this.events = {
-            warrior: () => -this.likesLife,
-            priest: () => this.likesAttention,
-            builder: () => this.likesManMade,
+            warrior: () => -this.likesLife/2,
+            priest: () => this.likesAttention/2,
+            builder: () => this.likesManMade/2,
             baby: () => this.likesLife,
             bridge: () => this.likesManMade * 4,
             house: () => this.likesManMade * 2 + this.likesLife * 1.5,
@@ -73,6 +71,8 @@ class God extends PIXI.Container {
             pray: () => this.likesAttention,
             summon: () => this.likesAttention / 2 - this.likesLife / 2
         };
+
+        this.changePersonality(true);
     }
     get z() { return -200; }
     set tint(val) {
@@ -99,11 +99,20 @@ class God extends PIXI.Container {
         this.background.tint =
             PIXI.Color.interpolate(game.cloudColor, 0xffffff, 0.5);
 
-        this.overallMood += this.mood /= 1.01;
+        this.overallMood += this.mood;
+        this.mood -= 0.01 * Math.sign(this.mood);
+        if (Math.abs(this.mood) < 0.01) this.mood = 0;
+
         let feeling = this.feeling(game.goal);
         this.tileY = Math.bounded(3 - Math.round(feeling * 3), 0, 6);
 
-        if (Math.random() < -feeling / 500) this.doSacrifice(game);
+        if (Math.random() < -feeling / 400) this.doSacrifice(game);
+
+        if (this.mood > 0) {
+            this.satisfaction += this.mood;
+            if (this.satisfaction > game.goal / 10)
+                this.changePersonality(false, game);
+        }
 
         this.sincePersonality++;
         if (this.sincePersonality > God.personalityLength)
@@ -144,6 +153,9 @@ class God extends PIXI.Container {
     changePersonality(base, game) {
         if (game) game.overlay.flash(60);
         sounds.new.play();
+        this.sincePersonality = 0;
+        this.mood = 0;
+        this.satisfaction = 0;
 
         let min = -God.preferenceModifier,
             max = God.preferenceModifier;
@@ -157,15 +169,14 @@ class God extends PIXI.Container {
             this.likesLife = min + Math.random() * range;
             this.likesAttention = min + Math.random() * range;
             this.likesManMade = min + Math.random() * range;
-            this.sincePersonality = 0;
         }
-        this.updateColor(
-            (this.likesLife - min) / range * 2 - 1,
-            (this.likesManMade - min) / range * 2 - 1,
-            (this.likesAttention - min) / range * 2 - 1
-        );
+        this.updateColor();
     }
-    updateColor(life = 0, man = 0, attention = 0) {
+    updateColor(
+        life = this.likesLife / God.preferenceModifier,
+        man = this.likesManMade / God.preferenceModifier,
+        attention = this.likesAttention / God.preferenceModifier
+    ) {
         // Get the angle into the range [0, 4[
         let angle = 2 * Math.atan2(man, life) / Math.PI;
         if (angle < 0) angle = 4 + angle;
@@ -195,6 +206,33 @@ class God extends PIXI.Container {
     lookAt(pt) {
         this.lookAtX = pt.x;
         this.lookAtY = pt.y;
+    }
+
+    outputState() {
+        return {
+            likesLife : this.likesLife,
+            likesAttention : this.likesAttention,
+            likesManMade : this.likesManMade,
+            mood : this.mood,
+            overallMood : this.overallMood,
+            sincePersonality : this.sincePersonality,
+            satisfaction : this.satisfaction,
+            lookAtX : this.lookAtX,
+            lookAtY : this.lookAtY
+        };
+    }
+
+    readState(state, game) {
+        this.likesLife = state.likesLife;
+        this.likesAttention = state.likesAttention;
+        this.likesManMade = state.likesManMade;
+        this.mood = state.mood;
+        this.overallMood = state.overallMood;
+        this.sincePersonality = state.sincePersonality;
+        this.satisfaction = state.satisfaction;
+        this.lookAtX = state.lookAtX;
+        this.lookAtY = state.lookAtY;
+        this.updateColor();
     }
 }
 God.preferenceModifier = 1;

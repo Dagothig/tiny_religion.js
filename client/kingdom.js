@@ -1,7 +1,8 @@
 'use strict';
 
 class Kingdom {
-    constructor(tint, isPlayer) {
+    constructor(name, tint, isPlayer) {
+        this.name = name;
         this.tint = tint;
         this.isPlayer = isPlayer;
         this.resetCount = x => this[x.name + 'Count'] = 0;

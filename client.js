@@ -803,19 +803,17 @@ var God = function (_PIXI$Container) {
         _this.mouth.anchor.x = _this.mouth.anchor.y = 0.5;
         _this.mouth.x = -2;_this.mouth.y = 112;
 
-        _this.changePersonality(true);
-
         _this.addChild(_this.background, _this.head, _this.leftEyeSocket, _this.rightEyeSocket, _this.leftBrow, _this.rightBrow, _this.mouth);
 
         _this.events = {
             warrior: function warrior() {
-                return -_this.likesLife;
+                return -_this.likesLife / 2;
             },
             priest: function priest() {
-                return _this.likesAttention;
+                return _this.likesAttention / 2;
             },
             builder: function builder() {
-                return _this.likesManMade;
+                return _this.likesManMade / 2;
             },
             baby: function baby() {
                 return _this.likesLife;
@@ -863,6 +861,8 @@ var God = function (_PIXI$Container) {
                 return _this.likesAttention / 2 - _this.likesLife / 2;
             }
         };
+
+        _this.changePersonality(true);
         return _this;
     }
 
@@ -871,11 +871,19 @@ var God = function (_PIXI$Container) {
         value: function update(delta, game) {
             this.background.tint = PIXI.Color.interpolate(game.cloudColor, 0xffffff, 0.5);
 
-            this.overallMood += this.mood /= 1.01;
+            this.overallMood += this.mood;
+            this.mood -= 0.01 * Math.sign(this.mood);
+            if (Math.abs(this.mood) < 0.01) this.mood = 0;
+
             var feeling = this.feeling(game.goal);
             this.tileY = Math.bounded(3 - Math.round(feeling * 3), 0, 6);
 
-            if (Math.random() < -feeling / 500) this.doSacrifice(game);
+            if (Math.random() < -feeling / 400) this.doSacrifice(game);
+
+            if (this.mood > 0) {
+                this.satisfaction += this.mood;
+                if (this.satisfaction > game.goal / 10) this.changePersonality(false, game);
+            }
 
             this.sincePersonality++;
             if (this.sincePersonality > God.personalityLength) this.changePersonality(false, game);
@@ -922,6 +930,9 @@ var God = function (_PIXI$Container) {
         value: function changePersonality(base, game) {
             if (game) game.overlay.flash(60);
             sounds.new.play();
+            this.sincePersonality = 0;
+            this.mood = 0;
+            this.satisfaction = 0;
 
             var min = -God.preferenceModifier,
                 max = God.preferenceModifier;
@@ -935,16 +946,15 @@ var God = function (_PIXI$Container) {
                 this.likesLife = min + Math.random() * range;
                 this.likesAttention = min + Math.random() * range;
                 this.likesManMade = min + Math.random() * range;
-                this.sincePersonality = 0;
             }
-            this.updateColor((this.likesLife - min) / range * 2 - 1, (this.likesManMade - min) / range * 2 - 1, (this.likesAttention - min) / range * 2 - 1);
+            this.updateColor();
         }
     }, {
         key: 'updateColor',
         value: function updateColor() {
-            var life = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
-            var man = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-            var attention = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+            var life = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.likesLife / God.preferenceModifier;
+            var man = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.likesManMade / God.preferenceModifier;
+            var attention = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : this.likesAttention / God.preferenceModifier;
 
             // Get the angle into the range [0, 4[
             var angle = 2 * Math.atan2(man, life) / Math.PI;
@@ -977,6 +987,35 @@ var God = function (_PIXI$Container) {
         value: function lookAt(pt) {
             this.lookAtX = pt.x;
             this.lookAtY = pt.y;
+        }
+    }, {
+        key: 'outputState',
+        value: function outputState() {
+            return {
+                likesLife: this.likesLife,
+                likesAttention: this.likesAttention,
+                likesManMade: this.likesManMade,
+                mood: this.mood,
+                overallMood: this.overallMood,
+                sincePersonality: this.sincePersonality,
+                satisfaction: this.satisfaction,
+                lookAtX: this.lookAtX,
+                lookAtY: this.lookAtY
+            };
+        }
+    }, {
+        key: 'readState',
+        value: function readState(state, game) {
+            this.likesLife = state.likesLife;
+            this.likesAttention = state.likesAttention;
+            this.likesManMade = state.likesManMade;
+            this.mood = state.mood;
+            this.overallMood = state.overallMood;
+            this.sincePersonality = state.sincePersonality;
+            this.satisfaction = state.satisfaction;
+            this.lookAtX = state.lookAtX;
+            this.lookAtY = state.lookAtY;
+            this.updateColor();
         }
     }, {
         key: 'z',
@@ -1024,11 +1063,12 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Kingdom = function () {
-    function Kingdom(tint, isPlayer) {
+    function Kingdom(name, tint, isPlayer) {
         var _this = this;
 
         _classCallCheck(this, Kingdom);
 
+        this.name = name;
         this.tint = tint;
         this.isPlayer = isPlayer;
         this.resetCount = function (x) {
@@ -1498,10 +1538,10 @@ var Island = function (_PIXI$Container) {
             var buildingCount = 0,
                 treeCount = 0;
             this.buildings = this.buildings.filter(function (b) {
-                if (b.type === Tree) treeCount++;else if (b.type === FallingTree) {} else buildingCount++;
+                if (b.type === Tree) treeCount++;else if (b.type === FallingTree) {} else if (b.type !== Bridge) buildingCount++;
                 return !b.shouldRemove;
             });
-            this.ground.tileX = Math.bounded(buildingCount / 3, 0, 3) | 0;
+            this.ground.tileX = Math.bounded(buildingCount / 3 - treeCount / 6, 0, 3) | 0;
         }
     }, {
         key: 'changeKingdom',
@@ -1514,6 +1554,29 @@ var Island = function (_PIXI$Container) {
             });
         }
     }, {
+        key: 'outputState',
+        value: function outputState() {
+            return {
+                people: this.people.map(function (person) {
+                    return person.outputState();
+                }),
+                buildings: this.buildings.map(function (building) {
+                    return building.outputState();
+                }),
+                kingdom: this.kingdom.name
+            };
+        }
+    }, {
+        key: 'resolveIndices',
+        value: function resolveIndices(game) {
+            this.people.forEach(function (person) {
+                return person.resolveIndices(game);
+            });
+            this.buildings.forEach(function (building) {
+                return building.resolveIndices(game);
+            });
+        }
+    }, {
         key: 'z',
         get: function get() {
             return -100;
@@ -1523,6 +1586,16 @@ var Island = function (_PIXI$Container) {
     return Island;
 }(PIXI.Container);
 
+Island.fromState = function (state, game) {
+    var isl = new Island(game.islandsWidth, 0);
+    isl.people = state.people.map(function (s) {
+        return Person.fromState(s, isl, game);
+    });
+    isl.buildings = state.buildings.map(function (s) {
+        return Building.fromState(s, isl, game);
+    });
+    return isl;
+};
 PIXI.loader.add('island', 'images/Island.png', null, function (res) {
     return Island.ground = new PIXI.TiledTexture(res.texture, 480, 240);
 }).add('cloud', 'images/Cloud.png', null, function (res) {
@@ -1627,6 +1700,21 @@ var Building = function (_PIXI$TiledSprite) {
             if (this.type.update) this.type.update.apply(this, arguments);
         }
     }, {
+        key: 'outputState',
+        value: function outputState() {
+            return {
+                x: this.x,
+                y: this.y,
+                type: this.type.name,
+                kingdom: this.kingdom.name,
+                buildTime: this.buildTime,
+                finished: this.finished
+            };
+        }
+    }, {
+        key: 'resolveIndices',
+        value: function resolveIndices(game) {}
+    }, {
         key: 'radius',
         get: function get() {
             return this.type.radius;
@@ -1646,6 +1734,15 @@ var Building = function (_PIXI$TiledSprite) {
     return Building;
 }(PIXI.TiledSprite);
 
+Building.fromState = function (s, island, game) {
+    var type = Building.types.find(function (t) {
+        return t.name === s.type;
+    });
+    var kingdom = game[s.kingdom];
+    var b = new Building(s.x, s.y, type, kingdom, island, s.finished);
+    b.finished = s.finished;
+    return b;
+};
 Building.types = [];
 var Bridge = new BuildingType('bridge', 'images/Bridge.png', -10, -47, -30, false, 200, 10000, {
     building: function building() {
@@ -1798,13 +1895,11 @@ var Person = function (_PIXI$AnimatedSprite) {
     }, {
         key: 'moveTo',
         value: function moveTo(islands, index) {
-            var currentIndex = this.island.index;
-            var dir = Math.sign(index - currentIndex);
-
-            for (var i = currentIndex; i !== index; i += dir) {
+            var dir = Math.sign(index - this.island.index);
+            for (var i = this.island.index; i !== index; i += dir) {
                 var prev = islands[i],
                     next = islands[i + dir];
-                var bridge = dir === 1 ? prev.bridge : next.bridge;
+                var bridge = dir > 0 ? prev.bridge : next.bridge;
                 if (!bridge || !bridge.finished) return;
                 this.movements.push({
                     x: bridge.x - dir * 90,
@@ -1837,6 +1932,42 @@ var Person = function (_PIXI$AnimatedSprite) {
             return this.praying <= 0 && (this.praying = Math.random() * 50 + 75);
         }
     }, {
+        key: 'outputState',
+        value: function outputState() {
+            return Object.merge({
+                x: this.x,
+                y: this.y,
+                job: this.job.name,
+                health: this.health,
+                isSummon: this.isSummon,
+                sinceTookDamage: this.sinceTookDamage,
+                praying: this.praying,
+                speed: this.speed,
+                movX: this.movX,
+                movY: this.movY,
+                target: this.target && {
+                    x: this.target.x, y: this.target.y,
+                    island: this.target.island.index
+                },
+                movements: this.movements.map(function (m) {
+                    return {
+                        x: m.x, y: m.y,
+                        island: m.island.index
+                    };
+                }),
+                kingdom: this.kingdom.name
+            }, this.job.outputState && this.job.outputState.apply(this, arguments));
+        }
+    }, {
+        key: 'resolveIndices',
+        value: function resolveIndices(game) {
+            if (this.target) this.target.island = game.islands[this.target.island];
+            this.movements.forEach(function (m) {
+                return m.island = game.islands[m.ìsland];
+            });
+            this.job.resolveIndices && this.job.resolveIndices.apply(this, arguments);
+        }
+    }, {
         key: 'z',
         get: function get() {
             return this.y;
@@ -1861,6 +1992,28 @@ var Person = function (_PIXI$AnimatedSprite) {
     return Person;
 }(PIXI.AnimatedSprite);
 
+Person.fromState = function (s, island, game) {
+    var job = Person.jobs.find(function (j) {
+        return j.name === s.job;
+    });
+    var kingdom = game[s.kingdom];
+    var p = new Person(s.x, s.y, job, kingdom, island, s.isSummon);
+    p.health = s.health;
+    p.sinceTookDamage = s.sinceTookDamage;
+    p.praying = s.praying;
+    p.speed = s.speed;
+    p.movX = s.movX;
+    p.movY = s.movY;
+    p.target = s.target && {
+        x: s.target.x, y: s.target.y,
+        island: s.target.island
+    };
+    p.movements = s.movements.map(function (m) {
+        return { x: m.x, y: m.y, island: m.island };
+    });
+    p.job.readState && p.job.readState.apply(p, arguments);
+    return p;
+};
 Person.jobs = [];
 var Villager = new Job('villager', 'images/Villager.png', {
     person: function person() {
@@ -1887,6 +2040,12 @@ var Villager = new Job('villager', 'images/Villager.png', {
             if (this.kingdom.isPlayer) game.god.event('baby', 1, this.position);
             return baby;
         }
+    },
+    outputState: function outputState() {
+        return { sinceBaby: this.sinceBaby };
+    },
+    readState: function readState(state, game) {
+        this.sinceBaby = state.sinceBaby;
     }
 }),
     Builder = new Job('builder', 'images/Builder.png', {
@@ -1903,7 +2062,7 @@ var Villager = new Job('villager', 'images/Villager.png', {
     },
     findNextTarget: function findNextTarget(game) {
         if (this.building && !this.building.finished) {
-            moveTo(game.islands, this.building.island.index);
+            this.moveTo(game.islands, this.building.island.index);
             var x = (Math.random() * 2 - 1) * this.building.radius * 0.75;
             var y = (Math.random() * 2 - 1) * this.building.radius * 0.75;
             if (this.building.type === Bridge) {
@@ -1918,6 +2077,20 @@ var Villager = new Job('villager', 'images/Villager.png', {
             });
             return true;
         }
+    },
+    outputState: function outputState() {
+        return this.building && {
+            building: {
+                index: this.building.island.buildings.indexOf(this.building),
+                island: this.building.island.index
+            }
+        };
+    },
+    readState: function readState(state, game) {
+        this.buidling = state.building;
+    },
+    resolveIndices: function resolveIndices(game) {
+        if (this.building) this.building = game.islands[this.building.island].buildings[this.building.index];
     }
 }),
     Warrior = new Job('warrior', 'images/Warrior.png', {
@@ -1959,6 +2132,9 @@ var Villager = new Job('villager', 'images/Villager.png', {
             if (this.kingdom.isPlayer) game.god.event('summon', 1, this.position);
             return summon;
         }
+    },
+    outputState: function outputState() {
+        return { sinceSummon: this.sinceSummon };
     }
 });
 'use strict';
@@ -1974,7 +2150,9 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var Overlay = function (_PIXI$Sprite) {
     _inherits(Overlay, _PIXI$Sprite);
 
-    function Overlay(texture) {
+    function Overlay() {
+        var texture = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : PIXI.whitePixel;
+
         _classCallCheck(this, Overlay);
 
         var _this = _possibleConstructorReturn(this, (Overlay.__proto__ || Object.getPrototypeOf(Overlay)).call(this, texture));
@@ -2005,6 +2183,14 @@ var Overlay = function (_PIXI$Sprite) {
             this.flashes.push({ time: duration, duration: duration });
         }
     }, {
+        key: 'outputState',
+        value: function outputState() {
+            return {
+                alpha: this.alpha,
+                flashes: this.flashes.slice()
+            };
+        }
+    }, {
         key: 'z',
         get: function get() {
             return 1000;
@@ -2013,6 +2199,13 @@ var Overlay = function (_PIXI$Sprite) {
 
     return Overlay;
 }(PIXI.Sprite);
+
+Overlay.fromState = function (state, game) {
+    var overlay = new Overlay();
+    overlay.alpha = state.alpha;
+    overlay.flashes = state.flashes;
+    return overlay;
+};
 
 var darkSkyColor = 0x28162f,
     skyColor = 0xb2b8c0,
@@ -2028,39 +2221,44 @@ var Game = function (_PIXI$Container) {
     _inherits(Game, _PIXI$Container);
 
     function Game(onFinished) {
-        var goal = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : Game.shortGoal;
+        var state = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : { x: 0, y: 0, goal: Game.mediumGoal };
 
         _classCallCheck(this, Game);
 
         var _this2 = _possibleConstructorReturn(this, (Game.__proto__ || Object.getPrototypeOf(Game)).call(this));
 
-        _this2.goal = goal;
+        _this2.x = state.x;
+        _this2.y = state.y;
+        _this2.goal = state.goal;
         _this2.onFinished = function (win) {
             Music.stop();
             onFinished(win);
         };
 
         _this2.god = new God();
+        if (state.god) _this2.god.readState(state.god, _this2);
         _this2.addChild(_this2.god);
 
-        _this2.player = new Kingdom(0x113996, true);
-        _this2.ai = new Kingdom(0xab1705, false);
-        _this2.gaia = new Kingdom(0x888888, false);
+        _this2.player = new Kingdom('player', 0x113996, true);
+        _this2.ai = new Kingdom('ai', 0xab1705, false);
+        _this2.gaia = new Kingdom('gaia', 0x888888, false);
         _this2.islands = [];
 
-        var starting = new Island(0, 0, _this2.player);
-        starting.generateBuilding(House, true);
-        starting.generatePlain();
-        _this2.islandBounds = starting.getLocalBounds();
-        starting.people.push(new Person(0, 0, Villager, _this2.player, starting), new Person(0, 0, Villager, _this2.player, starting), new Person(0, 0, Warrior, _this2.player, starting), new Person(0, 0, Priest, _this2.player, starting), new Person(0, 0, Builder, _this2.player, starting));
-        _this2.addIsland(starting);
+        if (state.islands) {
+            state.islands.forEach(function (s) {
+                return _this2.addIsland(Island.fromState(s, _this2));
+            });
+            _this2.islands.forEach(function (island) {
+                return island.resolveIndices(_this2);
+            });
+        } else _this2.generateInitial();
 
         _this2.cloudStart = new PIXI.Sprite(Island.cloudStart);
-        _this2.cloudStart.x = _this2.islandBounds.left;
+        _this2.cloudStart.x = _this2.islBnds.left;
 
         _this2.cloudEnd = new PIXI.Sprite(Island.cloudStart);
         _this2.cloudEnd.scale.x = -1;
-        _this2.cloudEnd.x = _this2.islandBounds.right;
+        _this2.cloudEnd.x = _this2.islBnds.left + _this2.islandsWidth;
 
         _this2.cloudStart.anchor.x = _this2.cloudEnd.anchor.x = 1;
         _this2.cloudStart.anchor.y = _this2.cloudEnd.anchor.y = 0.3;
@@ -2068,8 +2266,10 @@ var Game = function (_PIXI$Container) {
 
         _this2.skiesMood = 0;
 
-        _this2.overlay = new Overlay(PIXI.whitePixel);
-        _this2.overlay.flash(60);
+        if (state.overlay) _this2.overlay = Overlay.fromState(state.overlay, _this2);else {
+            _this2.overlay = new Overlay();
+            _this2.overlay.flash(60);
+        }
         _this2.addChild(_this2.overlay);
         return _this2;
     }
@@ -2080,13 +2280,13 @@ var Game = function (_PIXI$Container) {
             var _this3 = this;
 
             if (this.down) this.updateDown(delta);
-            var totalWidth = this.islands.length * this.islandBounds.width;
+            var totalWidth = this.islandsWidth;
             var target = void 0;
             if (this.islands.length === 1 || width > totalWidth) {
-                target = (width - totalWidth + this.islandBounds.width) / 2;
-            } else target = Math.bounded(this.x, -(this.islandBounds.left + totalWidth - width), -this.islandBounds.left);
+                target = (width - totalWidth + this.islBnds.width) / 2;
+            } else target = Math.bounded(this.x, -(this.islBnds.left + totalWidth - width), -this.islBnds.left);
             this.x = target * 0.05 + this.x * 0.95;
-            this.y = height - this.islandBounds.bottom;
+            this.y = height - this.islBnds.bottom;
             this.god.x = -this.x + width / 2;
             this.god.y = -this.y;
 
@@ -2130,12 +2330,22 @@ var Game = function (_PIXI$Container) {
     }, {
         key: 'addIsland',
         value: function addIsland(island) {
+            if (!this.islBnds) this.islBnds = island.getLocalBounds();
             island.index = this.islands.length;
             this.islands.add(island);
             this.addChild(island);
             if (island.buildings.length) this.addChild.apply(this, island.buildings);
             if (island.people.length) this.addChild.apply(this, island.people);
-            if (this.cloudEnd) this.cloudEnd.x = this.islandBounds.width * (this.islands.length - 1) + this.islandBounds.right;
+            if (this.cloudEnd) this.cloudEnd.x = this.islBnds.width * (this.islands.length - 1) + this.islBnds.right;
+        }
+    }, {
+        key: 'generateInitial',
+        value: function generateInitial() {
+            var starting = new Island(this.islandsWidth, 0, this.player);
+            starting.generateBuilding(House, true);
+            starting.generatePlain();
+            starting.people.push(new Person(0, 0, Villager, this.player, starting), new Person(0, 0, Villager, this.player, starting), new Person(0, 0, Warrior, this.player, starting), new Person(0, 0, Priest, this.player, starting), new Person(0, 0, Builder, this.player, starting));
+            this.addIsland(starting);
         }
     }, {
         key: 'generateNewIsland',
@@ -2147,7 +2357,7 @@ var Game = function (_PIXI$Container) {
         value: function generateInhabited() {
             var count = Math.random() * this.islands.length;
             for (var i = 0; i < count; i++) {
-                var island = new Island(this.islands.length * 480, 0, this.ai);
+                var island = new Island(this.islandsWidth, 0, this.ai);
                 if (i === 0) island.generateOutpost();else {
                     var rnd = Math.random();
                     if (rnd < 0.33) {
@@ -2165,7 +2375,7 @@ var Game = function (_PIXI$Container) {
     }, {
         key: 'generateUninhabited',
         value: function generateUninhabited() {
-            var island = new Island(this.islands.length * 480, 0, this.gaia);
+            var island = new Island(this.islandsWidth, 0, this.gaia);
             if (Math.random() < 0.5) island.generatePlain();else island.generateForest();
             this.addIsland(island);
         }
@@ -2253,6 +2463,25 @@ var Game = function (_PIXI$Container) {
             if (this.down && !this.down.finished) {
                 this.down.current = x;
             }
+        }
+    }, {
+        key: 'outputState',
+        value: function outputState() {
+            return {
+                x: this.x,
+                y: this.y,
+                goal: this.goal,
+                overlay: this.overlay.outputState(),
+                god: this.god.outputState(),
+                islands: this.islands.map(function (island) {
+                    return island.outputState();
+                })
+            };
+        }
+    }, {
+        key: 'islandsWidth',
+        get: function get() {
+            return this.islBnds ? this.islands.length * this.islBnds.width : 0;
         }
     }]);
 
@@ -2351,20 +2580,36 @@ var UI = function () {
             return _this.game.player.sendRetreat(_this.game);
         }, null, 'retreat', 'retreat')]);
 
-        this.settingsTag = document.createElement('div');
-        this.settingsTag.classList.add('settings');
-        var sourceLink = document.createElement('a');
-        sourceLink.href = 'https://github.com/Dagothig/tiny_religion.js/';
-        sourceLink.target = 'blank';
-        sourceLink.innerHTML = 'SOURCE';
-        this.settingsTag.appendChild(sourceLink);
+        this.menuContainerTag = document.createElement('div');
+        this.menuContainerTag.classList.add('menu-container');
+
+        this.menuBtn = document.createElement('input');
+        this.menuBtn.name = this.menuBtn.id = 'menu-btn';
+        this.menuBtn.type = 'checkbox';
+        this.menuBtn.classList.add('menu-btn');
+        this.menuContainerTag.appendChild(this.menuBtn);
+
+        this.menuBtnCheck = document.createElement('label');
+        this.menuBtnCheck.classList.add('check');
+        this.menuBtnCheck.htmlFor = 'menu-btn';
+        this.menuContainerTag.appendChild(this.menuBtnCheck);
+
+        this.menuTag = document.createElement('div');
+        this.menuTag.classList.add('menu');
+
         this.settings = settings.all.map(function (n) {
             return _this.createSettings(n);
         });
 
+        this.createLink('Save', 'javascript:save()');
+        this.createLink('Restore', 'javascript:restore()');
+        this.createLink('Source', 'https://github.com/Dagothig/tiny_religion.js/').link.target = 'blank';
+
+        this.menuContainerTag.appendChild(this.menuTag);
+
         document.body.appendChild(this.titleTag);
         document.body.appendChild(this.btnsTag);
-        document.body.appendChild(this.settingsTag);
+        document.body.appendChild(this.menuContainerTag);
     }
 
     _createClass(UI, [{
@@ -2399,15 +2644,31 @@ var UI = function () {
             };
         }
     }, {
+        key: 'createLink',
+        value: function createLink(name, href) {
+            var linkContainer = document.createElement('div');
+            var link = document.createElement('a');
+            link.href = href;
+            link.innerHTML = name;
+            linkContainer.appendChild(link);
+            this.menuTag.appendChild(linkContainer);
+            return {
+                container: linkContainer,
+                link: link
+            };
+        }
+    }, {
         key: 'createSettings',
         value: function createSettings(name) {
             var setting = document.createElement('div');
 
             var lbl = document.createElement('label');
             lbl.innerHTML = name;
+            lbl.htmlFor = name;
 
             var input = document.createElement('input');
             input.type = 'checkbox';
+            input.id = name;
             input.name = name;
             input.checked = settings[name];
             input.onchange = function (ev) {
@@ -2415,8 +2676,8 @@ var UI = function () {
             };
 
             setting.appendChild(lbl);
-            lbl.appendChild(input);
-            this.settingsTag.appendChild(setting);
+            setting.appendChild(input);
+            this.menuTag.appendChild(setting);
 
             return setting;
         }
@@ -2429,7 +2690,7 @@ var UI = function () {
                     var text = btn.update && btn.update();
                     if (btn.text !== text) btn.text = btn.btn.innerHTML = text;
                 });
-                this.btnsTag.style.backgroundColor = game.god.offTint.toString('16').padStart(6, '0');
+                this.btnsTag.style.backgroundColor = '#' + game.god.offTint.toString('16').padStart(6, '0');
             }
         }
     }, {
@@ -2463,6 +2724,11 @@ var UI = function () {
 }();
 'use strict';
 
+// Remove the preload class from the body
+setTimeout(function () {
+    return document.body.classList.remove('preload');
+}, 1000);
+
 var scaling = 1;
 var container = document.createElement('div');
 container.id = 'container';
@@ -2475,7 +2741,6 @@ container.appendChild(renderer.view);
 var resize = function resize() {
     var w = container.clientWidth,
         h = container.clientHeight;
-    console.log(w, h);
     if (!h) return;
     scaling = 1;
     if (h < 420) {
@@ -2535,3 +2800,19 @@ Game.onLoad(function () {
     upd();
     resize();
 });
+
+var state = JSON.parse(localStorage.getItem('save'));
+function save() {
+    state = game.outputState();
+    localStorage.setItem('save', JSON.stringify(state));
+}
+function restore() {
+    if (!state) return;
+    if (game) game.detachEvents();
+    game = new Game(function (win) {
+        ui.showTitle(win);
+        game.detachEvents();
+        game = null;
+    }, state);
+    game.attachEvents(container);
+}

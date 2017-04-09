@@ -1,7 +1,7 @@
 'use strict';
 
 class Overlay extends PIXI.Sprite {
-    constructor(texture) {
+    constructor(texture = PIXI.whitePixel) {
         super(texture);
         this.flashes = [];
     }
@@ -23,7 +23,19 @@ class Overlay extends PIXI.Sprite {
         this.flashes.push({time: duration, duration: duration});
     }
     get z() { return 1000; }
+    outputState() {
+        return {
+            alpha: this.alpha,
+            flashes: this.flashes.slice()
+        };
+    }
 }
+Overlay.fromState = function(state, game) {
+    let overlay = new Overlay();
+    overlay.alpha = state.alpha;
+    overlay.flashes = state.flashes;
+    return overlay;
+};
 
 let darkSkyColor = 0x28162f,
     skyColor = 0xb2b8c0,
@@ -38,41 +50,36 @@ let darkSkyColor = 0x28162f,
     goodGlobalColor = 0xfff0cc;
 
 class Game extends PIXI.Container {
-    constructor(onFinished, goal = Game.shortGoal) {
+    constructor(onFinished, state = { x: 0, y: 0, goal: Game.mediumGoal }) {
         super();
-        this.goal = goal;
+        this.x = state.x;
+        this.y = state.y;
+        this.goal = state.goal;
         this.onFinished = win => {
             Music.stop();
             onFinished(win);
         };
 
         this.god = new God();
+        if (state.god) this.god.readState(state.god, this);
         this.addChild(this.god);
 
-        this.player = new Kingdom(0x113996, true);
-        this.ai = new Kingdom(0xab1705, false);
-        this.gaia = new Kingdom(0x888888, false);
+        this.player = new Kingdom('player', 0x113996, true);
+        this.ai = new Kingdom('ai', 0xab1705, false);
+        this.gaia = new Kingdom('gaia', 0x888888, false);
         this.islands = [];
 
-        let starting = new Island(0, 0, this.player);
-        starting.generateBuilding(House, true);
-        starting.generatePlain();
-        this.islandBounds = starting.getLocalBounds();
-        starting.people.push(
-            new Person(0, 0, Villager, this.player, starting),
-            new Person(0, 0, Villager, this.player, starting),
-            new Person(0, 0, Warrior, this.player, starting),
-            new Person(0, 0, Priest, this.player, starting),
-            new Person(0, 0, Builder, this.player, starting)
-        );
-        this.addIsland(starting);
+        if (state.islands) {
+            state.islands.forEach(s => this.addIsland(Island.fromState(s, this)));
+            this.islands.forEach(island => island.resolveIndices(this));
+        } else this.generateInitial();
 
         this.cloudStart = new PIXI.Sprite(Island.cloudStart);
-        this.cloudStart.x = this.islandBounds.left;
+        this.cloudStart.x = this.islBnds.left;
 
         this.cloudEnd = new PIXI.Sprite(Island.cloudStart);
         this.cloudEnd.scale.x = -1;
-        this.cloudEnd.x = this.islandBounds.right;
+        this.cloudEnd.x = this.islBnds.left + this.islandsWidth;
 
         this.cloudStart.anchor.x = this.cloudEnd.anchor.x = 1;
         this.cloudStart.anchor.y = this.cloudEnd.anchor.y = 0.3;
@@ -80,23 +87,30 @@ class Game extends PIXI.Container {
 
         this.skiesMood = 0;
 
-        this.overlay = new Overlay(PIXI.whitePixel);
-        this.overlay.flash(60);
+        if (state.overlay) this.overlay = Overlay.fromState(state.overlay, this);
+        else {
+            this.overlay = new Overlay();
+            this.overlay.flash(60);
+        }
         this.addChild(this.overlay);
+    }
+
+    get islandsWidth() {
+        return this.islBnds ? this.islands.length * this.islBnds.width : 0;
     }
 
     update(delta, width, height) {
         if (this.down) this.updateDown(delta);
-        let totalWidth = this.islands.length * this.islandBounds.width;
+        let totalWidth = this.islandsWidth;
         let target;
         if (this.islands.length === 1 || width > totalWidth) {
-            target = (width - totalWidth + this.islandBounds.width) / 2;
+            target = (width - totalWidth + this.islBnds.width) / 2;
         } else
             target = Math.bounded(this.x,
-                -(this.islandBounds.left + totalWidth - width),
-                -this.islandBounds.left);
+                -(this.islBnds.left + totalWidth - width),
+                -this.islBnds.left);
         this.x = target * 0.05 + this.x * 0.95;
-        this.y = height - this.islandBounds.bottom;
+        this.y = height - this.islBnds.bottom;
         this.god.x = -this.x + width / 2;
         this.god.y = -this.y;
 
@@ -138,6 +152,7 @@ class Game extends PIXI.Container {
     }
 
     addIsland(island) {
+        if (!this.islBnds) this.islBnds = island.getLocalBounds();
         island.index = this.islands.length;
         this.islands.add(island);
         this.addChild(island);
@@ -146,8 +161,21 @@ class Game extends PIXI.Container {
         if (island.people.length)
             this.addChild.apply(this, island.people);
         if (this.cloudEnd)
-            this.cloudEnd.x = this.islandBounds.width * (this.islands.length - 1) +
-                this.islandBounds.right;
+            this.cloudEnd.x = this.islBnds.width * (this.islands.length - 1) +
+                this.islBnds.right;
+    }
+    generateInitial() {
+        let starting = new Island(this.islandsWidth, 0, this.player);
+        starting.generateBuilding(House, true);
+        starting.generatePlain();
+        starting.people.push(
+            new Person(0, 0, Villager, this.player, starting),
+            new Person(0, 0, Villager, this.player, starting),
+            new Person(0, 0, Warrior, this.player, starting),
+            new Person(0, 0, Priest, this.player, starting),
+            new Person(0, 0, Builder, this.player, starting)
+        );
+        this.addIsland(starting);
     }
     generateNewIsland() {
         if (Math.random() < 1/(3+this.islands.length)) this.generateInhabited();
@@ -156,7 +184,7 @@ class Game extends PIXI.Container {
     generateInhabited() {
         let count = Math.random() * this.islands.length;
         for (let i = 0; i < count; i++) {
-            let island = new Island(this.islands.length * 480, 0, this.ai);
+            let island = new Island(this.islandsWidth, 0, this.ai);
             if (i === 0) island.generateOutpost();
             else {
                 let rnd = Math.random();
@@ -177,7 +205,7 @@ class Game extends PIXI.Container {
         }
     }
     generateUninhabited() {
-        let island = new Island(this.islands.length * 480, 0, this.gaia);
+        let island = new Island(this.islandsWidth, 0, this.gaia);
         if (Math.random() < 0.5) island.generatePlain();
         else island.generateForest();
         this.addIsland(island);
@@ -249,6 +277,17 @@ class Game extends PIXI.Container {
             this.down.current = x;
         }
     }
+
+    outputState() {
+        return {
+            x: this.x,
+            y: this.y,
+            goal: this.goal,
+            overlay: this.overlay.outputState(),
+            god: this.god.outputState(),
+            islands: this.islands.map(island => island.outputState())
+        };
+    }
 }
 Game.tinyGoal = 3000;
 Game.shortGoal = 6000;
@@ -256,7 +295,7 @@ Game.mediumGoal = 12000;
 Game.longGoal = 24000;
 Game.loadedHandlers = [];
 Object.defineProperty(Game, 'loaded', {
-    get () { return this._loaded; },
+    get() { return this._loaded; },
     set(val) {
         while (Game.loadedHandlers.length)
             Game.loadedHandlers.shift()();

@@ -108,12 +108,10 @@ class Person extends PIXI.AnimatedSprite {
             this.moveTo(game.islands, wantsToLeave);
     }
     moveTo(islands, index) {
-        let currentIndex = this.island.index;
-        let dir = Math.sign(index - currentIndex);
-
-        for (let i = currentIndex; i !== index; i += dir) {
+        let dir = Math.sign(index - this.island.index);
+        for (let i = this.island.index; i !== index; i += dir) {
             let prev = islands[i], next = islands[i+dir];
-            let bridge = dir === 1 ? prev.bridge : next.bridge;
+            let bridge = dir > 0 ? prev.bridge : next.bridge;
             if (!bridge || !bridge.finished) return;
             this.movements.push({
                 x: bridge.x - dir * 90,
@@ -141,7 +139,55 @@ class Person extends PIXI.AnimatedSprite {
     pray() {
         return this.praying <= 0 && (this.praying = Math.random() * 50 + 75);
     }
+
+    outputState() {
+        return Object.merge({
+            x: this.x,
+            y: this.y,
+            job: this.job.name,
+            health: this.health,
+            isSummon: this.isSummon,
+            sinceTookDamage: this.sinceTookDamage,
+            praying: this.praying,
+            speed: this.speed,
+            movX: this.movX,
+            movY: this.movY,
+            target: this.target && {
+                x: this.target.x, y: this.target.y,
+                island: this.target.island.index
+            },
+            movements: this.movements.map(m => ({
+                x: m.x, y: m.y,
+                island: m.island.index
+            })),
+            kingdom: this.kingdom.name
+        }, this.job.outputState && this.job.outputState.apply(this, arguments));
+    }
+    resolveIndices(game) {
+        if (this.target)
+            this.target.island = game.islands[this.target.island];
+        this.movements.forEach(m => m.island = game.islands[m.ìsland]);
+        this.job.resolveIndices && this.job.resolveIndices.apply(this, arguments);
+    }
 }
+Person.fromState = function(s, island, game) {
+    let job = Person.jobs.find(j => j.name === s.job);
+    let kingdom = game[s.kingdom];
+    let p = new Person(s.x, s.y, job, kingdom, island, s.isSummon);
+    p.health = s.health;
+    p.sinceTookDamage = s.sinceTookDamage;
+    p.praying = s.praying;
+    p.speed = s.speed;
+    p.movX = s.movX;
+    p.movY = s.movY;
+    p.target = s.target && {
+        x: s.target.x, y: s.target.y,
+        island: s.target.island
+    };
+    p.movements = s.movements.map(m => ({ x: m.x, y: m.y, island: m.island }));
+    p.job.readState && p.job.readState.apply(p, arguments);
+    return p;
+};
 Person.jobs = [];
 let Villager = new Job('villager', 'images/Villager.png', {
     person() { this.sinceBaby = 0; },
@@ -163,7 +209,9 @@ let Villager = new Job('villager', 'images/Villager.png', {
             if (this.kingdom.isPlayer) game.god.event('baby', 1, this.position);
             return baby;
         }
-    }
+    },
+    outputState() { return { sinceBaby: this.sinceBaby }; },
+    readState(state, game) { this.sinceBaby = state.sinceBaby; }
 }),
 Builder = new Job('builder', 'images/Builder.png', {
     update(delta, game) {
@@ -176,7 +224,7 @@ Builder = new Job('builder', 'images/Builder.png', {
     },
     findNextTarget(game) {
         if (this.building && !this.building.finished) {
-            moveTo(game.islands, this.building.island.index);
+            this.moveTo(game.islands, this.building.island.index);
             let x = (Math.random() * 2 - 1) * this.building.radius * 0.75;
             let y = (Math.random() * 2 - 1) * this.building.radius * 0.75;
             if (this.building.type === Bridge) {
@@ -191,6 +239,21 @@ Builder = new Job('builder', 'images/Builder.png', {
             });
             return true;
         }
+    },
+    outputState() {
+        return this.building && {
+            building: {
+                index: this.building.island.buildings.indexOf(this.building),
+                island: this.building.island.index
+            }
+        };
+    },
+    readState(state, game) {
+        this.buidling = state.building;
+    },
+    resolveIndices(game) {
+        if (this.building) this.building =
+            game.islands[this.building.island].buildings[this.building.index];
     }
 }),
 Warrior = new Job('warrior', 'images/Warrior.png', {
@@ -229,5 +292,6 @@ Priest = new Job('priest', 'images/Priest.png', {
             if (this.kingdom.isPlayer) game.god.event('summon', 1, this.position);
             return summon;
         }
-    }
+    },
+    outputState() { return { sinceSummon: this.sinceSummon }; }
 });

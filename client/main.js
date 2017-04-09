@@ -1,3 +1,6 @@
+// Remove the preload class from the body
+setTimeout(() => document.body.classList.remove('preload'), 1000);
+
 let scaling = 1;
 let container = document.createElement('div');
 container.id = 'container';
@@ -9,7 +12,6 @@ renderer.roundPixels = true;
 container.appendChild(renderer.view);
 let resize = () => {
     let w = container.clientWidth, h = container.clientHeight;
-    console.log(w, h);
     if (!h) return;
     scaling = 1;
     if (h < 420) {
@@ -67,3 +69,19 @@ Game.onLoad(() => {
     upd();
     resize();
 });
+
+let state = JSON.parse(localStorage.getItem('save'));
+function save() {
+    state = game.outputState();
+    localStorage.setItem('save', JSON.stringify(state));
+}
+function restore() {
+    if (!state) return;
+    if (game) game.detachEvents();
+    game = new Game(win => {
+        ui.showTitle(win);
+        game.detachEvents();
+        game = null;
+    }, state);
+    game.attachEvents(container);
+}

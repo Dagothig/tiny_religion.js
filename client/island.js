@@ -114,10 +114,10 @@ class Island extends PIXI.Container {
         this.buildings = this.buildings.filter(b => {
             if (b.type === Tree) treeCount++;
             else if (b.type === FallingTree){}
-            else buildingCount++;
+            else if (b.type !== Bridge) buildingCount++;
             return !b.shouldRemove;
         });
-        this.ground.tileX = (Math.bounded((buildingCount)/ 3, 0, 3)|0);
+        this.ground.tileX = (Math.bounded(buildingCount/3 - treeCount/6, 0, 3)|0);
     }
 
     changeKingdom(newKingdom) {
@@ -129,7 +129,25 @@ class Island extends PIXI.Container {
             b.updateTextureState();
         });
     }
+
+    outputState() {
+        return {
+            people: this.people.map(person => person.outputState()),
+            buildings: this.buildings.map(building => building.outputState()),
+            kingdom: this.kingdom.name
+        }
+    }
+    resolveIndices(game) {
+        this.people.forEach(person => person.resolveIndices(game));
+        this.buildings.forEach(building => building.resolveIndices(game));
+    }
 }
+Island.fromState = function(state, game) {
+    let isl = new Island(game.islandsWidth, 0);
+    isl.people = state.people.map(s => Person.fromState(s, isl, game));
+    isl.buildings = state.buildings.map(s => Building.fromState(s, isl, game));
+    return isl;
+};
 PIXI.loader
 .add('island', 'images/Island.png', null, res =>
     Island.ground = new PIXI.TiledTexture(res.texture, 480, 240))

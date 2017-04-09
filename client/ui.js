@@ -77,18 +77,35 @@ class UI {
                 'retreat', 'retreat')
         ]);
 
-        this.settingsTag = document.createElement('div');
-        this.settingsTag.classList.add('settings');
-        let sourceLink = document.createElement('a');
-        sourceLink.href = 'https://github.com/Dagothig/tiny_religion.js/';
-        sourceLink.target = 'blank';
-        sourceLink.innerHTML = 'SOURCE';
-        this.settingsTag.appendChild(sourceLink);
+        this.menuContainerTag = document.createElement('div');
+        this.menuContainerTag.classList.add('menu-container');
+
+        this.menuBtn = document.createElement('input');
+        this.menuBtn.name = this.menuBtn.id = 'menu-btn';
+        this.menuBtn.type = 'checkbox';
+        this.menuBtn.classList.add('menu-btn');
+        this.menuContainerTag.appendChild(this.menuBtn);
+
+        this.menuBtnCheck = document.createElement('label');
+        this.menuBtnCheck.classList.add('check');
+        this.menuBtnCheck.htmlFor = 'menu-btn';
+        this.menuContainerTag.appendChild(this.menuBtnCheck);
+
+        this.menuTag = document.createElement('div');
+        this.menuTag.classList.add('menu');
+
         this.settings = settings.all.map(n => this.createSettings(n));
+
+        this.createLink('Save', 'javascript:save()');
+        this.createLink('Restore', 'javascript:restore()');
+        this.createLink('Source', 'https://github.com/Dagothig/tiny_religion.js/')
+            .link.target = 'blank';
+
+        this.menuContainerTag.appendChild(this.menuTag);
 
         document.body.appendChild(this.titleTag);
         document.body.appendChild(this.btnsTag);
-        document.body.appendChild(this.settingsTag);
+        document.body.appendChild(this.menuContainerTag);
     }
     createBtn(onclick, onupdate, name, ...classes) {
         let tag = document.createElement('div');
@@ -114,22 +131,36 @@ class UI {
             update: onupdate
         };
     }
+    createLink(name, href) {
+        let linkContainer = document.createElement('div');
+        let link = document.createElement('a');
+        link.href = href;
+        link.innerHTML = name;
+        linkContainer.appendChild(link);
+        this.menuTag.appendChild(linkContainer);
+        return {
+            container: linkContainer,
+            link: link
+        };
+    }
     createSettings(name) {
         let setting = document.createElement('div');
 
         let lbl = document.createElement('label');
         lbl.innerHTML = name;
+        lbl.htmlFor = name;
 
         let input = document.createElement('input');
         input.type = 'checkbox';
+        input.id = name;
         input.name = name;
         input.checked = settings[name];
         input.onchange = ev => ev.target.checked !== settings[name] &&
             (settings[name] = ev.target.checked);
 
         setting.appendChild(lbl);
-        lbl.appendChild(input);
-        this.settingsTag.appendChild(setting);
+        setting.appendChild(input);
+        this.menuTag.appendChild(setting);
 
         return setting;
     }
@@ -141,7 +172,7 @@ class UI {
                 if (btn.text !== text) btn.text = btn.btn.innerHTML = text;
             });
             this.btnsTag.style.backgroundColor =
-                game.god.offTint.toString('16').padStart(6, '0');
+                '#' + game.god.offTint.toString('16').padStart(6, '0');
         }
     }
     showTitle(win = null) {

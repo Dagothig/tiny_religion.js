@@ -67,6 +67,24 @@ class Building extends PIXI.TiledSprite {
         this.tint = game.globalColor;
         if (this.type.update) this.type.update.apply(this, arguments);
     }
+    outputState() {
+        return {
+            x: this.x,
+            y: this.y,
+            type: this.type.name,
+            kingdom: this.kingdom.name,
+            buildTime: this.buildTime,
+            finished: this.finished
+        };
+    }
+    resolveIndices(game) {}
+}
+Building.fromState = function(s, island, game) {
+    let type = Building.types.find(t => t.name === s.type);
+    let kingdom = game[s.kingdom];
+    let b = new Building(s.x, s.y, type, kingdom, island, s.finished);
+    b.finished = s.finished;
+    return b;
 }
 Building.types = [];
 let Bridge = new BuildingType(
