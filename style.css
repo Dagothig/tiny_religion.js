@@ -120,7 +120,8 @@ canvas {
 }
 .menu {
     display: none;
-    color: #fff;
+    text-shadow: 0 1px black;
+    color: white;
     text-transform: uppercase;
     text-align: left;
 }
@@ -151,6 +152,7 @@ canvas {
     padding: 4px 0;
     cursor: pointer;
     color: white;
+    text-shadow: 0 1px black;
     text-align: right;
     font-family: monospace;
     text-transform: uppercase;
@@ -191,7 +193,7 @@ canvas {
     color: white;
     padding: 4px 0;
     text-align: center;
-    text-shadow: 0 1px #000;
+    text-shadow: 0 1px black;
     background-color: rgba(0, 0, 0, 0.3);
 }
 .tooltips .tooltip { display: block; }
@@ -205,7 +207,7 @@ canvas {
     overflow: hidden;
     filter: brightness(0.75) grayscale(0.75);
     color: white;
-    text-shadow: 0 1px #000;
+    text-shadow: 0 1px black;
     text-align: center;
     line-height: 94px;
     padding: 0;
@@ -418,7 +420,7 @@ canvas {
 
 .retreat:after {
     content: "RETREAT";
-    color: #fff;
+    color: white;
     width: 100%;
     left: 0;
     top: 0;
