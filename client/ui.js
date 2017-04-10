@@ -95,8 +95,8 @@ class UI {
         this.menuTag = document.createElement('div');
         this.menuTag.classList.add('menu');
 
-        this.settings = settings.all.map(n => this.createSettings(n));
-
+        settings.all.map(n => this.createSettings(n));
+        this.createLink('New', 'javascript:newGame()');
         this.createLink('Save', 'javascript:save()');
         this.createLink('Restore', 'javascript:restore()');
         this.createLink('Source', 'https://github.com/Dagothig/tiny_religion.js/')
@@ -145,25 +145,19 @@ class UI {
         };
     }
     createSettings(name) {
-        let setting = document.createElement('div');
+        let container = document.createElement('div');
 
         let lbl = document.createElement('label');
         lbl.innerHTML = name;
         lbl.htmlFor = name;
 
-        let input = document.createElement('input');
-        input.type = 'checkbox';
-        input.id = name;
-        input.name = name;
-        input.checked = settings[name];
-        input.onchange = ev => ev.target.checked !== settings[name] &&
-            (settings[name] = ev.target.checked);
+        let input = settings.inputFor(name);
 
-        setting.appendChild(lbl);
-        setting.appendChild(input);
-        this.menuTag.appendChild(setting);
+        container.appendChild(lbl);
+        container.appendChild(input);
+        this.menuTag.appendChild(container);
 
-        return setting;
+        return container;
     }
     update(delta, game) {
         this.game = game;

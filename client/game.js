@@ -50,7 +50,8 @@ let darkSkyColor = 0x28162f,
     goodGlobalColor = 0xfff0cc;
 
 class Game extends PIXI.Container {
-    constructor(onFinished, state = { x: 0, y: 0, goal: Game.mediumGoal }) {
+    constructor(onFinished, state = { x: 0, y: 0, goal: settings.goal }) {
+        console.log(state);
         super();
         this.x = state.x;
         this.y = state.y;
@@ -289,10 +290,6 @@ class Game extends PIXI.Container {
         };
     }
 }
-Game.tinyGoal = 3000;
-Game.shortGoal = 6000;
-Game.mediumGoal = 12000;
-Game.longGoal = 24000;
 Game.loadedHandlers = [];
 Object.defineProperty(Game, 'loaded', {
     get() { return this._loaded; },

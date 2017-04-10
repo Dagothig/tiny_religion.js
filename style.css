@@ -86,7 +86,8 @@ canvas {
     height: 120px;
     background-image: url('images/Title.png');
 }
-@media (max-width:640px) {
+
+@media (max-width:640px, min-height: 480px) {
     .title:before, .title:after { height: 0; }
     .title:before { padding-top: 75%; }
     .title:after { padding-top: 18.75%; }
@@ -136,7 +137,7 @@ canvas {
     background-color: rgba(0, 0, 0, 0.1);
 }
 .menu label, .menu a {
-    padding: 2px 4px;
+    padding: 4px 8px;
     flex-grow: 1;
 }
 .menu label, .menu input {
@@ -146,7 +147,23 @@ canvas {
     margin: 0;
     margin-right: 4px;
 }
+.menu select {
+    padding: 4px 0;
+    cursor: pointer;
+    color: white;
+    text-align: right;
+    font-family: monospace;
+    text-transform: uppercase;
+    background: none;
+    border: none;
+    font-weight: 800;
+}
+.menu select option {
+    color: black;
+    text-align: right;
+}
 .menu a {
+    cursor: pointer;
     display: block;
 }
 

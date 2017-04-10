@@ -445,7 +445,8 @@ example of use:
 let settingsEx = settings(strat, {
     boolEx: [true, 'bool', 'usr'],
     numEx: [0, 'num', 'sys'],
-    strEx: ['', 'str', 'usr']
+    strEx: ['', 'str', 'usr'],
+    choiceEx: ['short', 'choice', 'usr', { short: 1, medium: 2, long: 3 }]
 });
 */
 var settings = function (strat, confs) {
@@ -492,6 +493,48 @@ var settings = function (strat, confs) {
             });else this.all.forEach(function (key) {
                 return _this._clear(key);
             });
+        },
+        inputFor: function inputFor(name) {
+            var _this2 = this;
+
+            var conf = this['_' + name + 'Conf'];
+            var input = void 0;
+            switch (conf[1]) {
+                case 'str':
+                    input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = this[name];
+                    break;
+                case 'num':
+                    input = document.createElement('input');
+                    input.type = 'numeric';
+                    input.value = this[name];
+                    break;
+                case 'bool':
+                    input = document.createElement('input');
+                    input.type = 'checkbox';
+                    input.checked = this[name];
+                    break;
+                case 'choice':
+                    input = document.createElement('select');
+                    input.selectedIndex = Object.entries(conf[3]).map(function (opt) {
+                        var entry = document.createElement('option');
+                        entry.innerHTML = opt[0];
+                        entry.value = opt[1];
+                        input.appendChild(entry);
+                        return entry;
+                    }) // Fuzzy equality
+                    .findIndex(function (e) {
+                        return e.value == _this2[name];
+                    });
+                    input.onchange = function () {
+                        console.log(input.value);
+                        _this2[name] = input.value;
+                    };
+                    break;
+            }
+            input.id = input.name = name;
+            return input;
         }
     });
 }({
@@ -519,19 +562,39 @@ var settings = function (strat, confs) {
             return str === 'true';
         }
     },
+    choice: {
+        toStr: function toStr(val, conf) {
+            return (// Fuzzy equality
+                Object.entries(conf[3]).find(function (entry) {
+                    return entry[1] == val;
+                })[0]
+            );
+        },
+        fromStr: function fromStr(str, conf) {
+            return Object.entries(conf[3]).find(function (entry) {
+                return entry[0] === str;
+            })[1];
+        }
+    },
 
     read: function read(key, conf) {
         var stored = localStorage.getItem(key);
-        return stored !== null ? this[conf[1] || 'str'].fromStr(stored) : conf[0];
+        return stored !== null ? this[conf[1] || 'str'].fromStr(stored, conf) : conf[0];
     },
     write: function write(key, conf, value) {
-        localStorage.setItem(key, this[conf[1] || 'str'].toStr(value));
+        localStorage.setItem(key, this[conf[1] || 'str'].toStr(value, conf));
         return value;
     }
 }, {
     tooltips: [true, 'bool', 'usr'],
     music: [true, 'bool', 'usr'],
-    sound: [true, 'bool', 'usr']
+    sound: [true, 'bool', 'usr'],
+    goal: [12000, 'choice', 'usr', {
+        tiny: 3000,
+        short: 6000,
+        medium: 12000,
+        long: 24000
+    }]
 });
 'use strict';
 
@@ -1756,7 +1819,7 @@ var Bridge = new BuildingType('bridge', 'images/Bridge.png', -10, -47, -30, fals
     GreenHouse = new BuildingType('greenHouse', 'images/GreenHouse.png', 0, 0, 16, true, 35, 10000),
     Tree = new BuildingType('tree', 'images/Tree.png', 0, 4, 0, false, 15, 1000, {
     update: function update(delta, game) {
-        if (!this.finished) this.progressBuild(3 + this.kingdom.greenHouseCount, game);
+        if (!this.finished) this.progressBuild(2 + this.kingdom.greenHouseCount, game);
     }
 }),
     FallingTree = new BuildingType('fallingTree', 'images/FallingTree.png', 0, 4, 0, false, 15, 250, {
@@ -2221,9 +2284,11 @@ var Game = function (_PIXI$Container) {
     _inherits(Game, _PIXI$Container);
 
     function Game(onFinished) {
-        var state = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : { x: 0, y: 0, goal: Game.mediumGoal };
+        var state = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : { x: 0, y: 0, goal: settings.goal };
 
         _classCallCheck(this, Game);
+
+        console.log(state);
 
         var _this2 = _possibleConstructorReturn(this, (Game.__proto__ || Object.getPrototypeOf(Game)).call(this));
 
@@ -2488,10 +2553,6 @@ var Game = function (_PIXI$Container) {
     return Game;
 }(PIXI.Container);
 
-Game.tinyGoal = 3000;
-Game.shortGoal = 6000;
-Game.mediumGoal = 12000;
-Game.longGoal = 24000;
 Game.loadedHandlers = [];
 Object.defineProperty(Game, 'loaded', {
     get: function get() {
@@ -2598,10 +2659,10 @@ var UI = function () {
         this.menuTag = document.createElement('div');
         this.menuTag.classList.add('menu');
 
-        this.settings = settings.all.map(function (n) {
+        settings.all.map(function (n) {
             return _this.createSettings(n);
         });
-
+        this.createLink('New', 'javascript:newGame()');
         this.createLink('Save', 'javascript:save()');
         this.createLink('Restore', 'javascript:restore()');
         this.createLink('Source', 'https://github.com/Dagothig/tiny_religion.js/').link.target = 'blank';
@@ -2661,26 +2722,19 @@ var UI = function () {
     }, {
         key: 'createSettings',
         value: function createSettings(name) {
-            var setting = document.createElement('div');
+            var container = document.createElement('div');
 
             var lbl = document.createElement('label');
             lbl.innerHTML = name;
             lbl.htmlFor = name;
 
-            var input = document.createElement('input');
-            input.type = 'checkbox';
-            input.id = name;
-            input.name = name;
-            input.checked = settings[name];
-            input.onchange = function (ev) {
-                return ev.target.checked !== settings[name] && (settings[name] = ev.target.checked);
-            };
+            var input = settings.inputFor(name);
 
-            setting.appendChild(lbl);
-            setting.appendChild(input);
-            this.menuTag.appendChild(setting);
+            container.appendChild(lbl);
+            container.appendChild(input);
+            this.menuTag.appendChild(container);
 
-            return setting;
+            return container;
         }
     }, {
         key: 'update',
@@ -2753,23 +2807,15 @@ var resize = function resize() {
 };
 window.addEventListener('resize', resize);
 resize();
+settings.bind('tooltips', resize);
 
 PIXI.loader.load(function () {
     return Game.loaded = true;
 });
 var game = void 0;
 var ui = new UI(container, function () {
-    ui.hideTitle();
-    Game.onLoad(function () {
-        game = new Game(function (win) {
-            ui.showTitle(win);
-            game.detachEvents();
-            game = null;
-        });
-        game.attachEvents(container);
-    });
+    return newGame();
 });
-settings.bind('tooltips', resize);
 
 var paused = false;
 function resume() {
@@ -2781,6 +2827,21 @@ function pause() {
     Music.pause();
 }
 
+function newGame() {
+    var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : undefined;
+
+    ui.hideTitle();
+    Game.onLoad(function () {
+        if (game) game.detachEvents();
+        game = new Game(function (win) {
+            ui.showTitle(win);
+            game.detachEvents();
+            game = null;
+        }, state);
+        game.attachEvents(container);
+    });
+}
+
 var state = JSON.parse(localStorage.getItem('save'));
 function save() {
     state = game.outputState();
@@ -2788,13 +2849,7 @@ function save() {
 }
 function restore() {
     if (!state) return;
-    if (game) game.detachEvents();
-    game = new Game(function (win) {
-        ui.showTitle(win);
-        game.detachEvents();
-        game = null;
-    }, state);
-    game.attachEvents(container);
+    newGame(state);
 }
 
 Game.onLoad(function () {
@@ -2818,6 +2873,4 @@ Game.onLoad(function () {
     resize();
 });
 
-if (!state) ui.showTitle();else Game.onLoad(function () {
-    ui.hideTitle();restore();
-});
+ui.showTitle();

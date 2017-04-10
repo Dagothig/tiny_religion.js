@@ -23,21 +23,11 @@ let resize = () => {
 }
 window.addEventListener('resize', resize);
 resize();
+settings.bind('tooltips', resize);
 
 PIXI.loader.load(() => Game.loaded = true);
 let game;
-let ui = new UI(container, () => {
-    ui.hideTitle();
-    Game.onLoad(() => {
-        game = new Game(win => {
-            ui.showTitle(win);
-            game.detachEvents();
-            game = null;
-        });
-        game.attachEvents(container);
-    });
-});
-settings.bind('tooltips', resize);
+let ui = new UI(container, () => newGame());
 
 let paused = false;
 function resume() {
@@ -49,6 +39,19 @@ function pause() {
     Music.pause();
 }
 
+function newGame(state = undefined) {
+    ui.hideTitle();
+    Game.onLoad(() => {
+        if (game) game.detachEvents();
+        game = new Game(win => {
+            ui.showTitle(win);
+            game.detachEvents();
+            game = null;
+        }, state);
+        game.attachEvents(container);
+    });
+}
+
 let state = JSON.parse(localStorage.getItem('save'));
 function save() {
     state = game.outputState();
@@ -56,13 +59,7 @@ function save() {
 }
 function restore() {
     if (!state) return;
-    if (game) game.detachEvents();
-    game = new Game(win => {
-        ui.showTitle(win);
-        game.detachEvents();
-        game = null;
-    }, state);
-    game.attachEvents(container);
+    newGame(state);
 }
 
 Game.onLoad(() => {
@@ -86,5 +83,4 @@ Game.onLoad(() => {
     resize();
 });
 
-if (!state) ui.showTitle();
-else Game.onLoad(() => { ui.hideTitle(); restore(); });
+ui.showTitle();

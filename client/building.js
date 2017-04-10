@@ -105,7 +105,7 @@ Tree = new BuildingType(
     'tree', 'images/Tree.png', 0, 4, 0, false, 15, 1000, {
         update(delta, game) {
             if (!this.finished)
-                this.progressBuild(3 + this.kingdom.greenHouseCount, game);
+                this.progressBuild(2 + this.kingdom.greenHouseCount, game);
         }
     }),
 FallingTree = new BuildingType(
