@@ -2668,10 +2668,6 @@ var UI = function () {
         this.createLink('Source', 'https://github.com/Dagothig/tiny_religion.js/').link.target = 'blank';
 
         this.menuContainerTag.appendChild(this.menuTag);
-
-        document.body.appendChild(this.titleTag);
-        document.body.appendChild(this.btnsTag);
-        document.body.appendChild(this.menuContainerTag);
     }
 
     _createClass(UI, [{
@@ -2779,60 +2775,27 @@ var UI = function () {
 }();
 'use strict';
 
-// Remove the preload class from the body
-setTimeout(function () {
-    return document.body.classList.remove('preload');
-}, 1000);
-
-var scaling = 1;
 var container = document.createElement('div');
 container.id = 'container';
-document.body.appendChild(container);
-// Setup renderer
-PIXI.scaleModes.DEFAULT = PIXI.scaleModes.NEAREST;
-var renderer = PIXI.autoDetectRenderer();
-renderer.roundPixels = true;
-container.appendChild(renderer.view);
-var resize = function resize() {
-    var w = container.clientWidth,
-        h = container.clientHeight;
-    if (!h) return;
-    scaling = 1;
-    if (h < 420) {
-        w *= 420 / h;
-        h = 420;
-        scaling++;
-    }
-    renderer.resize(w, h);
-};
-window.addEventListener('resize', resize);
-resize();
-settings.bind('tooltips', resize);
-
-PIXI.loader.load(function () {
-    return Game.loaded = true;
-});
-var game = void 0;
 var ui = new UI(container, function () {
     return newGame();
 });
+var game = void 0;
 
 var paused = false;
 function resume() {
-    paused = false;
-    Music.resume();
+    paused = false;Music.resume();
 }
 function pause() {
-    paused = true;
-    Music.pause();
+    paused = true;Music.pause();
 }
 
 function newGame() {
     var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : undefined;
 
-    ui.hideTitle();
     Game.onLoad(function () {
         if (game) game.detachEvents();
+        ui.hideTitle();
         game = new Game(function (win) {
             ui.showTitle(win);
             game.detachEvents();
@@ -2844,33 +2807,72 @@ function newGame() {
 
 var state = JSON.parse(localStorage.getItem('save'));
 function save() {
-    state = game.outputState();
-    localStorage.setItem('save', JSON.stringify(state));
+    if (!game) return;
+    localStorage.setItem('save', JSON.stringify(state = game.outputState()));
 }
 function restore() {
-    if (!state) return;
-    newGame(state);
+    state && newGame(state);
 }
 
-Game.onLoad(function () {
-    var last = performance.now();
-    var upd = function upd() {
-        var time = performance.now();
-        var delta = time - last;
-        if (!paused) {
-            ui.update(delta, game);
-            if (game) {
-                game.update(delta, renderer.width, renderer.height);
-                renderer.backgroundColor = game.backgroundColor;
-                renderer.render(game);
-                game.checkForEnd();
-            }
-        }
-        last = time;
-        requestAnimationFrame(upd);
-    };
-    upd();
-    resize();
-});
+window.addEventListener("DOMContentLoaded", function () {
+    PIXI.loader.load(function () {
+        return Game.loaded = true;
+    });
+    // Remove the preload class from the body
+    setTimeout(function () {
+        return document.body.classList.remove('preload');
+    }, 1000);
 
-ui.showTitle();
+    // Setup container & ui
+    document.body.appendChild(container);
+    document.body.appendChild(ui.titleTag);
+    document.body.appendChild(ui.btnsTag);
+    document.body.appendChild(ui.menuContainerTag);
+    ui.showTitle();
+
+    // Setup renderer
+    PIXI.scaleModes.DEFAULT = PIXI.scaleModes.NEAREST;
+    var renderer = PIXI.autoDetectRenderer();
+    renderer.roundPixels = true;
+    container.appendChild(renderer.view);
+
+    // Setup resize hook
+    var scaling = 1;
+    var resize = function resize() {
+        var w = container.clientWidth,
+            h = container.clientHeight;
+        if (!h) return;
+        scaling = 1;
+        if (h < 420) {
+            w *= 420 / h;
+            h = 420;
+            scaling++;
+        }
+        renderer.resize(w, h);
+    };
+    window.addEventListener('resize', resize);
+    resize();
+    settings.bind('tooltips', resize);
+
+    Game.onLoad(function () {
+        // Setup event loop
+        var last = performance.now();
+        var upd = function upd() {
+            var time = performance.now();
+            var delta = time - last;
+            if (!paused) {
+                ui.update(delta, game);
+                if (game) {
+                    game.update(delta, renderer.width, renderer.height);
+                    renderer.backgroundColor = game.backgroundColor;
+                    renderer.render(game);
+                    game.checkForEnd();
+                }
+            }
+            last = time;
+            requestAnimationFrame(upd);
+        };
+        upd();
+        resize();
+    });
+});

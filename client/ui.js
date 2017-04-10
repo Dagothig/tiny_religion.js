@@ -103,10 +103,6 @@ class UI {
             .link.target = 'blank';
 
         this.menuContainerTag.appendChild(this.menuTag);
-
-        document.body.appendChild(this.titleTag);
-        document.body.appendChild(this.btnsTag);
-        document.body.appendChild(this.menuContainerTag);
     }
     createBtn(onclick, onupdate, name, ...classes) {
         let tag = document.createElement('div');
