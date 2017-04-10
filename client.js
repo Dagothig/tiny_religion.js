@@ -1653,7 +1653,7 @@ var Island = function (_PIXI$Container) {
 }(PIXI.Container);
 
 Island.fromState = function (state, game) {
-    var isl = new Island(game.islandsWidth, 0);
+    var isl = new Island(game.islandsWidth, 0, game[state.kingdom]);
     isl.people = state.people.map(function (s) {
         return Person.fromState(s, isl, game);
     });

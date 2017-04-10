@@ -143,7 +143,7 @@ class Island extends PIXI.Container {
     }
 }
 Island.fromState = function(state, game) {
-    let isl = new Island(game.islandsWidth, 0);
+    let isl = new Island(game.islandsWidth, 0, game[state.kingdom]);
     isl.people = state.people.map(s => Person.fromState(s, isl, game));
     isl.buildings = state.buildings.map(s => Building.fromState(s, isl, game));
     return isl;
