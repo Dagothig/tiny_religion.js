@@ -87,7 +87,7 @@ canvas {
     background-image: url('images/Title.png');
 }
 
-@media (max-width:640px, min-height: 480px) {
+@media (max-width:640px) and (max-aspect-ratio: 640/600) {
     .title:before, .title:after { height: 0; }
     .title:before { padding-top: 75%; }
     .title:after { padding-top: 18.75%; }
