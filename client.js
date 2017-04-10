@@ -2816,6 +2816,16 @@ function restore() {
     state && newGame(state);
 }
 
+function saveTemp() {
+    if (!game) return;
+    localStorage.setItem('saveTemp', JSON.stringify(game.outputState()));
+}
+function restoreTemp() {
+    var tempState = JSON.parse(localStorage.getItem('saveTemp'));
+    localStorage.removeItem('saveTemp');
+    tempState && newGame(tempState);
+}
+
 window.addEventListener("DOMContentLoaded", function () {
     PIXI.loader.load(function () {
         return Game.loaded = true;

@@ -28,6 +28,16 @@ function save() {
 }
 function restore() { state && newGame(state); }
 
+function saveTemp() {
+    if (!game) return;
+    localStorage.setItem('saveTemp', JSON.stringify(game.outputState()));
+}
+function restoreTemp() {
+    let tempState = JSON.parse(localStorage.getItem('saveTemp'));
+    localStorage.removeItem('saveTemp');
+    tempState && newGame(tempState);
+}
+
 window.addEventListener("DOMContentLoaded", () => {
     PIXI.loader.load(() => Game.loaded = true);
     // Remove the preload class from the body
