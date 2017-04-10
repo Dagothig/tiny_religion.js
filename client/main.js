@@ -1,3 +1,4 @@
+let scaling = 1;
 let container = document.createElement('div');
 container.id = 'container';
 let ui = new UI(container, () => newGame());
@@ -46,7 +47,6 @@ window.addEventListener("DOMContentLoaded", () => {
     container.appendChild(renderer.view);
 
     // Setup resize hook
-    let scaling = 1;
     let resize = () => {
         let w = container.clientWidth, h = container.clientHeight;
         if (!h) return;

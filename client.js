@@ -2775,6 +2775,7 @@ var UI = function () {
 }();
 'use strict';
 
+var scaling = 1;
 var container = document.createElement('div');
 container.id = 'container';
 var ui = new UI(container, function () {
@@ -2837,7 +2838,6 @@ window.addEventListener("DOMContentLoaded", function () {
     container.appendChild(renderer.view);
 
     // Setup resize hook
-    var scaling = 1;
     var resize = function resize() {
         var w = container.clientWidth,
             h = container.clientHeight;
