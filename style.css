@@ -108,6 +108,7 @@ canvas {
     display: inline-block;
     width: 32px;
     height: 32px;
+    background-size: auto;
     background-image: url('images/Settings.png');
     cursor: pointer;
     opacity: 0.5;

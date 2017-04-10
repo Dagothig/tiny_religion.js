@@ -51,7 +51,6 @@ let darkSkyColor = 0x28162f,
 
 class Game extends PIXI.Container {
     constructor(onFinished, state = { x: 0, y: 0, goal: settings.goal }) {
-        console.log(state);
         super();
         this.x = state.x;
         this.y = state.y;

@@ -53,6 +53,7 @@ let settings = ((strat, confs) => Object.keys(confs).reduce((settings, key) => {
     inputFor: function(name) {
         let conf = this['_' + name + 'Conf'];
         let input;
+        let onchange = () => this[name] = input.value;
         switch(conf[1]) {
             case 'str':
                 input = document.createElement('input');
@@ -68,6 +69,7 @@ let settings = ((strat, confs) => Object.keys(confs).reduce((settings, key) => {
                 input = document.createElement('input');
                 input.type = 'checkbox';
                 input.checked = this[name];
+                onchange = () => this[name] = input.checked;
                 break;
             case 'choice':
                 input = document.createElement('select');
@@ -80,13 +82,10 @@ let settings = ((strat, confs) => Object.keys(confs).reduce((settings, key) => {
                     return entry;
                 }) // Fuzzy equality
                 .findIndex(e => e.value == this[name]);
-                input.onchange = () => {
-                    console.log(input.value);
-                    this[name] = input.value;
-                };
                 break;
         }
         input.id = input.name = name;
+        input.onchange = onchange;
         return input;
     }
 }))({

@@ -499,6 +499,9 @@ var settings = function (strat, confs) {
 
             var conf = this['_' + name + 'Conf'];
             var input = void 0;
+            var onchange = function onchange() {
+                return _this2[name] = input.value;
+            };
             switch (conf[1]) {
                 case 'str':
                     input = document.createElement('input');
@@ -514,6 +517,9 @@ var settings = function (strat, confs) {
                     input = document.createElement('input');
                     input.type = 'checkbox';
                     input.checked = this[name];
+                    onchange = function onchange() {
+                        return _this2[name] = input.checked;
+                    };
                     break;
                 case 'choice':
                     input = document.createElement('select');
@@ -527,13 +533,10 @@ var settings = function (strat, confs) {
                     .findIndex(function (e) {
                         return e.value == _this2[name];
                     });
-                    input.onchange = function () {
-                        console.log(input.value);
-                        _this2[name] = input.value;
-                    };
                     break;
             }
             input.id = input.name = name;
+            input.onchange = onchange;
             return input;
         }
     });
@@ -2287,8 +2290,6 @@ var Game = function (_PIXI$Container) {
         var state = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : { x: 0, y: 0, goal: settings.goal };
 
         _classCallCheck(this, Game);
-
-        console.log(state);
 
         var _this2 = _possibleConstructorReturn(this, (Game.__proto__ || Object.getPrototypeOf(Game)).call(this));
 
