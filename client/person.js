@@ -130,11 +130,7 @@ class Person extends PIXI.AnimatedSprite {
         let filter = p => p.kingdom !== this.kingdom
             && predicate(p)
             && Math.dst2(this.x, this.y, p.x, p.y) < dst2;
-        /*return this.island.people.filter(filter).rand()
-            || (this.island.index - 1 >= 0 &&
-                game.islands[this.island.index - 1].people.filter(filter).rand())
-            || (this.island.index + 1 < game.islands.length &&
-                game.islands[this.island.index + 1].people.filter(filter).rand());*/
+
         let target = this.island.people.find(filter);
         if (target) return target;
 

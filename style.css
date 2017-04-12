@@ -14,6 +14,7 @@ body {
     font-weight: 800;
     background-color: #193bcb;
     font-size: 3rem;
+    overflow: hidden;
 }
 a {
     color: white;
@@ -89,12 +90,6 @@ canvas {
     width: 480px;
     height: 120px;
     background-image: url('images/Title.png');
-}
-
-@media (max-width:640px) and (max-aspect-ratio: 640/600) {
-    .title:before, .title:after { height: 0; }
-    .title:before { padding-top: 75%; }
-    .title:after { padding-top: 18.75%; }
 }
 
 .menu-container {
@@ -181,14 +176,15 @@ canvas {
     flex-direction: row;
     background-color: #113996;
     padding-top: 1px;
-    overflow: auto;
 }
-.btns>div {
-    width: 16rem;
+.btns>div, .group .children>div {
+    box-sizing: border-box;
+    flex-basis: 14rem;
     flex-grow: 1;
-    flex-shrink: 0;
 }
-.btns>div+div { margin-left: 1px; }
+.btns>div+div {
+    margin-left: 1px;
+}
 
 .tooltip {
     display: none;
@@ -201,27 +197,82 @@ canvas {
     text-align: center;
     text-shadow: 0 1px black;
     background-color: rgba(0, 0, 0, 0.3);
+    line-height: 2.75rem;
 }
 .tooltips .tooltip { display: block; }
 
-.btn {
+.group, .btn {
     position: relative;
-    display: block;
     width: 100%;
     height: 14rem;
-    background-color: rgba(255, 255, 255, 0.3);
-    overflow: hidden;
-    filter: brightness(0.75) grayscale(0.75);
     color: white;
     text-shadow: 0 1px black;
     text-align: center;
-    line-height: 23.5rem;
+}
+
+.group {
+    text-transform: uppercase;
+    overflow: visible;
+    background: inherit;
+}
+.group:before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+.group .name {
+    position: absolute;
+    width: 100%;
+    line-height: 0;
+    top: 50%;
+}
+.group:hover:before {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+.group .children {
+    position: absolute;
+    bottom: 100%;
+    padding-bottom: 0.5px;
+    left: -0.5px;
+    right: -0.5px;
+    background: inherit;
+
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+.group:not(:hover) .children {
+    display: none;
+}
+.group .children>div {
+    background: inherit;
+    padding: 1px;
+    margin: -0.5px;
+}
+
+.btn {
+    display: block;
+    background-color: rgba(255, 255, 255, 0.3);
+    overflow: hidden;
+    filter: brightness(0.75) grayscale(0.75);
+
     padding: 0;
     border: none;
     cursor: pointer;
     font-family: monospace;
     font-weight: 800;
     font-size: 3rem;
+}
+.btn span  {
+    position: absolute;
+    top: 80%;
+    left: 1rem;
+    right: 1rem;
+    margin-top: -1.5rem;
 }
 .btn:disabled {
     filter: brightness(0.6) grayscale(1) !important;
@@ -437,4 +488,46 @@ canvas {
     top: 0;
     text-align: center;
     line-height: 14rem;
+}
+
+@media (max-width:640px) and (max-aspect-ratio: 640/600) {
+    .title:before, .title:after { height: 0; }
+    .title:before { padding-top: 75%; }
+    .title:after { padding-top: 18.75%; }
+}
+@media (min-aspect-ratio: 4/3) {
+    body {
+        flex-direction: row-reverse;
+    }
+    .btns {
+        width: auto;
+        height: 100%;
+        flex-direction: column;
+        padding-top: 0;
+        padding-right: 1px;
+    }
+    .btns>div+div {
+        margin-top: 1px;
+        margin-left: 0px;
+    }
+    .group, .btn {
+        width: 16rem;
+    }
+    .group .children {
+        top: -0.5px;
+        bottom: -0.5px;
+        padding-bottom: 0px;
+        left: 100%;
+        right: initial;
+        padding-left: 0.5px;
+
+        flex-direction: column;
+    }
+    .btn {
+        height: 100%;
+        line-height: 1em;
+    }
+    .tooltips .btn {
+        height: calc(100% - 4.75rem - 1px);
+    }
 }

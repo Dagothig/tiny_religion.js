@@ -2004,11 +2004,7 @@ var Person = function (_PIXI$AnimatedSprite) {
             var filter = function filter(p) {
                 return p.kingdom !== _this3.kingdom && predicate(p) && Math.dst2(_this3.x, _this3.y, p.x, p.y) < dst2;
             };
-            /*return this.island.people.filter(filter).rand()
-                || (this.island.index - 1 >= 0 &&
-                    game.islands[this.island.index - 1].people.filter(filter).rand())
-                || (this.island.index + 1 < game.islands.length &&
-                    game.islands[this.island.index + 1].people.filter(filter).rand());*/
+
             var target = this.island.people.find(filter);
             if (target) return target;
 
@@ -2636,6 +2632,13 @@ var UI = function () {
         settings.bind('tooltips', function (t) {
             return _this.btnsTag.classList[t ? 'add' : 'remove']('tooltips');
         });
+
+        this.trainTag = this.createGroup(this.btnsTag, 'train');
+        this.untrainTag = this.createGroup(this.btnsTag, 'untrain');
+        this.buildTag = this.createGroup(this.btnsTag, 'build');
+        this.doTag = this.createGroup(this.btnsTag, 'do');
+        this.moveTag = this.createGroup(this.btnsTag, 'move');
+
         this.btns = ['train', 'untrain'].reduce(function (btns, act) {
             return [Builder, Warrior, Priest].reduce(function (btns, job) {
                 var v = function v() {
@@ -2644,47 +2647,47 @@ var UI = function () {
                 var j = function j() {
                     return _this.game.player[job.name + 'Count'];
                 };
-                btns.add(_this.createBtn(function () {
+                btns.add(_this.createBtn(_this[act + 'Tag'].children, function () {
                     return _this.game.player[act](_this.game, job);
                 }, act === 'train' ? function () {
                     return v() + '   ' + j();
                 } : function () {
                     return j() + '   ' + v();
-                }, act[0] + '.' + job.name, act, job.name));
+                }, job.name, act, job.name));
                 return btns;
             }, btns);
         }, []).concat([House, Barracks, Workshop, Temple, GreenHouse].reduce(function (btns, type) {
-            btns.add(_this.createBtn(function () {
+            btns.add(_this.createBtn(_this.buildTag.children, function () {
                 return _this.game.player.build(_this.game, type);
             }, function () {
                 return _this.game.player[type.name + 'Count'];
             }, type.name, 'build', type.name));
             return btns;
-        }, [])).concat([this.createBtn(function () {
+        }, [])).concat([this.createBtn(this.buildTag.children, function () {
             return _this.game.player.buildBridge(_this.game);
-        }, null, 'bridge', 'build', 'bridge'), this.createBtn(function () {
+        }, null, 'bridge', 'build', 'bridge'), this.createBtn(this.doTag.children, function () {
             return _this.game.player.forestate(_this.game);
         }, function () {
             return _this.game.player.treeCount;
-        }, 'forestate', 'forestate'), this.createBtn(function () {
+        }, 'forestate', 'forestate'), this.createBtn(this.doTag.children, function () {
             return _this.game.player.deforest(_this.game);
-        }, null, 'deforest', 'deforest'), this.createBtn(function () {
+        }, null, 'deforest', 'deforest'), this.createBtn(this.doTag.children, function () {
             return _this.game.god.doSacrifice(_this.game);
-        }, null, 'sacrifice', 'sacrifice'), this.createBtn(function () {
+        }, null, 'sacrifice', 'sacrifice'), this.createBtn(this.doTag.children, function () {
             return _this.game.player.doBaby(_this.game);
         }, function () {
             return _this.game.player.peopleCount + '/' + _this.game.player.maxPop;
-        }, 'baby', 'baby'), this.createBtn(function () {
+        }, 'baby', 'baby'), this.createBtn(this.doTag.children, function () {
             return _this.game.player.attemptSummon(_this.game);
         }, function () {
             return _this.game.player.summonCount + '/' + _this.game.player.maxSummon;
-        }, 'summon', 'summon'), this.createBtn(function () {
+        }, 'summon', 'summon'), this.createBtn(this.doTag.children, function () {
             return _this.game.player.pray(_this.game);
-        }, null, 'pray', 'pray'), this.createBtn(function () {
+        }, null, 'pray', 'pray'), this.createBtn(this.moveTag.children, function () {
             return _this.game.player.sendAttack(_this.game);
-        }, null, 'attack', 'attack'), this.createBtn(function () {
+        }, null, 'attack', 'attack'), this.createBtn(this.moveTag.children, function () {
             return _this.game.player.sendConvert(_this.game);
-        }, null, 'convert', 'convert'), this.createBtn(function () {
+        }, null, 'convert', 'convert'), this.createBtn(this.moveTag.children, function () {
             return _this.game.player.sendRetreat(_this.game);
         }, null, 'retreat', 'retreat')]);
 
@@ -2711,31 +2714,58 @@ var UI = function () {
     }
 
     _createClass(UI, [{
+        key: 'createGroup',
+        value: function createGroup(parent, name) {
+            var tag = document.createElement('div');
+            tag.classList.add('group');
+
+            var nameTag = document.createElement('div');
+            nameTag.classList.add('name');
+            nameTag.innerHTML = name;
+            tag.appendChild(nameTag);
+
+            var children = document.createElement('div');
+            children.classList.add('children');
+            tag.appendChild(children);
+
+            parent.appendChild(tag);
+
+            return {
+                tag: tag,
+                nameTag: nameTag,
+                children: children
+            };
+        }
+    }, {
         key: 'createBtn',
-        value: function createBtn(onclick, onupdate, name) {
+        value: function createBtn(parent, onclick, onupdate, name) {
             var tag = document.createElement('div');
 
             var btn = document.createElement('button');
             btn.classList.add('btn');
 
-            for (var _len = arguments.length, classes = Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
-                classes[_key - 3] = arguments[_key];
+            for (var _len = arguments.length, classes = Array(_len > 4 ? _len - 4 : 0), _key = 4; _key < _len; _key++) {
+                classes[_key - 4] = arguments[_key];
             }
 
             btn.classList.add.apply(btn.classList, classes);
             btn.onclick = onclick;
             tag.appendChild(btn);
 
+            var textTag = document.createElement('span');
+            btn.appendChild(textTag);
+
             var tooltip = document.createElement('div');
             tooltip.innerHTML = name;
             tooltip.classList.add('tooltip');
             tag.appendChild(tooltip);
 
-            this.btnsTag.appendChild(tag);
+            parent.appendChild(tag);
 
             return {
                 tag: tag,
                 btn: btn,
+                textTag: textTag,
                 tooltip: tooltip,
                 text: '',
                 update: onupdate
@@ -2795,7 +2825,7 @@ var UI = function () {
             if (game) {
                 this.btns.forEach(function (btn) {
                     var text = btn.update && btn.update();
-                    if (btn.text !== text) btn.text = btn.btn.innerHTML = text;
+                    if (btn.text !== text) btn.text = btn.textTag.innerHTML = text;
                 });
                 this.btnsTag.style.backgroundColor = '#' + game.god.offTint.toString('16').padStart(6, '0');
             }
