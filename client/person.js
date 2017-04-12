@@ -175,7 +175,7 @@ class Person extends PIXI.AnimatedSprite {
     resolveIndices(game) {
         if (this.target)
             this.target.island = game.islands[this.target.island];
-        this.movements.forEach(m => m.island = game.islands[m.ìsland]);
+        this.movements.forEach(m => m.island = game.islands[m.island]);
         this.job.resolveIndices && this.job.resolveIndices.apply(this, arguments);
     }
 }
@@ -258,7 +258,7 @@ Builder = new Job('builder', 'images/Builder.png', {
         };
     },
     readState(state, game) {
-        this.buidling = state.building;
+        this.building = state.building;
     },
     resolveIndices(game) {
         if (this.building) this.building =

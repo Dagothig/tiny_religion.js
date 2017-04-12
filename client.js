@@ -2052,7 +2052,7 @@ var Person = function (_PIXI$AnimatedSprite) {
         value: function resolveIndices(game) {
             if (this.target) this.target.island = game.islands[this.target.island];
             this.movements.forEach(function (m) {
-                return m.island = game.islands[m.ìsland];
+                return m.island = game.islands[m.island];
             });
             this.job.resolveIndices && this.job.resolveIndices.apply(this, arguments);
         }
@@ -2176,7 +2176,7 @@ var Villager = new Job('villager', 'images/Villager.png', {
         };
     },
     readState: function readState(state, game) {
-        this.buidling = state.building;
+        this.building = state.building;
     },
     resolveIndices: function resolveIndices(game) {
         if (this.building) this.building = game.islands[this.building.island].buildings[this.building.index];
