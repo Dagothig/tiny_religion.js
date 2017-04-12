@@ -2012,8 +2012,8 @@ var Person = function (_PIXI$AnimatedSprite) {
             var target = this.island.people.find(filter);
             if (target) return target;
 
-            var toIsland = this.island.x - this.x;
-            if (toIsland < -150 && this.island.index + 1 < game.islands.length) return game.islands[this.island.index + 1].people.find(filter);else if (toIsland > 150 && this.island.index - 1 >= 0) return game.islands[this.island.index + 1].people.find(filter);
+            var toIsland = this.x - this.island.x;
+            if (toIsland > 150 && this.island.index + 1 < game.islands.length) return game.islands[this.island.index + 1].people.find(filter);else if (toIsland < -150 && this.island.index - 1 >= 0) return game.islands[this.island.index - 1].people.find(filter);
         }
     }, {
         key: 'pray',

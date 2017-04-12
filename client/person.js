@@ -138,11 +138,11 @@ class Person extends PIXI.AnimatedSprite {
         let target = this.island.people.find(filter);
         if (target) return target;
 
-        let toIsland = this.island.x - this.x;
-        if (toIsland < -150 && this.island.index + 1 < game.islands.length)
+        let toIsland = this.x - this.island.x;
+        if (toIsland > 150 && this.island.index + 1 < game.islands.length)
             return game.islands[this.island.index + 1].people.find(filter);
-        else if (toIsland > 150 && this.island.index - 1 >= 0)
-            return game.islands[this.island.index + 1].people.find(filter);
+        else if (toIsland < -150 && this.island.index - 1 >= 0)
+            return game.islands[this.island.index - 1].people.find(filter);
     }
 
     pray() {
