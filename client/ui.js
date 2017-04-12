@@ -218,6 +218,7 @@ class UI {
                 this.titleTag.classList.add('lost');
             }
         } else sounds.titleScreen.play();
+        if (window.android) android.updateStatusTint(0x193bcb);
     }
     hideTitle() {
         this.titleTag.classList.add('hidden');

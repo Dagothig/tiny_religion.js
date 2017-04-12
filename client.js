@@ -1042,6 +1042,7 @@ var God = function (_PIXI$Container) {
             var lightness = attention / (attention < 0 ? 6 : 4) + 0.5;
             this.tint = PIXI.Color.fromHSL(hue, saturation, lightness);
             this.offTint = PIXI.Color.fromHSL(hue, saturation * 0.5, lightness * 0.5);
+            if (window.android) android.updateStatusTint(this.offTint);
         }
     }, {
         key: 'event',
@@ -2847,6 +2848,7 @@ var UI = function () {
                     this.titleTag.classList.add('lost');
                 }
             } else sounds.titleScreen.play();
+            if (window.android) android.updateStatusTint(0x193bcb);
         }
     }, {
         key: 'hideTitle',

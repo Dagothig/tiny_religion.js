@@ -196,6 +196,7 @@ class God extends PIXI.Container {
         let lightness = attention / (attention < 0 ? 6 : 4) + 0.5;
         this.tint = PIXI.Color.fromHSL(hue, saturation, lightness);
         this.offTint = PIXI.Color.fromHSL(hue, saturation * 0.5, lightness * 0.5);
+        if (window.android) android.updateStatusTint(this.offTint);
     }
 
     event(what, scalar, where) {
