@@ -7,11 +7,6 @@ html, body {
 html {
     font-size: 4px;
 }
-@media (min-height: 800px) {
-    html {
-        font-size: 5px;
-    }
-}
 body {
     display: flex;
     flex-direction: column;
