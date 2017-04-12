@@ -4,12 +4,21 @@ html, body {
     width: 100%;
     height: 100%;
 }
+html {
+    font-size: 4px;
+}
+@media (min-height: 800px) {
+    html {
+        font-size: 5px;
+    }
+}
 body {
     display: flex;
     flex-direction: column;
     font-family: monospace;
     font-weight: 800;
     background-color: #193bcb;
+    font-size: 3rem;
 }
 a {
     color: white;
@@ -99,35 +108,36 @@ canvas {
     right: 0;
     text-align: right;
 }
-.menu-btn {
+
+.checked {
     position: absolute;
     width: 0;
     height: 0;
 }
-.menu-btn+.check {
+.checked+.check {
     display: inline-block;
-    width: 32px;
-    height: 32px;
-    background-image: url('images/Settings.png');
+    width: 8rem;
+    height: 8rem;
     cursor: pointer;
     opacity: 0.5;
+    background-size: cover;
+    image-rendering: pixelated;
 }
-.menu-btn:checked+.check {
-    background-image: url('images/Close.png');
-}
-.menu-btn:focus+.check {
-    opacity: 1;
-}
+.checked:focus+.check { opacity: 1; }
+.pause-btn+.check { background-image: url('images/Pause.png'); }
+.pause-btn:checked+.check { background-image: url('images/Play.png'); }
+.menu-btn+.check { background-image: url('images/Settings.png'); }
+.menu-btn:checked+.check { background-image: url('images/Close.png'); }
+
 .menu {
     display: none;
     text-shadow: 0 1px black;
     color: white;
     text-transform: uppercase;
     text-align: left;
+    font-size: 3.5rem;
 }
-.menu-btn:checked+.check+.menu {
-    display: block;
-}
+.menu-btn:checked+.check+.menu { display: block; }
 
 .menu div {
     display: flex;
@@ -155,6 +165,7 @@ canvas {
     text-shadow: 0 1px black;
     text-align: right;
     font-family: monospace;
+    font-size: 3.5rem;
     text-transform: uppercase;
     background: none;
     border: none;
@@ -178,7 +189,7 @@ canvas {
     overflow: auto;
 }
 .btns>div {
-    width: 64px;
+    width: 16rem;
     flex-grow: 1;
     flex-shrink: 0;
 }
@@ -187,11 +198,11 @@ canvas {
 .tooltip {
     display: none;
     width: 100%;
-    font-size: 10px;
+    font-size: 2.5rem;
     margin-top: 1px;
     text-transform: uppercase;
     color: white;
-    padding: 4px 0;
+    padding: 1rem 0;
     text-align: center;
     text-shadow: 0 1px black;
     background-color: rgba(0, 0, 0, 0.3);
@@ -202,20 +213,25 @@ canvas {
     position: relative;
     display: block;
     width: 100%;
-    height: 56px;
+    height: 14rem;
     background-color: rgba(255, 255, 255, 0.3);
     overflow: hidden;
     filter: brightness(0.75) grayscale(0.75);
     color: white;
     text-shadow: 0 1px black;
     text-align: center;
-    line-height: 94px;
+    line-height: 23.5rem;
     padding: 0;
     border: none;
     cursor: pointer;
     font-family: monospace;
     font-weight: 800;
+    font-size: 3rem;
 }
+.btn:disabled {
+    filter: brightness(0.6) grayscale(1) !important;
+}
+.btn:disabled:after, .btn:disabled:before { animation-duration: 1000000s; }
 .btn:hover, .btn:focus { filter: brightness(1) grayscale(0); }
 .btn:focus { outline: none; }
 
@@ -425,5 +441,5 @@ canvas {
     left: 0;
     top: 0;
     text-align: center;
-    line-height: 56px;
+    line-height: 14rem;
 }

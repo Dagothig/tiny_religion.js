@@ -5,8 +5,16 @@ let ui = new UI(container, () => newGame());
 let game;
 
 let paused = false;
-function resume() { paused = false; Music.resume(); }
-function pause() { paused = true; Music.pause(); }
+function resume() {
+    paused = false;
+    Music.resume();
+    ui.resume();
+}
+function pause() {
+    paused = true;
+    Music.pause();
+    ui.pause();
+}
 
 function newGame(state = undefined) {
     Game.onLoad(() => {
@@ -78,15 +86,14 @@ window.addEventListener("DOMContentLoaded", () => {
         let upd = () => {
             let time = performance.now();
             let delta = time - last;
-            if (!paused) {
-                ui.update(delta, game);
-                if (game) {
-                    game.update(delta, renderer.width, renderer.height);
-                    renderer.backgroundColor = game.backgroundColor;
-                    renderer.render(game);
-                    game.checkForEnd();
-                }
+
+            if (game) {
+                if (!paused) game.update(delta, renderer.width, renderer.height);
+                game.render(delta, renderer);
+                if (!paused) game.checkForEnd();
             }
+            ui.update(delta, game);
+
             last = time;
             requestAnimationFrame(upd);
         }

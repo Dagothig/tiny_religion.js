@@ -5,11 +5,12 @@ class Overlay extends PIXI.Sprite {
         super(texture);
         this.flashes = [];
     }
-    update(delta, game, width, height) {
+    render(delta, game, renderer) {
         this.x = -game.x;
         this.y = -game.y;
-        this.width = width;
-        this.height = height;
+        this.width = renderer.width;
+        this.height = renderer.height;
+
         let alpha = 0;
         for (let i = this.flashes.length; i--;) {
             let flash = this.flashes[i];
@@ -46,8 +47,8 @@ let darkSkyColor = 0x28162f,
     goodCloudColor = 0xd6f0ff,
 
     darkGlobalColor = 0xff99cc,
-    globalColor = 0xcccccc,
-    goodGlobalColor = 0xfff0cc;
+    globalColor = 0xdddddd,
+    goodGlobalColor = 0xfff0dd;
 
 class Game extends PIXI.Container {
     constructor(onFinished, state = { x: 0, y: 0, goal: settings.goal }) {
@@ -60,20 +61,25 @@ class Game extends PIXI.Container {
             onFinished(win);
         };
 
+        // God
         this.god = new God();
         if (state.god) this.god.readState(state.god, this);
         this.addChild(this.god);
 
+        // Kingdoms
         this.player = new Kingdom('player', 0x113996, true);
         this.ai = new Kingdom('ai', 0xab1705, false);
         this.gaia = new Kingdom('gaia', 0x888888, false);
-        this.islands = [];
 
+        // Islands
+        this.islands = [];
         if (state.islands) {
             state.islands.forEach(s => this.addIsland(Island.fromState(s, this)));
             this.islands.forEach(island => island.resolveIndices(this));
         } else this.generateInitial();
+        this.updateCounts();
 
+        // Clouds
         this.cloudStart = new PIXI.Sprite(Island.cloudStart);
         this.cloudStart.x = this.islBnds.left;
 
@@ -87,6 +93,7 @@ class Game extends PIXI.Container {
 
         this.skiesMood = 0;
 
+        // Overlay
         if (state.overlay) this.overlay = Overlay.fromState(state.overlay, this);
         else {
             this.overlay = new Overlay();
@@ -99,7 +106,19 @@ class Game extends PIXI.Container {
         return this.islBnds ? this.islands.length * this.islBnds.width : 0;
     }
 
-    update(delta, width, height) {
+    update(delta) {
+        this.updateCounts();
+
+        this.children.forEach(child =>
+            child.update && child.update(delta, this));
+        this.children = this.children.filter(child => !child.shouldRemove);
+
+        if (this.player.linkedTo(this, this.ai)) Music.switchTo(musics.combat);
+        else Music.switchTo(musics.regular);
+    }
+    render(delta, renderer) {
+        // Positions & limits
+        let width = renderer.width, height = renderer.height;
         if (this.down) this.updateDown(delta);
         let totalWidth = this.islandsWidth;
         let target;
@@ -114,20 +133,7 @@ class Game extends PIXI.Container {
         this.god.x = -this.x + width / 2;
         this.god.y = -this.y;
 
-        this.updateColor();
-        this.player.count(this);
-        this.ai.count(this);
-
-        this.children.forEach(child =>
-            child.update && child.update(delta, this, width, height));
-        this.children = this.children.filter(child => !child.shouldRemove);
-        this.children.forEach((child, i) => child.__i__ = i);
-        this.children.sort((a, b) => (a.z || 0) - (b.z || 0));
-
-        if (this.player.linkedTo(this, this.ai)) Music.switchTo(musics.combat);
-        else Music.switchTo(musics.regular);
-    }
-    updateColor() {
+        // Coloring
         let feeling = this.god.feeling(this.goal);
         this.skiesMood += (feeling - this.skiesMood) * 0.01;
         this.skiesMood = Math.bounded(this.skiesMood, -1, 1);
@@ -143,6 +149,18 @@ class Game extends PIXI.Container {
             Math.abs(this.skiesMood));
 
         this.cloudStart.tint = this.cloudEnd.tint = this.cloudColor;
+        renderer.backgroundColor = this.backgroundColor;
+
+        this.children.forEach(child =>
+            child.render && child.render(delta, this, renderer));
+
+        this.children.sort((a, b) => (a.z || 0) - (b.z || 0));
+        renderer.render(this);
+    }
+    updateCounts() {
+        this.player.count(this);
+        this.ai.count(this);
+        this.gaia.count(this);
     }
     checkForEnd() {
         if (!this.player.peopleCount && !this.player.summonCount)
@@ -168,7 +186,7 @@ class Game extends PIXI.Container {
         let starting = new Island(this.islandsWidth, 0, this.player);
         starting.generateBuilding(House, true);
         starting.generatePlain();
-        starting.people.push(
+        starting.people.add(
             new Person(0, 0, Villager, this.player, starting),
             new Person(0, 0, Villager, this.player, starting),
             new Person(0, 0, Warrior, this.player, starting),

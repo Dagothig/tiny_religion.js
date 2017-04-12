@@ -99,9 +99,6 @@ class Island extends PIXI.Container {
     }
 
     update(delta, game) {
-        this.cloud.tint = game.cloudColor;
-        this.ground.tint = game.globalColor;
-
         let alliedPresence = null, enemyPresence = null;
         this.people = this.people.filter(p => {
             if (p.kingdom === this.kingdom) alliedPresence = p.kingdom;
@@ -118,6 +115,10 @@ class Island extends PIXI.Container {
             return !b.shouldRemove;
         });
         this.ground.tileX = (Math.bounded(buildingCount/3 - treeCount/6, 0, 3)|0);
+    }
+    render(delta, game, renderer) {
+        this.cloud.tint = game.cloudColor;
+        this.ground.tint = game.globalColor;
     }
 
     changeKingdom(newKingdom) {

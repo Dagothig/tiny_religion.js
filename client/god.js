@@ -96,17 +96,12 @@ class God extends PIXI.Container {
     }
 
     update(delta, game) {
-        this.background.tint =
-            PIXI.Color.interpolate(game.cloudColor, 0xffffff, 0.5);
-
         this.overallMood += this.mood;
         this.mood -= 0.01 * Math.sign(this.mood);
         if (Math.abs(this.mood) < 0.01) this.mood = 0;
 
-        let feeling = this.feeling(game.goal);
-        this.tileY = Math.bounded(3 - Math.round(feeling * 3), 0, 6);
-
-        if (Math.random() < -feeling / 400) this.doSacrifice(game);
+        if (Math.random() < -this.feeling(game.goal) / 400)
+            this.doSacrifice(game);
 
         if (this.mood > 0) {
             this.satisfaction += this.mood;
@@ -117,18 +112,25 @@ class God extends PIXI.Container {
         this.sincePersonality++;
         if (this.sincePersonality > God.personalityLength)
             this.changePersonality(false, game);
+    }
+    render(delta, game, renderer) {
+        this.background.tint =
+            PIXI.Color.interpolate(game.cloudColor, 0xffffff, 0.5);
+
+        let feeling = this.feeling(game.goal);
+        this.tileY = Math.bounded(3 - Math.round(feeling * 3), 0, 6);
 
         let x = this.x + this.leftEyeSocket.x,
             y = this.y + this.leftEyeSocket.y;
         let dstToLeftEye = Math.dst(x, y, this.lookAtX, this.lookAtY);
-        this.leftEye.x = 3 * (this.lookAtX - x) / dstToLeftEye;
-        this.leftEye.y = 3 * (this.lookAtY - y) / dstToLeftEye;
+        this.leftEye.x = 4 * (this.lookAtX - x) / dstToLeftEye;
+        this.leftEye.y = 4 * (this.lookAtY - y) / dstToLeftEye;
 
         x = this.x + this.rightEyeSocket.x;
         y = this.y + this.rightEyeSocket.y;
         let dstToRightEye = Math.dst(x, y, this.lookAtX, this.lookAtY);
-        this.rightEye.x = 3 * (this.lookAtX - x) / dstToRightEye;
-        this.rightEye.y = 3 * (this.lookAtY - y) / dstToRightEye;
+        this.rightEye.x = 4 * (this.lookAtX - x) / dstToRightEye;
+        this.rightEye.y = 4 * (this.lookAtY - y) / dstToRightEye;
     }
 
     doSacrifice(game) {
@@ -198,6 +200,7 @@ class God extends PIXI.Container {
 
     event(what, scalar, where) {
         if (!this.events[what]) return;
+        if (scalar < 0) scalar *= 2;
         let change = this.events[what]() * scalar;
         this.mood += change;
         this.lookAt(where);

@@ -64,8 +64,10 @@ class Building extends PIXI.TiledSprite {
         }
     }
     update(delta, game) {
-        this.tint = game.globalColor;
         if (this.type.update) this.type.update.apply(this, arguments);
+    }
+    render(delta, game, renderer) {
+        this.tint = game.globalColor;
     }
     outputState() {
         return {

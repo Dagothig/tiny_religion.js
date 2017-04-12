@@ -935,16 +935,11 @@ var God = function (_PIXI$Container) {
     _createClass(God, [{
         key: 'update',
         value: function update(delta, game) {
-            this.background.tint = PIXI.Color.interpolate(game.cloudColor, 0xffffff, 0.5);
-
             this.overallMood += this.mood;
             this.mood -= 0.01 * Math.sign(this.mood);
             if (Math.abs(this.mood) < 0.01) this.mood = 0;
 
-            var feeling = this.feeling(game.goal);
-            this.tileY = Math.bounded(3 - Math.round(feeling * 3), 0, 6);
-
-            if (Math.random() < -feeling / 400) this.doSacrifice(game);
+            if (Math.random() < -this.feeling(game.goal) / 400) this.doSacrifice(game);
 
             if (this.mood > 0) {
                 this.satisfaction += this.mood;
@@ -953,18 +948,26 @@ var God = function (_PIXI$Container) {
 
             this.sincePersonality++;
             if (this.sincePersonality > God.personalityLength) this.changePersonality(false, game);
+        }
+    }, {
+        key: 'render',
+        value: function render(delta, game, renderer) {
+            this.background.tint = PIXI.Color.interpolate(game.cloudColor, 0xffffff, 0.5);
+
+            var feeling = this.feeling(game.goal);
+            this.tileY = Math.bounded(3 - Math.round(feeling * 3), 0, 6);
 
             var x = this.x + this.leftEyeSocket.x,
                 y = this.y + this.leftEyeSocket.y;
             var dstToLeftEye = Math.dst(x, y, this.lookAtX, this.lookAtY);
-            this.leftEye.x = 3 * (this.lookAtX - x) / dstToLeftEye;
-            this.leftEye.y = 3 * (this.lookAtY - y) / dstToLeftEye;
+            this.leftEye.x = 4 * (this.lookAtX - x) / dstToLeftEye;
+            this.leftEye.y = 4 * (this.lookAtY - y) / dstToLeftEye;
 
             x = this.x + this.rightEyeSocket.x;
             y = this.y + this.rightEyeSocket.y;
             var dstToRightEye = Math.dst(x, y, this.lookAtX, this.lookAtY);
-            this.rightEye.x = 3 * (this.lookAtX - x) / dstToRightEye;
-            this.rightEye.y = 3 * (this.lookAtY - y) / dstToRightEye;
+            this.rightEye.x = 4 * (this.lookAtX - x) / dstToRightEye;
+            this.rightEye.y = 4 * (this.lookAtY - y) / dstToRightEye;
         }
     }, {
         key: 'doSacrifice',
@@ -1044,6 +1047,7 @@ var God = function (_PIXI$Container) {
         key: 'event',
         value: function event(what, scalar, where) {
             if (!this.events[what]) return;
+            if (scalar < 0) scalar *= 2;
             var change = this.events[what]() * scalar;
             this.mood += change;
             this.lookAt(where);
@@ -1590,9 +1594,6 @@ var Island = function (_PIXI$Container) {
         value: function update(delta, game) {
             var _this3 = this;
 
-            this.cloud.tint = game.cloudColor;
-            this.ground.tint = game.globalColor;
-
             var alliedPresence = null,
                 enemyPresence = null;
             this.people = this.people.filter(function (p) {
@@ -1608,6 +1609,12 @@ var Island = function (_PIXI$Container) {
                 return !b.shouldRemove;
             });
             this.ground.tileX = Math.bounded(buildingCount / 3 - treeCount / 6, 0, 3) | 0;
+        }
+    }, {
+        key: 'render',
+        value: function render(delta, game, renderer) {
+            this.cloud.tint = game.cloudColor;
+            this.ground.tint = game.globalColor;
         }
     }, {
         key: 'changeKingdom',
@@ -1762,8 +1769,12 @@ var Building = function (_PIXI$TiledSprite) {
     }, {
         key: 'update',
         value: function update(delta, game) {
-            this.tint = game.globalColor;
             if (this.type.update) this.type.update.apply(this, arguments);
+        }
+    }, {
+        key: 'render',
+        value: function render(delta, game, renderer) {
+            this.tint = game.globalColor;
         }
     }, {
         key: 'outputState',
@@ -1945,10 +1956,13 @@ var Person = function (_PIXI$AnimatedSprite) {
                 this.y += this.movY;
             }
 
-            // Visuals
+            _get(Person.prototype.__proto__ || Object.getPrototypeOf(Person.prototype), 'update', this).call(this, delta);
+        }
+    }, {
+        key: 'render',
+        value: function render(delta, game, renderer) {
             this.tileY = Math.abs(this.movX) > Math.abs(this.movY) ? this.movX > 0 ? this.tileY = 1 : this.tileY = 2 : this.movY > 0 ? this.tileY = 3 : this.tileY = 4;
             this.tint = this.sinceTookDamage > 4 ? 0xFFFFFF : this.kingdom.tint;
-            _get(Person.prototype.__proto__ || Object.getPrototypeOf(Person.prototype), 'update', this).call(this, delta);
         }
     }, {
         key: 'findNextTarget',
@@ -1990,7 +2004,16 @@ var Person = function (_PIXI$AnimatedSprite) {
             var filter = function filter(p) {
                 return p.kingdom !== _this3.kingdom && predicate(p) && Math.dst2(_this3.x, _this3.y, p.x, p.y) < dst2;
             };
-            return this.island.people.filter(filter).rand() || this.island.index - 1 >= 0 && game.islands[this.island.index - 1].people.filter(filter).rand() || this.island.index + 1 < game.islands.length && game.islands[this.island.index + 1].people.filter(filter).rand();
+            /*return this.island.people.filter(filter).rand()
+                || (this.island.index - 1 >= 0 &&
+                    game.islands[this.island.index - 1].people.filter(filter).rand())
+                || (this.island.index + 1 < game.islands.length &&
+                    game.islands[this.island.index + 1].people.filter(filter).rand());*/
+            var target = this.island.people.find(filter);
+            if (target) return target;
+
+            var toIsland = this.island.x - this.x;
+            if (toIsland < -150 && this.island.index + 1 < game.islands.length) return game.islands[this.island.index + 1].people.find(filter);else if (toIsland > 150 && this.island.index - 1 >= 0) return game.islands[this.island.index + 1].people.find(filter);
         }
     }, {
         key: 'pray',
@@ -2228,12 +2251,13 @@ var Overlay = function (_PIXI$Sprite) {
     }
 
     _createClass(Overlay, [{
-        key: 'update',
-        value: function update(delta, game, width, height) {
+        key: 'render',
+        value: function render(delta, game, renderer) {
             this.x = -game.x;
             this.y = -game.y;
-            this.width = width;
-            this.height = height;
+            this.width = renderer.width;
+            this.height = renderer.height;
+
             var alpha = 0;
             for (var i = this.flashes.length; i--;) {
                 var flash = this.flashes[i];
@@ -2280,8 +2304,8 @@ var darkSkyColor = 0x28162f,
     cloudColor = 0x8ca0a4,
     goodCloudColor = 0xd6f0ff,
     darkGlobalColor = 0xff99cc,
-    globalColor = 0xcccccc,
-    goodGlobalColor = 0xfff0cc;
+    globalColor = 0xdddddd,
+    goodGlobalColor = 0xfff0dd;
 
 var Game = function (_PIXI$Container) {
     _inherits(Game, _PIXI$Container);
@@ -2301,15 +2325,18 @@ var Game = function (_PIXI$Container) {
             onFinished(win);
         };
 
+        // God
         _this2.god = new God();
         if (state.god) _this2.god.readState(state.god, _this2);
         _this2.addChild(_this2.god);
 
+        // Kingdoms
         _this2.player = new Kingdom('player', 0x113996, true);
         _this2.ai = new Kingdom('ai', 0xab1705, false);
         _this2.gaia = new Kingdom('gaia', 0x888888, false);
-        _this2.islands = [];
 
+        // Islands
+        _this2.islands = [];
         if (state.islands) {
             state.islands.forEach(function (s) {
                 return _this2.addIsland(Island.fromState(s, _this2));
@@ -2318,7 +2345,9 @@ var Game = function (_PIXI$Container) {
                 return island.resolveIndices(_this2);
             });
         } else _this2.generateInitial();
+        _this2.updateCounts();
 
+        // Clouds
         _this2.cloudStart = new PIXI.Sprite(Island.cloudStart);
         _this2.cloudStart.x = _this2.islBnds.left;
 
@@ -2332,6 +2361,7 @@ var Game = function (_PIXI$Container) {
 
         _this2.skiesMood = 0;
 
+        // Overlay
         if (state.overlay) _this2.overlay = Overlay.fromState(state.overlay, _this2);else {
             _this2.overlay = new Overlay();
             _this2.overlay.flash(60);
@@ -2342,9 +2372,28 @@ var Game = function (_PIXI$Container) {
 
     _createClass(Game, [{
         key: 'update',
-        value: function update(delta, width, height) {
+        value: function update(delta) {
             var _this3 = this;
 
+            this.updateCounts();
+
+            this.children.forEach(function (child) {
+                return child.update && child.update(delta, _this3);
+            });
+            this.children = this.children.filter(function (child) {
+                return !child.shouldRemove;
+            });
+
+            if (this.player.linkedTo(this, this.ai)) Music.switchTo(musics.combat);else Music.switchTo(musics.regular);
+        }
+    }, {
+        key: 'render',
+        value: function render(delta, renderer) {
+            var _this4 = this;
+
+            // Positions & limits
+            var width = renderer.width,
+                height = renderer.height;
             if (this.down) this.updateDown(delta);
             var totalWidth = this.islandsWidth;
             var target = void 0;
@@ -2356,28 +2405,7 @@ var Game = function (_PIXI$Container) {
             this.god.x = -this.x + width / 2;
             this.god.y = -this.y;
 
-            this.updateColor();
-            this.player.count(this);
-            this.ai.count(this);
-
-            this.children.forEach(function (child) {
-                return child.update && child.update(delta, _this3, width, height);
-            });
-            this.children = this.children.filter(function (child) {
-                return !child.shouldRemove;
-            });
-            this.children.forEach(function (child, i) {
-                return child.__i__ = i;
-            });
-            this.children.sort(function (a, b) {
-                return (a.z || 0) - (b.z || 0);
-            });
-
-            if (this.player.linkedTo(this, this.ai)) Music.switchTo(musics.combat);else Music.switchTo(musics.regular);
-        }
-    }, {
-        key: 'updateColor',
-        value: function updateColor() {
+            // Coloring
             var feeling = this.god.feeling(this.goal);
             this.skiesMood += (feeling - this.skiesMood) * 0.01;
             this.skiesMood = Math.bounded(this.skiesMood, -1, 1);
@@ -2387,6 +2415,23 @@ var Game = function (_PIXI$Container) {
             this.globalColor = PIXI.Color.interpolate(globalColor, this.skiesMood > 0 ? goodGlobalColor : darkGlobalColor, Math.abs(this.skiesMood));
 
             this.cloudStart.tint = this.cloudEnd.tint = this.cloudColor;
+            renderer.backgroundColor = this.backgroundColor;
+
+            this.children.forEach(function (child) {
+                return child.render && child.render(delta, _this4, renderer);
+            });
+
+            this.children.sort(function (a, b) {
+                return (a.z || 0) - (b.z || 0);
+            });
+            renderer.render(this);
+        }
+    }, {
+        key: 'updateCounts',
+        value: function updateCounts() {
+            this.player.count(this);
+            this.ai.count(this);
+            this.gaia.count(this);
         }
     }, {
         key: 'checkForEnd',
@@ -2410,7 +2455,7 @@ var Game = function (_PIXI$Container) {
             var starting = new Island(this.islandsWidth, 0, this.player);
             starting.generateBuilding(House, true);
             starting.generatePlain();
-            starting.people.push(new Person(0, 0, Villager, this.player, starting), new Person(0, 0, Villager, this.player, starting), new Person(0, 0, Warrior, this.player, starting), new Person(0, 0, Priest, this.player, starting), new Person(0, 0, Builder, this.player, starting));
+            starting.people.add(new Person(0, 0, Villager, this.player, starting), new Person(0, 0, Villager, this.player, starting), new Person(0, 0, Warrior, this.player, starting), new Person(0, 0, Priest, this.player, starting), new Person(0, 0, Builder, this.player, starting));
             this.addIsland(starting);
         }
     }, {
@@ -2448,24 +2493,24 @@ var Game = function (_PIXI$Container) {
     }, {
         key: 'attachEvents',
         value: function attachEvents(container) {
-            var _this4 = this;
+            var _this5 = this;
 
             if (this.container) this.detachEvents();else {
                 this.events = {};
                 this.events.mousedown = function (ev) {
-                    return _this4.beginDown(ev.pageX, ev.pageY);
+                    return _this5.beginDown(ev.pageX, ev.pageY);
                 };
                 this.events.touchstart = Misc.wrap(Misc.touchToMouseEv, this.events.mousedown);
                 this.events.mousemove = function (ev) {
-                    return _this4.onMove(ev.pageX, ev.pageY);
+                    return _this5.onMove(ev.pageX, ev.pageY);
                 };
                 this.events.touchmove = Misc.wrap(Misc.touchToMouseEv, this.events.mousemove);
                 this.events.mouseup = function (ev) {
-                    return _this4.finishDown();
+                    return _this5.finishDown();
                 };
                 this.events.touchend = this.events.mouseup;
                 this.events.mousewheel = function (ev) {
-                    return _this4.x -= ev.deltaX;
+                    return _this5.x -= ev.deltaX;
                 };
             }
             this.container = container;
@@ -2646,16 +2691,10 @@ var UI = function () {
         this.menuContainerTag = document.createElement('div');
         this.menuContainerTag.classList.add('menu-container');
 
-        this.menuBtn = document.createElement('input');
-        this.menuBtn.name = this.menuBtn.id = 'menu-btn';
-        this.menuBtn.type = 'checkbox';
-        this.menuBtn.classList.add('menu-btn');
-        this.menuContainerTag.appendChild(this.menuBtn);
-
-        this.menuBtnCheck = document.createElement('label');
-        this.menuBtnCheck.classList.add('check');
-        this.menuBtnCheck.htmlFor = 'menu-btn';
-        this.menuContainerTag.appendChild(this.menuBtnCheck);
+        this.createMenuBtn('pause-btn').btn.onchange = function (ev) {
+            return ev.target.checked ? pause() : resume();
+        };
+        this.createMenuBtn('menu-btn');
 
         this.menuTag = document.createElement('div');
         this.menuTag.classList.add('menu');
@@ -2734,6 +2773,22 @@ var UI = function () {
             return container;
         }
     }, {
+        key: 'createMenuBtn',
+        value: function createMenuBtn(name) {
+            var btn = document.createElement('input');
+            btn.name = btn.id = name;
+            btn.type = 'checkbox';
+            btn.classList.add('checked', name);
+            this.menuContainerTag.appendChild(btn);
+
+            var check = document.createElement('label');
+            check.classList.add('check');
+            check.htmlFor = name;
+            this.menuContainerTag.appendChild(check);
+
+            return { btn: btn, check: check };
+        }
+    }, {
         key: 'update',
         value: function update(delta, game) {
             this.game = game;
@@ -2770,6 +2825,20 @@ var UI = function () {
             this.btnsTag.classList.remove('hidden');
             this.gameContainer.classList.remove('hidden');
         }
+    }, {
+        key: 'pause',
+        value: function pause() {
+            this.btns.forEach(function (btn) {
+                return btn.btn.disabled = true;
+            });
+        }
+    }, {
+        key: 'resume',
+        value: function resume() {
+            this.btns.forEach(function (btn) {
+                return btn.btn.disabled = false;
+            });
+        }
     }]);
 
     return UI;
@@ -2786,10 +2855,14 @@ var game = void 0;
 
 var paused = false;
 function resume() {
-    paused = false;Music.resume();
+    paused = false;
+    Music.resume();
+    ui.resume();
 }
 function pause() {
-    paused = true;Music.pause();
+    paused = true;
+    Music.pause();
+    ui.pause();
 }
 
 function newGame() {
@@ -2871,15 +2944,14 @@ window.addEventListener("DOMContentLoaded", function () {
         var upd = function upd() {
             var time = performance.now();
             var delta = time - last;
-            if (!paused) {
-                ui.update(delta, game);
-                if (game) {
-                    game.update(delta, renderer.width, renderer.height);
-                    renderer.backgroundColor = game.backgroundColor;
-                    renderer.render(game);
-                    game.checkForEnd();
-                }
+
+            if (game) {
+                if (!paused) game.update(delta, renderer.width, renderer.height);
+                game.render(delta, renderer);
+                if (!paused) game.checkForEnd();
             }
+            ui.update(delta, game);
+
             last = time;
             requestAnimationFrame(upd);
         };

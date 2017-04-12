@@ -91,12 +91,13 @@ class Person extends PIXI.AnimatedSprite {
             this.y += this.movY;
         }
 
-        // Visuals
+        super.update(delta);
+    }
+    render(delta, game, renderer) {
         this.tileY = Math.abs(this.movX) > Math.abs(this.movY) ?
             (this.movX > 0 ? this.tileY = 1 : this.tileY = 2) :
             (this.movY > 0 ? this.tileY = 3 : this.tileY = 4);
         this.tint = this.sinceTookDamage > 4 ? 0xFFFFFF : this.kingdom.tint;
-        super.update(delta);
     }
     findNextTarget(game) {
         if (this.job.findNextTarget &&
@@ -129,11 +130,19 @@ class Person extends PIXI.AnimatedSprite {
         let filter = p => p.kingdom !== this.kingdom
             && predicate(p)
             && Math.dst2(this.x, this.y, p.x, p.y) < dst2;
-        return this.island.people.filter(filter).rand()
+        /*return this.island.people.filter(filter).rand()
             || (this.island.index - 1 >= 0 &&
                 game.islands[this.island.index - 1].people.filter(filter).rand())
             || (this.island.index + 1 < game.islands.length &&
-                game.islands[this.island.index + 1].people.filter(filter).rand());
+                game.islands[this.island.index + 1].people.filter(filter).rand());*/
+        let target = this.island.people.find(filter);
+        if (target) return target;
+
+        let toIsland = this.island.x - this.x;
+        if (toIsland < -150 && this.island.index + 1 < game.islands.length)
+            return game.islands[this.island.index + 1].people.find(filter);
+        else if (toIsland > 150 && this.island.index - 1 >= 0)
+            return game.islands[this.island.index + 1].people.find(filter);
     }
 
     pray() {

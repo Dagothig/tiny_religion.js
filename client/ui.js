@@ -81,16 +81,9 @@ class UI {
         this.menuContainerTag = document.createElement('div');
         this.menuContainerTag.classList.add('menu-container');
 
-        this.menuBtn = document.createElement('input');
-        this.menuBtn.name = this.menuBtn.id = 'menu-btn';
-        this.menuBtn.type = 'checkbox';
-        this.menuBtn.classList.add('menu-btn');
-        this.menuContainerTag.appendChild(this.menuBtn);
-
-        this.menuBtnCheck = document.createElement('label');
-        this.menuBtnCheck.classList.add('check');
-        this.menuBtnCheck.htmlFor = 'menu-btn';
-        this.menuContainerTag.appendChild(this.menuBtnCheck);
+        this.createMenuBtn('pause-btn')
+            .btn.onchange = ev => ev.target.checked ? pause(): resume();
+        this.createMenuBtn('menu-btn');
 
         this.menuTag = document.createElement('div');
         this.menuTag.classList.add('menu');
@@ -155,6 +148,20 @@ class UI {
 
         return container;
     }
+    createMenuBtn(name) {
+        let btn = document.createElement('input');
+        btn.name = btn.id = name;
+        btn.type = 'checkbox';
+        btn.classList.add('checked', name);
+        this.menuContainerTag.appendChild(btn);
+
+        let check = document.createElement('label');
+        check.classList.add('check');
+        check.htmlFor = name;
+        this.menuContainerTag.appendChild(check);
+
+        return { btn: btn, check: check };
+    }
     update(delta, game) {
         this.game = game;
         if (game) {
@@ -185,4 +192,6 @@ class UI {
         this.btnsTag.classList.remove('hidden');
         this.gameContainer.classList.remove('hidden');
     }
+    pause() { this.btns.forEach(btn => btn.btn.disabled = true); }
+    resume() { this.btns.forEach(btn => btn.btn.disabled = false); }
 }
