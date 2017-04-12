@@ -4,9 +4,12 @@ class UI {
     constructor(gameContainer, onTitle) {
         this.gameContainer = gameContainer;
         this.gameContainer.classList.add('hidden');
+        this.onTitle = () => {
+            this.titleTag.removeEventListener('click', this.onTitle);
+            onTitle();
+        };
         this.titleTag = document.createElement('div');
         this.titleTag.classList.add('hidden', 'title');
-        this.titleTag.onclick = onTitle;
 
         this.btnsTag = document.createElement('div');
         this.btnsTag.classList.add('hidden', 'btns');
@@ -219,6 +222,8 @@ class UI {
             }
         } else sounds.titleScreen.play();
         if (window.android) android.updateStatusTint(0x193bcb);
+        setTimeout(() =>
+            this.titleTag.addEventListener('click', this.onTitle), 1000);
     }
     hideTitle() {
         this.titleTag.classList.add('hidden');

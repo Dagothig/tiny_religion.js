@@ -2624,9 +2624,12 @@ var UI = function () {
 
         this.gameContainer = gameContainer;
         this.gameContainer.classList.add('hidden');
+        this.onTitle = function () {
+            _this.titleTag.removeEventListener('click', _this.onTitle);
+            onTitle();
+        };
         this.titleTag = document.createElement('div');
         this.titleTag.classList.add('hidden', 'title');
-        this.titleTag.onclick = onTitle;
 
         this.btnsTag = document.createElement('div');
         this.btnsTag.classList.add('hidden', 'btns');
@@ -2834,6 +2837,8 @@ var UI = function () {
     }, {
         key: 'showTitle',
         value: function showTitle() {
+            var _this2 = this;
+
             var win = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 
             this.titleTag.classList.remove('hidden', 'win', 'lost');
@@ -2849,6 +2854,9 @@ var UI = function () {
                 }
             } else sounds.titleScreen.play();
             if (window.android) android.updateStatusTint(0x193bcb);
+            setTimeout(function () {
+                return _this2.titleTag.addEventListener('click', _this2.onTitle);
+            }, 1000);
         }
     }, {
         key: 'hideTitle',
