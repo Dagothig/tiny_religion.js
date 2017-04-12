@@ -6,10 +6,15 @@ class Island extends PIXI.Container {
         this.x = x;
         this.y = y;
         this.ground = new PIXI.TiledSprite(Island.ground);
-        this.cloud = new PIXI.Sprite(Island.cloud);
-        this.ground.anchor.x = this.cloud.anchor.x = 0.525;
-        this.ground.anchor.y = this.cloud.anchor.y = 0.3;
-        this.addChild(this.ground, this.cloud);
+        this.cloudBack = new PIXI.OscillatingSprite(
+            Island.cloudBack, 6000, 0, 0, 0, 8);
+        this.cloudFront = new PIXI.OscillatingSprite(
+            Island.cloudFront, 4100, 0, 0, 0, 8);
+        this.ground.anchor.x = this.cloudBack.anchor.x = this.cloudFront.anchor.x =
+            0.525;
+        this.ground.anchor.y = this.cloudBack.anchor.y = this.cloudFront.anchor.y =
+            0.3;
+        this.addChild(this.cloudBack, this.ground, this.cloudFront);
         this.buildings = [];
         this.people = [];
         this.kingdom = kingdom;
@@ -115,9 +120,13 @@ class Island extends PIXI.Container {
             return !b.shouldRemove;
         });
         this.ground.tileX = (Math.bounded(buildingCount/3 - treeCount/6, 0, 3)|0);
+
+        this.cloudBack.update(delta);
+        this.cloudFront.update(delta);
     }
     render(delta, game, renderer) {
-        this.cloud.tint = game.cloudColor;
+        this.cloudBack.tint = game.cloudColor;
+        this.cloudFront.tint = game.cloudColor;
         this.ground.tint = game.globalColor;
     }
 
@@ -152,7 +161,11 @@ Island.fromState = function(state, game) {
 PIXI.loader
 .add('island', 'images/Island.png', null, res =>
     Island.ground = new PIXI.TiledTexture(res.texture, 480, 240))
-.add('cloud', 'images/Cloud.png', null, res =>
-    Island.cloud = res.texture)
-.add('cloudStart', 'images/CloudStart.png', null, res =>
-    Island.cloudStart = res.texture);
+.add('cloudBack', 'images/CloudBack.png', null, res =>
+    Island.cloudBack = res.texture)
+.add('cloudFront', 'images/CloudFront.png', null, res =>
+    Island.cloudFront = res.texture)
+.add('cloudStartBack', 'images/CloudStartBack.png', null, res =>
+    Island.cloudStartBack = res.texture)
+.add('cloudStartFront', 'images/CloudStartFront.png', null, res =>
+    Island.cloudStartFront = res.texture);

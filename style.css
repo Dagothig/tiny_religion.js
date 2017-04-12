@@ -103,6 +103,7 @@ canvas {
     position: absolute;
     width: 0;
     height: 0;
+    opacity: 0;
 }
 .checked+.check {
     display: inline-block;
@@ -485,9 +486,9 @@ canvas {
     color: white;
     width: 100%;
     left: 0;
-    top: 0;
+    top: 50%;
     text-align: center;
-    line-height: 14rem;
+    line-height: 0;
 }
 
 @media (max-width:640px) and (max-aspect-ratio: 640/600) {

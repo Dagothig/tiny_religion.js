@@ -105,6 +105,10 @@ GreenHouse = new BuildingType(
     'greenHouse', 'images/GreenHouse.png', 0, 0, 16, true, 35, 10000),
 Tree = new BuildingType(
     'tree', 'images/Tree.png', 0, 4, 0, false, 15, 1000, {
+        building() {
+            if (Math.random() < 0.5) this.scale.x = -1;
+            this.rotation = (Math.random() - 0.5) * Math.PI / 16;
+        },
         update(delta, game) {
             if (!this.finished)
                 this.progressBuild(2 + this.kingdom.greenHouseCount, game);

@@ -71,6 +71,22 @@ class Game extends PIXI.Container {
         this.ai = new Kingdom('ai', 0xab1705, false);
         this.gaia = new Kingdom('gaia', 0x888888, false);
 
+        // Clouds a
+        this.cloudStartBack = new PIXI.OscillatingSprite(
+            Island.cloudStartBack, 6000, 0, 0, 0, 8);
+        this.cloudStartBack.z = -101;
+        this.cloudStartFront = new PIXI.OscillatingSprite(
+            Island.cloudStartFront, 4100, 0, 0, 0, 8);
+        this.cloudStartFront.z = -99;
+
+        this.cloudEndBack = new PIXI.OscillatingSprite(
+            Island.cloudStartBack, 6000, 0, 0, 0, 8);
+        this.cloudEndBack.z = -101;
+        this.cloudEndFront = new PIXI.OscillatingSprite(
+            Island.cloudStartFront, 4100, 0, 0, 0, 8);
+        this.cloudEndFront.z = -99;
+        this.cloudEndBack.scale.x = this.cloudEndFront.scale.x = -1;
+
         // Islands
         this.islands = [];
         if (state.islands) {
@@ -79,19 +95,24 @@ class Game extends PIXI.Container {
         } else this.generateInitial();
         this.updateCounts();
 
-        // Clouds
-        this.cloudStart = new PIXI.Sprite(Island.cloudStart);
-        this.cloudStart.x = this.islBnds.left;
+        // Clouds b
+        this.cloudStartBack.x = this.cloudStartFront.x = this.islBnds.left;
+        this.cloudEndBack.x = this.cloudEndFront.x =
+            this.islBnds.left + this.islandsWidth;
 
-        this.cloudEnd = new PIXI.Sprite(Island.cloudStart);
-        this.cloudEnd.scale.x = -1;
-        this.cloudEnd.x = this.islBnds.left + this.islandsWidth;
-
-        this.cloudStart.anchor.x = this.cloudEnd.anchor.x = 1;
-        this.cloudStart.anchor.y = this.cloudEnd.anchor.y = 0.3;
-        this.addChild(this.cloudStart, this.cloudEnd);
+        this.cloudStartBack.anchor.x = this.cloudStartFront.anchor.x =
+        this.cloudEndBack.anchor.x = this.cloudEndFront.anchor.x = 1;
+        this.cloudStartBack.anchor.y = this.cloudStartFront.anchor.y =
+        this.cloudEndBack.anchor.y = this.cloudEndFront.anchor.y = 0.3;
+        this.addChild(
+            this.cloudStartBack, this.cloudStartFront,
+            this.cloudEndBack, this.cloudEndFront
+        );
 
         this.skiesMood = 0;
+        this.cloudCycle = 0;
+        this.cloudBackY = 4;
+        this.cloudFrontY = 4;
 
         // Overlay
         if (state.overlay) this.overlay = Overlay.fromState(state.overlay, this);
@@ -148,7 +169,8 @@ class Game extends PIXI.Container {
             this.skiesMood > 0 ? goodGlobalColor : darkGlobalColor,
             Math.abs(this.skiesMood));
 
-        this.cloudStart.tint = this.cloudEnd.tint = this.cloudColor;
+        this.cloudStartBack.tint = this.cloudStartFront.tint =
+        this.cloudEndBack.tint = this.cloudEndFront.tint = this.cloudColor;
         renderer.backgroundColor = this.backgroundColor;
 
         this.children.forEach(child =>
@@ -170,17 +192,35 @@ class Game extends PIXI.Container {
     }
 
     addIsland(island) {
-        if (!this.islBnds) this.islBnds = island.getLocalBounds();
+        if (!this.islBnds) {
+            let bnds = island.getLocalBounds();
+            this.islBnds = {
+                left: bnds.left,
+                top: bnds.top,
+                right: bnds.right,
+                bottom: bnds.bottom,
+                width: bnds.width,
+                height: bnds.height
+            };
+        }
         island.index = this.islands.length;
+        island.cloudBack.time = (island.index ?
+            this.islands[island.index - 1].cloudBack.time:
+            this.cloudStartBack.time) + 50;
+        island.cloudFront.time = (island.index ?
+            this.islands[island.index - 1].cloudFront.time:
+            this.cloudStartFront.time) + 50;
+        this.cloudEndBack.time = island.cloudBack.time + 50;
+        this.cloudEndFront.time = island.cloudFront.time + 50;
+
         this.islands.add(island);
         this.addChild(island);
         if (island.buildings.length)
             this.addChild.apply(this, island.buildings);
         if (island.people.length)
             this.addChild.apply(this, island.people);
-        if (this.cloudEnd)
-            this.cloudEnd.x = this.islBnds.width * (this.islands.length - 1) +
-                this.islBnds.right;
+        if (this.cloudEndBack) this.cloudEndBack.x = this.cloudEndFront.x =
+            this.islBnds.width * (this.islands.length - 1) + this.islBnds.right;
     }
     generateInitial() {
         let starting = new Island(this.islandsWidth, 0, this.player);

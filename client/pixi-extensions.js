@@ -184,6 +184,27 @@
         }
     });
 
+    class OscillatingSprite extends Sprite {
+        constructor(texture, duration, minX, maxX, minY, maxY) {
+            super(texture);
+            this.time = 0;
+            this.mult = Math.PI * 2 / duration;
+            this.minX = minX; this.rangeX = maxX - minX;
+            this.minY = minY; this.rangeY = maxY - minY;
+            this.displayX = this.displayY = 0;
+        }
+        update(delta) {
+            this.time += this.mult * delta;
+            let moment = (Math.sin(this.time) + 1)/2;
+            super.x = this.displayX + moment * this.rangeX + this.minX;
+            super.y = this.displayY + moment * this.rangeY + this.minY;
+        }
+        get x() { return this.displayX; }
+        set x(val) { this.displayX = val; }
+        get y() { return this.displayY; }
+        set y(val) { this.displayY = val; }
+    }
+
     requestAnimationFrame(() => {
     let graphics = new PIXI.Graphics();
     graphics.beginFill(0xffffff, 1);
@@ -201,4 +222,5 @@
     PIXI.TiledTexture = TiledTexture;
     PIXI.TiledSprite = TiledSprite;
     PIXI.AnimatedSprite = AnimatedSprite;
+    PIXI.OscillatingSprite = OscillatingSprite;
 })();

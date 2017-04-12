@@ -10,6 +10,7 @@ class UI {
         };
         this.titleTag = document.createElement('div');
         this.titleTag.classList.add('hidden', 'title');
+        this.titleTag.addEventListener('click', this.onTitle)
 
         this.btnsTag = document.createElement('div');
         this.btnsTag.classList.add('hidden', 'btns');

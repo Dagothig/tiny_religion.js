@@ -196,6 +196,16 @@ var Misc = {
 };
 'use strict';
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _set = function set(object, property, value, receiver) { var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent !== null) { set(parent, property, value, receiver); } } else if ("value" in desc && desc.writable) { desc.value = value; } else { var setter = desc.set; if (setter !== undefined) { setter.call(receiver, value); } } return value; };
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
 (function () {
 
     var rMask = 0xff0000,
@@ -412,6 +422,51 @@ var Misc = {
         }
     });
 
+    var OscillatingSprite = function (_Sprite) {
+        _inherits(OscillatingSprite, _Sprite);
+
+        function OscillatingSprite(texture, duration, minX, maxX, minY, maxY) {
+            _classCallCheck(this, OscillatingSprite);
+
+            var _this2 = _possibleConstructorReturn(this, (OscillatingSprite.__proto__ || Object.getPrototypeOf(OscillatingSprite)).call(this, texture));
+
+            _this2.time = 0;
+            _this2.mult = Math.PI * 2 / duration;
+            _this2.minX = minX;_this2.rangeX = maxX - minX;
+            _this2.minY = minY;_this2.rangeY = maxY - minY;
+            _this2.displayX = _this2.displayY = 0;
+            return _this2;
+        }
+
+        _createClass(OscillatingSprite, [{
+            key: "update",
+            value: function update(delta) {
+                this.time += this.mult * delta;
+                var moment = (Math.sin(this.time) + 1) / 2;
+                _set(OscillatingSprite.prototype.__proto__ || Object.getPrototypeOf(OscillatingSprite.prototype), "x", this.displayX + moment * this.rangeX + this.minX, this);
+                _set(OscillatingSprite.prototype.__proto__ || Object.getPrototypeOf(OscillatingSprite.prototype), "y", this.displayY + moment * this.rangeY + this.minY, this);
+            }
+        }, {
+            key: "x",
+            get: function get() {
+                return this.displayX;
+            },
+            set: function set(val) {
+                this.displayX = val;
+            }
+        }, {
+            key: "y",
+            get: function get() {
+                return this.displayY;
+            },
+            set: function set(val) {
+                this.displayY = val;
+            }
+        }]);
+
+        return OscillatingSprite;
+    }(Sprite);
+
     requestAnimationFrame(function () {
         var graphics = new PIXI.Graphics();
         graphics.beginFill(0xffffff, 1);
@@ -430,6 +485,7 @@ var Misc = {
     PIXI.TiledTexture = TiledTexture;
     PIXI.TiledSprite = TiledSprite;
     PIXI.AnimatedSprite = AnimatedSprite;
+    PIXI.OscillatingSprite = OscillatingSprite;
 })();
 'use strict';
 
@@ -1467,10 +1523,11 @@ var Island = function (_PIXI$Container) {
         _this.x = x;
         _this.y = y;
         _this.ground = new PIXI.TiledSprite(Island.ground);
-        _this.cloud = new PIXI.Sprite(Island.cloud);
-        _this.ground.anchor.x = _this.cloud.anchor.x = 0.525;
-        _this.ground.anchor.y = _this.cloud.anchor.y = 0.3;
-        _this.addChild(_this.ground, _this.cloud);
+        _this.cloudBack = new PIXI.OscillatingSprite(Island.cloudBack, 6000, 0, 0, 0, 8);
+        _this.cloudFront = new PIXI.OscillatingSprite(Island.cloudFront, 4100, 0, 0, 0, 8);
+        _this.ground.anchor.x = _this.cloudBack.anchor.x = _this.cloudFront.anchor.x = 0.525;
+        _this.ground.anchor.y = _this.cloudBack.anchor.y = _this.cloudFront.anchor.y = 0.3;
+        _this.addChild(_this.cloudBack, _this.ground, _this.cloudFront);
         _this.buildings = [];
         _this.people = [];
         _this.kingdom = kingdom;
@@ -1610,11 +1667,15 @@ var Island = function (_PIXI$Container) {
                 return !b.shouldRemove;
             });
             this.ground.tileX = Math.bounded(buildingCount / 3 - treeCount / 6, 0, 3) | 0;
+
+            this.cloudBack.update(delta);
+            this.cloudFront.update(delta);
         }
     }, {
         key: 'render',
         value: function render(delta, game, renderer) {
-            this.cloud.tint = game.cloudColor;
+            this.cloudBack.tint = game.cloudColor;
+            this.cloudFront.tint = game.cloudColor;
             this.ground.tint = game.globalColor;
         }
     }, {
@@ -1672,10 +1733,14 @@ Island.fromState = function (state, game) {
 };
 PIXI.loader.add('island', 'images/Island.png', null, function (res) {
     return Island.ground = new PIXI.TiledTexture(res.texture, 480, 240);
-}).add('cloud', 'images/Cloud.png', null, function (res) {
-    return Island.cloud = res.texture;
-}).add('cloudStart', 'images/CloudStart.png', null, function (res) {
-    return Island.cloudStart = res.texture;
+}).add('cloudBack', 'images/CloudBack.png', null, function (res) {
+    return Island.cloudBack = res.texture;
+}).add('cloudFront', 'images/CloudFront.png', null, function (res) {
+    return Island.cloudFront = res.texture;
+}).add('cloudStartBack', 'images/CloudStartBack.png', null, function (res) {
+    return Island.cloudStartBack = res.texture;
+}).add('cloudStartFront', 'images/CloudStartFront.png', null, function (res) {
+    return Island.cloudStartFront = res.texture;
 });
 'use strict';
 
@@ -1833,6 +1898,10 @@ var Bridge = new BuildingType('bridge', 'images/Bridge.png', -10, -47, -30, fals
     Temple = new BuildingType('temple', 'images/Temple.png', 0, 0, 16, true, 35, 10000),
     GreenHouse = new BuildingType('greenHouse', 'images/GreenHouse.png', 0, 0, 16, true, 35, 10000),
     Tree = new BuildingType('tree', 'images/Tree.png', 0, 4, 0, false, 15, 1000, {
+    building: function building() {
+        if (Math.random() < 0.5) this.scale.x = -1;
+        this.rotation = (Math.random() - 0.5) * Math.PI / 16;
+    },
     update: function update(delta, game) {
         if (!this.finished) this.progressBuild(2 + this.kingdom.greenHouseCount, game);
     }
@@ -2332,6 +2401,18 @@ var Game = function (_PIXI$Container) {
         _this2.ai = new Kingdom('ai', 0xab1705, false);
         _this2.gaia = new Kingdom('gaia', 0x888888, false);
 
+        // Clouds a
+        _this2.cloudStartBack = new PIXI.OscillatingSprite(Island.cloudStartBack, 6000, 0, 0, 0, 8);
+        _this2.cloudStartBack.z = -101;
+        _this2.cloudStartFront = new PIXI.OscillatingSprite(Island.cloudStartFront, 4100, 0, 0, 0, 8);
+        _this2.cloudStartFront.z = -99;
+
+        _this2.cloudEndBack = new PIXI.OscillatingSprite(Island.cloudStartBack, 6000, 0, 0, 0, 8);
+        _this2.cloudEndBack.z = -101;
+        _this2.cloudEndFront = new PIXI.OscillatingSprite(Island.cloudStartFront, 4100, 0, 0, 0, 8);
+        _this2.cloudEndFront.z = -99;
+        _this2.cloudEndBack.scale.x = _this2.cloudEndFront.scale.x = -1;
+
         // Islands
         _this2.islands = [];
         if (state.islands) {
@@ -2344,19 +2425,18 @@ var Game = function (_PIXI$Container) {
         } else _this2.generateInitial();
         _this2.updateCounts();
 
-        // Clouds
-        _this2.cloudStart = new PIXI.Sprite(Island.cloudStart);
-        _this2.cloudStart.x = _this2.islBnds.left;
+        // Clouds b
+        _this2.cloudStartBack.x = _this2.cloudStartFront.x = _this2.islBnds.left;
+        _this2.cloudEndBack.x = _this2.cloudEndFront.x = _this2.islBnds.left + _this2.islandsWidth;
 
-        _this2.cloudEnd = new PIXI.Sprite(Island.cloudStart);
-        _this2.cloudEnd.scale.x = -1;
-        _this2.cloudEnd.x = _this2.islBnds.left + _this2.islandsWidth;
-
-        _this2.cloudStart.anchor.x = _this2.cloudEnd.anchor.x = 1;
-        _this2.cloudStart.anchor.y = _this2.cloudEnd.anchor.y = 0.3;
-        _this2.addChild(_this2.cloudStart, _this2.cloudEnd);
+        _this2.cloudStartBack.anchor.x = _this2.cloudStartFront.anchor.x = _this2.cloudEndBack.anchor.x = _this2.cloudEndFront.anchor.x = 1;
+        _this2.cloudStartBack.anchor.y = _this2.cloudStartFront.anchor.y = _this2.cloudEndBack.anchor.y = _this2.cloudEndFront.anchor.y = 0.3;
+        _this2.addChild(_this2.cloudStartBack, _this2.cloudStartFront, _this2.cloudEndBack, _this2.cloudEndFront);
 
         _this2.skiesMood = 0;
+        _this2.cloudCycle = 0;
+        _this2.cloudBackY = 4;
+        _this2.cloudFrontY = 4;
 
         // Overlay
         if (state.overlay) _this2.overlay = Overlay.fromState(state.overlay, _this2);else {
@@ -2411,7 +2491,7 @@ var Game = function (_PIXI$Container) {
             this.cloudColor = PIXI.Color.interpolate(cloudColor, this.skiesMood > 0 ? goodCloudColor : darkCloudColor, Math.abs(this.skiesMood));
             this.globalColor = PIXI.Color.interpolate(globalColor, this.skiesMood > 0 ? goodGlobalColor : darkGlobalColor, Math.abs(this.skiesMood));
 
-            this.cloudStart.tint = this.cloudEnd.tint = this.cloudColor;
+            this.cloudStartBack.tint = this.cloudStartFront.tint = this.cloudEndBack.tint = this.cloudEndFront.tint = this.cloudColor;
             renderer.backgroundColor = this.backgroundColor;
 
             this.children.forEach(function (child) {
@@ -2438,13 +2518,28 @@ var Game = function (_PIXI$Container) {
     }, {
         key: 'addIsland',
         value: function addIsland(island) {
-            if (!this.islBnds) this.islBnds = island.getLocalBounds();
+            if (!this.islBnds) {
+                var bnds = island.getLocalBounds();
+                this.islBnds = {
+                    left: bnds.left,
+                    top: bnds.top,
+                    right: bnds.right,
+                    bottom: bnds.bottom,
+                    width: bnds.width,
+                    height: bnds.height
+                };
+            }
             island.index = this.islands.length;
+            island.cloudBack.time = (island.index ? this.islands[island.index - 1].cloudBack.time : this.cloudStartBack.time) + 50;
+            island.cloudFront.time = (island.index ? this.islands[island.index - 1].cloudFront.time : this.cloudStartFront.time) + 50;
+            this.cloudEndBack.time = island.cloudBack.time + 50;
+            this.cloudEndFront.time = island.cloudFront.time + 50;
+
             this.islands.add(island);
             this.addChild(island);
             if (island.buildings.length) this.addChild.apply(this, island.buildings);
             if (island.people.length) this.addChild.apply(this, island.people);
-            if (this.cloudEnd) this.cloudEnd.x = this.islBnds.width * (this.islands.length - 1) + this.islBnds.right;
+            if (this.cloudEndBack) this.cloudEndBack.x = this.cloudEndFront.x = this.islBnds.width * (this.islands.length - 1) + this.islBnds.right;
         }
     }, {
         key: 'generateInitial',
@@ -2630,6 +2725,7 @@ var UI = function () {
         };
         this.titleTag = document.createElement('div');
         this.titleTag.classList.add('hidden', 'title');
+        this.titleTag.addEventListener('click', this.onTitle);
 
         this.btnsTag = document.createElement('div');
         this.btnsTag.classList.add('hidden', 'btns');
