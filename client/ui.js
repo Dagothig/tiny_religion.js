@@ -17,18 +17,27 @@ class UI {
         settings.bind('tooltips', t =>
             this.btnsTag.classList[t ? 'add' : 'remove']('tooltips'));
 
-        this.trainTag = this.createGroup(this.btnsTag, 'train');
-        this.untrainTag = this.createGroup(this.btnsTag, 'untrain');
-        this.buildTag = this.createGroup(this.btnsTag, 'build');
-        this.doTag = this.createGroup(this.btnsTag, 'do');
-        this.moveTag = this.createGroup(this.btnsTag, 'move');
+        this.groupSelectTag = document.createElement('div');
+        this.groupSelectTag.classList.add('group-select');
+        this.btnsTag.appendChild(this.groupSelectTag);
+
+        this.groupsTag = document.createElement('div');
+        this.groupsTag.classList.add('groups');
+        this.btnsTag.appendChild(this.groupsTag);
+
+        this.trainGroup = this.createGroup('train');
+        this.show(this.trainGroup);
+        this.untrainGroup = this.createGroup('untrain');
+        this.buildGroup = this.createGroup('build');
+        this.doGroup = this.createGroup('do');
+        this.moveGroup = this.createGroup('move');
 
         this.btns =
         ['train', 'untrain'].reduce((btns, act) =>
             [Builder, Warrior, Priest].reduce((btns, job) => {
                 let v = () => this.game.player.villagerCount;
                 let j = () => this.game.player[job.name + 'Count'];
-                btns.add(this.createBtn(this[act + 'Tag'].children,
+                btns.add(this.createBtn(this[act + 'Group'].children,
                     () => this.game.player[act](this.game, job),
                     act === 'train' ?
                         () => v() + '   ' + j() :
@@ -38,52 +47,52 @@ class UI {
             }, btns), [])
         .concat([House, Barracks, Workshop, Temple, GreenHouse]
             .reduce((btns, type) => {
-                btns.add(this.createBtn(this.buildTag.children,
+                btns.add(this.createBtn(this.buildGroup.children,
                     () => this.game.player.build(this.game, type),
                     () => this.game.player[type.name + 'Count'],
                     type.name, 'build', type.name));
                 return btns;
             }, []))
         .concat([
-            this.createBtn(this.buildTag.children,
+            this.createBtn(this.buildGroup.children,
                 () => this.game.player.buildBridge(this.game),
                 null,
                 'bridge', 'build', 'bridge'),
-            this.createBtn(this.doTag.children,
+            this.createBtn(this.doGroup.children,
                 () => this.game.player.forestate(this.game),
                 () => this.game.player.treeCount,
                 'forestate', 'forestate'),
-            this.createBtn(this.doTag.children,
+            this.createBtn(this.doGroup.children,
                 () => this.game.player.deforest(this.game),
                 null,
                 'deforest', 'deforest'),
-            this.createBtn(this.doTag.children,
+            this.createBtn(this.doGroup.children,
                 () => this.game.god.doSacrifice(this.game),
                 null,
                 'sacrifice', 'sacrifice'),
-            this.createBtn(this.doTag.children,
+            this.createBtn(this.doGroup.children,
                 () => this.game.player.doBaby(this.game),
                 () => this.game.player.peopleCount + '/'
                     + this.game.player.maxPop,
                 'baby', 'baby'),
-            this.createBtn(this.doTag.children,
+            this.createBtn(this.doGroup.children,
                 () => this.game.player.attemptSummon(this.game),
                 () => this.game.player.summonCount + '/'
                     + this.game.player.maxSummon,
                 'summon', 'summon'),
-            this.createBtn(this.doTag.children,
+            this.createBtn(this.doGroup.children,
                 () => this.game.player.pray(this.game),
                 null,
                 'pray', 'pray'),
-            this.createBtn(this.moveTag.children,
+            this.createBtn(this.moveGroup.children,
                 () => this.game.player.sendAttack(this.game),
                 null,
                 'attack', 'attack'),
-            this.createBtn(this.moveTag.children,
+            this.createBtn(this.moveGroup.children,
                 () => this.game.player.sendConvert(this.game),
                 null,
                 'convert', 'convert'),
-            this.createBtn(this.moveTag.children,
+            this.createBtn(this.moveGroup.children,
                 () => this.game.player.sendRetreat(this.game),
                 null,
                 'retreat', 'retreat')
@@ -108,26 +117,38 @@ class UI {
 
         this.menuContainerTag.appendChild(this.menuTag);
     }
-    createGroup(parent, name) {
-        let tag = document.createElement('div');
-        tag.classList.add('group');
+    createGroup(name) {
+        let group = {};
 
-        let nameTag = document.createElement('div');
-        nameTag.classList.add('name');
-        nameTag.innerHTML = name;
-        tag.appendChild(nameTag);
+        let radio = document.createElement('input');
+        radio.id = name;
+        radio.type = 'radio';
+        radio.name = 'group';
+        radio.classList.add('checked');
+        radio.value = name;
+        radio.onchange = ev => this.show(group);
+
+        this.groupSelectTag.appendChild(radio);
+
+        let nameTag = document.createElement('label');
+        nameTag.classList.add('check');
+        nameTag.htmlFor = name;
+
+        let nameContent = document.createElement('span');
+        nameContent.innerHTML = name;
+        nameTag.appendChild(nameContent);
+
+        this.groupSelectTag.appendChild(nameTag);
 
         let children = document.createElement('div');
-        children.classList.add('children');
-        tag.appendChild(children);
+        children.classList.add('group', 'hidden');
+        this.groupsTag.appendChild(children);
 
-        parent.appendChild(tag);
-
-        return {
-            tag: tag,
-            nameTag: nameTag,
-            children: children
-        };
+        group.radio = radio;
+        group.nameTag = nameTag;
+        group.nameContent = nameContent;
+        group.children = children;
+        return group;
     }
     createBtn(parent, onclick, onupdate, name, ...classes) {
         let tag = document.createElement('div');
@@ -208,6 +229,12 @@ class UI {
             this.btnsTag.style.backgroundColor =
                 '#' + game.god.offTint.toString('16').padStart(6, '0');
         }
+    }
+    show(group) {
+        for (let i = this.groupsTag.children.length; i--;)
+            this.groupsTag.children[i].classList.add('hidden');
+        group.radio.checked = true;
+        group.children.classList.remove('hidden');
     }
     showTitle(win = null) {
         this.titleTag.classList.remove('hidden', 'win', 'lost');

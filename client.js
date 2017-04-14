@@ -2736,11 +2736,20 @@ var UI = function () {
             return _this.btnsTag.classList[t ? 'add' : 'remove']('tooltips');
         });
 
-        this.trainTag = this.createGroup(this.btnsTag, 'train');
-        this.untrainTag = this.createGroup(this.btnsTag, 'untrain');
-        this.buildTag = this.createGroup(this.btnsTag, 'build');
-        this.doTag = this.createGroup(this.btnsTag, 'do');
-        this.moveTag = this.createGroup(this.btnsTag, 'move');
+        this.groupSelectTag = document.createElement('div');
+        this.groupSelectTag.classList.add('group-select');
+        this.btnsTag.appendChild(this.groupSelectTag);
+
+        this.groupsTag = document.createElement('div');
+        this.groupsTag.classList.add('groups');
+        this.btnsTag.appendChild(this.groupsTag);
+
+        this.trainGroup = this.createGroup('train');
+        this.show(this.trainGroup);
+        this.untrainGroup = this.createGroup('untrain');
+        this.buildGroup = this.createGroup('build');
+        this.doGroup = this.createGroup('do');
+        this.moveGroup = this.createGroup('move');
 
         this.btns = ['train', 'untrain'].reduce(function (btns, act) {
             return [Builder, Warrior, Priest].reduce(function (btns, job) {
@@ -2750,7 +2759,7 @@ var UI = function () {
                 var j = function j() {
                     return _this.game.player[job.name + 'Count'];
                 };
-                btns.add(_this.createBtn(_this[act + 'Tag'].children, function () {
+                btns.add(_this.createBtn(_this[act + 'Group'].children, function () {
                     return _this.game.player[act](_this.game, job);
                 }, act === 'train' ? function () {
                     return v() + '   ' + j();
@@ -2760,37 +2769,37 @@ var UI = function () {
                 return btns;
             }, btns);
         }, []).concat([House, Barracks, Workshop, Temple, GreenHouse].reduce(function (btns, type) {
-            btns.add(_this.createBtn(_this.buildTag.children, function () {
+            btns.add(_this.createBtn(_this.buildGroup.children, function () {
                 return _this.game.player.build(_this.game, type);
             }, function () {
                 return _this.game.player[type.name + 'Count'];
             }, type.name, 'build', type.name));
             return btns;
-        }, [])).concat([this.createBtn(this.buildTag.children, function () {
+        }, [])).concat([this.createBtn(this.buildGroup.children, function () {
             return _this.game.player.buildBridge(_this.game);
-        }, null, 'bridge', 'build', 'bridge'), this.createBtn(this.doTag.children, function () {
+        }, null, 'bridge', 'build', 'bridge'), this.createBtn(this.doGroup.children, function () {
             return _this.game.player.forestate(_this.game);
         }, function () {
             return _this.game.player.treeCount;
-        }, 'forestate', 'forestate'), this.createBtn(this.doTag.children, function () {
+        }, 'forestate', 'forestate'), this.createBtn(this.doGroup.children, function () {
             return _this.game.player.deforest(_this.game);
-        }, null, 'deforest', 'deforest'), this.createBtn(this.doTag.children, function () {
+        }, null, 'deforest', 'deforest'), this.createBtn(this.doGroup.children, function () {
             return _this.game.god.doSacrifice(_this.game);
-        }, null, 'sacrifice', 'sacrifice'), this.createBtn(this.doTag.children, function () {
+        }, null, 'sacrifice', 'sacrifice'), this.createBtn(this.doGroup.children, function () {
             return _this.game.player.doBaby(_this.game);
         }, function () {
             return _this.game.player.peopleCount + '/' + _this.game.player.maxPop;
-        }, 'baby', 'baby'), this.createBtn(this.doTag.children, function () {
+        }, 'baby', 'baby'), this.createBtn(this.doGroup.children, function () {
             return _this.game.player.attemptSummon(_this.game);
         }, function () {
             return _this.game.player.summonCount + '/' + _this.game.player.maxSummon;
-        }, 'summon', 'summon'), this.createBtn(this.doTag.children, function () {
+        }, 'summon', 'summon'), this.createBtn(this.doGroup.children, function () {
             return _this.game.player.pray(_this.game);
-        }, null, 'pray', 'pray'), this.createBtn(this.moveTag.children, function () {
+        }, null, 'pray', 'pray'), this.createBtn(this.moveGroup.children, function () {
             return _this.game.player.sendAttack(_this.game);
-        }, null, 'attack', 'attack'), this.createBtn(this.moveTag.children, function () {
+        }, null, 'attack', 'attack'), this.createBtn(this.moveGroup.children, function () {
             return _this.game.player.sendConvert(_this.game);
-        }, null, 'convert', 'convert'), this.createBtn(this.moveTag.children, function () {
+        }, null, 'convert', 'convert'), this.createBtn(this.moveGroup.children, function () {
             return _this.game.player.sendRetreat(_this.game);
         }, null, 'retreat', 'retreat')]);
 
@@ -2818,26 +2827,42 @@ var UI = function () {
 
     _createClass(UI, [{
         key: 'createGroup',
-        value: function createGroup(parent, name) {
-            var tag = document.createElement('div');
-            tag.classList.add('group');
+        value: function createGroup(name) {
+            var _this2 = this;
 
-            var nameTag = document.createElement('div');
-            nameTag.classList.add('name');
-            nameTag.innerHTML = name;
-            tag.appendChild(nameTag);
+            var group = {};
+
+            var radio = document.createElement('input');
+            radio.id = name;
+            radio.type = 'radio';
+            radio.name = 'group';
+            radio.classList.add('checked');
+            radio.value = name;
+            radio.onchange = function (ev) {
+                return _this2.show(group);
+            };
+
+            this.groupSelectTag.appendChild(radio);
+
+            var nameTag = document.createElement('label');
+            nameTag.classList.add('check');
+            nameTag.htmlFor = name;
+
+            var nameContent = document.createElement('span');
+            nameContent.innerHTML = name;
+            nameTag.appendChild(nameContent);
+
+            this.groupSelectTag.appendChild(nameTag);
 
             var children = document.createElement('div');
-            children.classList.add('children');
-            tag.appendChild(children);
+            children.classList.add('group', 'hidden');
+            this.groupsTag.appendChild(children);
 
-            parent.appendChild(tag);
-
-            return {
-                tag: tag,
-                nameTag: nameTag,
-                children: children
-            };
+            group.radio = radio;
+            group.nameTag = nameTag;
+            group.nameContent = nameContent;
+            group.children = children;
+            return group;
         }
     }, {
         key: 'createBtn',
@@ -2934,9 +2959,17 @@ var UI = function () {
             }
         }
     }, {
+        key: 'show',
+        value: function show(group) {
+            for (var i = this.groupsTag.children.length; i--;) {
+                this.groupsTag.children[i].classList.add('hidden');
+            }group.radio.checked = true;
+            group.children.classList.remove('hidden');
+        }
+    }, {
         key: 'showTitle',
         value: function showTitle() {
-            var _this2 = this;
+            var _this3 = this;
 
             var win = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 
@@ -2954,7 +2987,7 @@ var UI = function () {
             } else sounds.titleScreen.play();
             if (window.android) android.updateStatusTint(0x193bcb);
             setTimeout(function () {
-                return _this2.titleTag.addEventListener('click', _this2.onTitle);
+                return _this3.titleTag.addEventListener('click', _this3.onTitle);
             }, 1000);
         }
     }, {

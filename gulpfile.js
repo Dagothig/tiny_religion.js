@@ -30,7 +30,18 @@ gulp.task('client', function(cb) {
     .pipe(concat('client.js'))
     .pipe(gulp.dest('./'));
 });
+
 gulp.task('watch-client', function(cb) {
     return gulp.watch("client/**/*.js", gulp.series('client'));
 });
-gulp.task('default', gulp.parallel('watch-client', 'client'));
+
+let node;
+gulp.task('static', function(cb) {
+    if (node) node.kill();
+    let childProcess = require('child_process');
+    node = childProcess.spawn('node', ['static']);
+    cb();
+});
+process.on('exit', () => node && node.kill());
+
+gulp.task('default', gulp.parallel('watch-client', 'client', 'static'));
