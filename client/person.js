@@ -266,9 +266,9 @@ Warrior = new Job('warrior', 'images/Warrior.png', {
         let target = this.findTarget(game, 32 * 32, p => p.sinceTookDamage <= 0);
         if (!target) return;
         target.takeDamage(3 + this.kingdom.barracksCount, game);
+        sounds.hit.play();
         if (this.kingdom.isPlayer) {
             game.god.event('fight', 1, this.position);
-            sounds.hit.play();
             if (target.health <= 0) game.god.event('kill', 1, target.position);
         }
     }
@@ -280,8 +280,8 @@ Priest = new Job('priest', 'images/Priest.png', {
         let target = this.findTarget(game, 48 * 48);
         if (!target) return;
         if (this.kingdom.isPlayer) game.god.event('converting', 1, this.position);
-        if (Math.random() * 1000 < 3 + this.templeCount) {
-            target.kingom = this.kingdom;
+        if (Math.random() * 1500 < 3 + this.kingdom.templeCount) {
+            target.kingdom = this.kingdom;
             game.addChild(new SFX(target.x, target.y, Summon));
             if (this.kingdom.isPlayer) game.god.event('convert', 1, this.position);
         }
