@@ -1523,8 +1523,8 @@ var Island = function (_PIXI$Container) {
         _this.x = x;
         _this.y = y;
         _this.ground = new PIXI.TiledSprite(Island.ground);
-        _this.cloudBack = new PIXI.OscillatingSprite(Island.cloudBack, 6000, 0, 0, 0, 8);
-        _this.cloudFront = new PIXI.OscillatingSprite(Island.cloudFront, 4100, 0, 0, 0, 8);
+        _this.cloudBack = new PIXI.OscillatingSprite(Island.cloudBack, cloudBackCycle, 0, 0, 0, 8);
+        _this.cloudFront = new PIXI.OscillatingSprite(Island.cloudFront, cloudFrontCycle, 0, 0, 0, 8);
         _this.ground.anchor.x = _this.cloudBack.anchor.x = _this.cloudFront.anchor.x = 0.525;
         _this.ground.anchor.y = _this.cloudBack.anchor.y = _this.cloudFront.anchor.y = 0.3;
         _this.addChild(_this.cloudBack, _this.ground, _this.cloudFront);
@@ -1794,6 +1794,7 @@ var Building = function (_PIXI$TiledSprite) {
 
         _this2.x = x;
         _this2.y = y;
+        if (Math.random() < 0.5) _this2.scale.x = -1;
         _this2.decal.x = _this2.texture.width / 2 + type.decalX;
         _this2.decal.y = _this2.texture.height / 2 + type.decalY;
         _this2.type = type;
@@ -1890,6 +1891,7 @@ Building.types = [];
 var Bridge = new BuildingType('bridge', 'images/Bridge.png', -10, -47, -30, false, 200, 10000, {
     building: function building() {
         this.island.bridge = this;
+        this.scale.x = 1;
     }
 }),
     House = new BuildingType('house', 'images/House.png', 0, 0, 16, true, 20, 2000),
@@ -1899,7 +1901,6 @@ var Bridge = new BuildingType('bridge', 'images/Bridge.png', -10, -47, -30, fals
     GreenHouse = new BuildingType('greenHouse', 'images/GreenHouse.png', 0, 0, 16, true, 35, 10000),
     Tree = new BuildingType('tree', 'images/Tree.png', 0, 4, 0, false, 15, 1000, {
     building: function building() {
-        if (Math.random() < 0.5) this.scale.x = -1;
         this.rotation = (Math.random() - 0.5) * Math.PI / 16;
     },
     update: function update(delta, game) {
@@ -2371,7 +2372,9 @@ var darkSkyColor = 0x28162f,
     goodCloudColor = 0xd6f0ff,
     darkGlobalColor = 0xff99cc,
     globalColor = 0xdddddd,
-    goodGlobalColor = 0xfff0dd;
+    goodGlobalColor = 0xfff0dd,
+    cloudBackCycle = 8000,
+    cloudFrontCycle = 6100;
 
 var Game = function (_PIXI$Container) {
     _inherits(Game, _PIXI$Container);
@@ -2402,14 +2405,14 @@ var Game = function (_PIXI$Container) {
         _this2.gaia = new Kingdom('gaia', 0x888888, false);
 
         // Clouds a
-        _this2.cloudStartBack = new PIXI.OscillatingSprite(Island.cloudStartBack, 6000, 0, 0, 0, 8);
+        _this2.cloudStartBack = new PIXI.OscillatingSprite(Island.cloudStartBack, cloudBackCycle, 0, 0, 0, 8);
         _this2.cloudStartBack.z = -101;
-        _this2.cloudStartFront = new PIXI.OscillatingSprite(Island.cloudStartFront, 4100, 0, 0, 0, 8);
+        _this2.cloudStartFront = new PIXI.OscillatingSprite(Island.cloudStartFront, cloudFrontCycle, 0, 0, 0, 8);
         _this2.cloudStartFront.z = -99;
 
-        _this2.cloudEndBack = new PIXI.OscillatingSprite(Island.cloudStartBack, 6000, 0, 0, 0, 8);
+        _this2.cloudEndBack = new PIXI.OscillatingSprite(Island.cloudStartBack, cloudBackCycle, 0, 0, 0, 8);
         _this2.cloudEndBack.z = -101;
-        _this2.cloudEndFront = new PIXI.OscillatingSprite(Island.cloudStartFront, 4100, 0, 0, 0, 8);
+        _this2.cloudEndFront = new PIXI.OscillatingSprite(Island.cloudStartFront, cloudFrontCycle, 0, 0, 0, 8);
         _this2.cloudEndFront.z = -99;
         _this2.cloudEndBack.scale.x = _this2.cloudEndFront.scale.x = -1;
 

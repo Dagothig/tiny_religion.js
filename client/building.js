@@ -27,6 +27,7 @@ class Building extends PIXI.TiledSprite {
         super(type.texture);
         this.x = x;
         this.y = y;
+        if (Math.random() < 0.5) this.scale.x = -1;
         this.decal.x = this.texture.width / 2 + type.decalX;
         this.decal.y = this.texture.height / 2 + type.decalY;
         this.type = type;
@@ -91,7 +92,10 @@ Building.fromState = function(s, island, game) {
 Building.types = [];
 let Bridge = new BuildingType(
     'bridge', 'images/Bridge.png', -10, -47, -30, false, 200, 10000, {
-        building() { this.island.bridge = this; }
+        building() {
+            this.island.bridge = this;
+            this.scale.x = 1;
+        }
     }),
 House = new BuildingType(
     'house', 'images/House.png', 0, 0, 16, true, 20, 2000),
@@ -106,7 +110,6 @@ GreenHouse = new BuildingType(
 Tree = new BuildingType(
     'tree', 'images/Tree.png', 0, 4, 0, false, 15, 1000, {
         building() {
-            if (Math.random() < 0.5) this.scale.x = -1;
             this.rotation = (Math.random() - 0.5) * Math.PI / 16;
         },
         update(delta, game) {

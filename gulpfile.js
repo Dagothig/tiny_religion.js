@@ -2,7 +2,9 @@ let gulp = require('gulp')
 
 gulp.task('client', function(cb) {
     let babel = require('gulp-babel'),
-        concat = require('gulp-concat');
+        concat = require('gulp-concat'),
+        cached = require('gulp-cached'),
+        remember = require('gulp-remember');
 
     return gulp.src([
         "client/extensions.js",
@@ -22,10 +24,13 @@ gulp.task('client', function(cb) {
         "client/ui.js",
         "client/main.js"
     ])
-    .pipe(babel({
-        presets: ['es2015']
-    }))
+    .pipe(cached('babel'))
+    .pipe(babel({ presets: ['es2015'] }))
+    .pipe(remember('babel'))
     .pipe(concat('client.js'))
     .pipe(gulp.dest('./'));
 });
-gulp.task('default', gulp.parallel('client'));
+gulp.task('watch-client', function(cb) {
+    return gulp.watch("client/**/*.js", gulp.series('client'));
+});
+gulp.task('default', gulp.parallel('watch-client', 'client'));

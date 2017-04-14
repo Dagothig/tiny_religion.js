@@ -48,7 +48,10 @@ let darkSkyColor = 0x28162f,
 
     darkGlobalColor = 0xff99cc,
     globalColor = 0xdddddd,
-    goodGlobalColor = 0xfff0dd;
+    goodGlobalColor = 0xfff0dd,
+
+    cloudBackCycle = 8000,
+    cloudFrontCycle = 6100;
 
 class Game extends PIXI.Container {
     constructor(onFinished, state = { x: 0, y: 0, goal: settings.goal }) {
@@ -73,17 +76,17 @@ class Game extends PIXI.Container {
 
         // Clouds a
         this.cloudStartBack = new PIXI.OscillatingSprite(
-            Island.cloudStartBack, 6000, 0, 0, 0, 8);
+            Island.cloudStartBack, cloudBackCycle, 0, 0, 0, 8);
         this.cloudStartBack.z = -101;
         this.cloudStartFront = new PIXI.OscillatingSprite(
-            Island.cloudStartFront, 4100, 0, 0, 0, 8);
+            Island.cloudStartFront, cloudFrontCycle, 0, 0, 0, 8);
         this.cloudStartFront.z = -99;
 
         this.cloudEndBack = new PIXI.OscillatingSprite(
-            Island.cloudStartBack, 6000, 0, 0, 0, 8);
+            Island.cloudStartBack, cloudBackCycle, 0, 0, 0, 8);
         this.cloudEndBack.z = -101;
         this.cloudEndFront = new PIXI.OscillatingSprite(
-            Island.cloudStartFront, 4100, 0, 0, 0, 8);
+            Island.cloudStartFront, cloudFrontCycle, 0, 0, 0, 8);
         this.cloudEndFront.z = -99;
         this.cloudEndBack.scale.x = this.cloudEndFront.scale.x = -1;
 

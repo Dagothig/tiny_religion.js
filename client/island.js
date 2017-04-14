@@ -7,9 +7,9 @@ class Island extends PIXI.Container {
         this.y = y;
         this.ground = new PIXI.TiledSprite(Island.ground);
         this.cloudBack = new PIXI.OscillatingSprite(
-            Island.cloudBack, 6000, 0, 0, 0, 8);
+            Island.cloudBack, cloudBackCycle, 0, 0, 0, 8);
         this.cloudFront = new PIXI.OscillatingSprite(
-            Island.cloudFront, 4100, 0, 0, 0, 8);
+            Island.cloudFront, cloudFrontCycle, 0, 0, 0, 8);
         this.ground.anchor.x = this.cloudBack.anchor.x = this.cloudFront.anchor.x =
             0.525;
         this.ground.anchor.y = this.cloudBack.anchor.y = this.cloudFront.anchor.y =
