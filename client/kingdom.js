@@ -62,7 +62,7 @@ class Kingdom {
 
     build(game, type) {
         if (this.builded) return false;
-        for (let i = 0; i < game.islands.length * 4; i++) {
+        for (let i = 0; i < game.islands.length * 8; i++) {
             let island = game.islands.rand();
             if (island.kingdom !== this) continue;
             let building = island.generateBuilding(type, false);

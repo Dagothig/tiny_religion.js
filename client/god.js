@@ -97,7 +97,7 @@ class God extends PIXI.Container {
 
     update(delta, game) {
         this.overallMood += this.mood;
-        this.mood -= 0.01 * Math.sign(this.mood);
+        this.mood /= 1.01;
         if (Math.abs(this.mood) < 0.01) this.mood = 0;
 
         if (Math.random() < -this.feeling(game.goal) / 400)
@@ -105,7 +105,7 @@ class God extends PIXI.Container {
 
         if (this.mood > 0) {
             this.satisfaction += this.mood;
-            if (this.satisfaction > game.goal / 10)
+            if (this.satisfaction > game.goal / 5)
                 this.changePersonality(false, game);
         }
 

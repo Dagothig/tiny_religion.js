@@ -1001,14 +1001,14 @@ var God = function (_PIXI$Container) {
         key: 'update',
         value: function update(delta, game) {
             this.overallMood += this.mood;
-            this.mood -= 0.01 * Math.sign(this.mood);
+            this.mood /= 1.01;
             if (Math.abs(this.mood) < 0.01) this.mood = 0;
 
             if (Math.random() < -this.feeling(game.goal) / 400) this.doSacrifice(game);
 
             if (this.mood > 0) {
                 this.satisfaction += this.mood;
-                if (this.satisfaction > game.goal / 10) this.changePersonality(false, game);
+                if (this.satisfaction > game.goal / 5) this.changePersonality(false, game);
             }
 
             this.sincePersonality++;
@@ -1266,7 +1266,7 @@ var Kingdom = function () {
         key: 'build',
         value: function build(game, type) {
             if (this.builded) return false;
-            for (var i = 0; i < game.islands.length * 4; i++) {
+            for (var i = 0; i < game.islands.length * 8; i++) {
                 var island = game.islands.rand();
                 if (island.kingdom !== this) continue;
                 var building = island.generateBuilding(type, false);
