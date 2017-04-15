@@ -64,6 +64,12 @@ class Game extends PIXI.Container {
             onFinished(win);
         };
 
+        this.bg = new PIXI.Sprite(PIXI.gradient);
+        this.bg.alpha = 0.25;
+        this.bg.anchor.y = 1;
+        this.bg.z = -200;
+        this.addChild(this.bg);
+
         // God
         this.god = new God();
         if (state.god) this.god.readState(state.god, this);
@@ -133,9 +139,14 @@ class Game extends PIXI.Container {
     update(delta) {
         this.updateCounts();
 
-        this.children.forEach(child =>
+        for (let i = this.children.length; i--;) {
+            let child = this.children[i];
+            if (child.update) child.update(delta, this);
+            if (child.shouldRemove) this.children.splice(i, 1);
+        }
+        /*this.children.forEach(child =>
             child.update && child.update(delta, this));
-        this.children = this.children.filter(child => !child.shouldRemove);
+        this.children = this.children.filter(child => !child.shouldRemove);*/
 
         if (this.player.linkedTo(this, this.ai)) Music.switchTo(musics.combat);
         else Music.switchTo(musics.regular);
@@ -144,6 +155,8 @@ class Game extends PIXI.Container {
         // Positions & limits
         let width = renderer.width, height = renderer.height;
         if (this.down) this.updateDown(delta);
+        if (this.events.keys[37]) this.x += 5 + this.islands.length;
+        if (this.events.keys[39]) this.x -= 5 + this.islands.length;
         let totalWidth = this.islandsWidth;
         let target;
         if (this.islands.length === 1 || width > totalWidth) {
@@ -156,6 +169,11 @@ class Game extends PIXI.Container {
         this.y = height - this.islBnds.bottom;
         this.god.x = -this.x + width / 2;
         this.god.y = -this.y;
+
+        this.bg.x = -this.x;
+        this.bg.y = this.islBnds.bottom;
+        this.bg.width = width;
+        this.bg.height = height;
 
         // Coloring
         let feeling = this.god.feeling(this.goal);
@@ -176,10 +194,16 @@ class Game extends PIXI.Container {
         this.cloudEndBack.tint = this.cloudEndFront.tint = this.cloudColor;
         renderer.backgroundColor = this.backgroundColor;
 
-        this.children.forEach(child =>
-            child.render && child.render(delta, this, renderer));
+        let min = -480;
+        let max = width + 480;
+        for (let i = this.children.length; i--;) {
+            let child = this.children[i];
+            let diff = child.x + this.x;
+            child.visible = diff > min && diff < max;
+            if (child.render) child.render(delta, this, renderer);
+        }
 
-        this.children.sort((a, b) => (a.z || 0) - (b.z || 0));
+        this.children.sort(Game.zSort);
         renderer.render(this);
     }
     updateCounts() {
@@ -276,15 +300,22 @@ class Game extends PIXI.Container {
         if (this.container) this.detachEvents();
         else {
             this.events = {};
-            this.events.mousedown = ev => this.beginDown(ev.pageX, ev.pageY);
+            this.events.mousedown = ev =>
+                this.beginDown(ev.pageX, ev.pageY);
             this.events.touchstart =
                 Misc.wrap(Misc.touchToMouseEv, this.events.mousedown);
-            this.events.mousemove = ev => this.onMove(ev.pageX, ev.pageY);
+
+            this.events.mousemove = ev =>
+                this.onMove(ev.pageX, ev.pageY);
             this.events.touchmove =
                 Misc.wrap(Misc.touchToMouseEv, this.events.mousemove);
+
             this.events.mouseup = ev => this.finishDown();
             this.events.touchend = this.events.mouseup;
             this.events.mousewheel = ev => this.x -= ev.deltaX;
+            this.events.keys = [];
+            this.events.keydown = ev => this.events.keys[ev.keyCode] = true;
+            this.events.keyup = ev => this.events.keys[ev.keyCode] = false;
         }
         this.container = container;
 
@@ -295,6 +326,8 @@ class Game extends PIXI.Container {
         container.addEventListener('touchend', this.events.touchend);
         document.addEventListener('mouseup', this.events.mouseup);
         container.addEventListener('mousewheel', this.events.mousewheel);
+        document.addEventListener('keydown', this.events.keydown);
+        document.addEventListener('keyup', this.events.keyup);
     }
     detachEvents() {
         this.container.removeEventListener('mousedown', this.events.mousedown);
@@ -304,6 +337,8 @@ class Game extends PIXI.Container {
         document.removeEventListener('mouseup', this.events.mouseup);
         this.container.removeEventListener('touchend', this.events.touchend);
         this.container.removeEventListener('mousewheel', this.events.mousewheel);
+        document.removeEventListener('keydown', this.events.keydown);
+        document.removeEventListener('keyup', this.events.keyup);
         this.container = null;
     }
 
@@ -350,6 +385,7 @@ class Game extends PIXI.Container {
         };
     }
 }
+Game.zSort = (a, b) => (a.z || 0) - (b.z || 0);
 Game.loadedHandlers = [];
 Object.defineProperty(Game, 'loaded', {
     get() { return this._loaded; },

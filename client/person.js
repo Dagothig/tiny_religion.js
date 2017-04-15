@@ -55,7 +55,7 @@ class Person extends PIXI.AnimatedSprite {
     }
 
     update(delta, game) {
-        if (this.health < 100) this.health = Math.min(this.health + 0.025, 100);
+        if (this.health < 100) this.health += 0.025;
         if (this.sinceTookDamage > 0) this.sinceTookDamage--;
         if (this.praying > 0) {
             this.praying--;
@@ -66,7 +66,7 @@ class Person extends PIXI.AnimatedSprite {
         if (this.job.update && this.job.update.apply(this, arguments)) return;
 
         // Movement
-        let dstToTarget;
+        let dstToTarget = 0;
         if (!this.target || (this.x===this.target.x && this.y===this.target.y)) {
             if (this.target) {
                 this.island.people.remove(this);
@@ -101,7 +101,7 @@ class Person extends PIXI.AnimatedSprite {
     }
     findNextTarget(game) {
         if (this.job.findNextTarget &&
-            this.job.findNextTarget.apply(this, arguments)
+            this.job.findNextTarget.call(this, game)
         ) return;
         this.movements.push(this.island.getRandomPoint());
         let wantsToLeave = (Math.random() * (game.islands.length + 10))|0;
@@ -126,19 +126,27 @@ class Person extends PIXI.AnimatedSprite {
         }
     }
 
-    findTarget(game, dst2, predicate = () => true) {
-        let filter = p => p.kingdom !== this.kingdom
-            && predicate(p)
-            && Math.dst2(this.x, this.y, p.x, p.y) < dst2;
-
-        let target = this.island.people.find(filter);
+    _trgtIsl(dst2, filter, island) {
+        for (let i = island.people.length; i--;) {
+            let p = island.people[i];
+            if (p.kingdom !== this.kingdom
+                && filter(p)
+                && Math.dst2(this.x, this.y, p.x, p.y) < dst2
+            ) return p;
+        }
+        return null;
+    }
+    findTarget(game, dst2, filter = () => true) {
+        let target = this._trgtIsl(dst2, filter, this.island);
         if (target) return target;
 
         let toIsland = this.x - this.island.x;
         if (toIsland > 150 && this.island.index + 1 < game.islands.length)
-            return game.islands[this.island.index + 1].people.find(filter);
+            return this._trgtIsl(
+                dst2, filter, game.islands[this.island.index + 1]);
         else if (toIsland < -150 && this.island.index - 1 >= 0)
-            return game.islands[this.island.index - 1].people.find(filter);
+            return this._trgtIsl(
+                dst2, filter, game.islands[this.island.index - 1]);
     }
 
     pray() {

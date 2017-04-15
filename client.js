@@ -468,11 +468,20 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
     }(Sprite);
 
     requestAnimationFrame(function () {
-        var graphics = new PIXI.Graphics();
-        graphics.beginFill(0xffffff, 1);
-        graphics.drawRect(0, 0, 1, 1);
-        graphics.closePath();
-        PIXI.whitePixel = graphics.generateTexture();
+        var whitePixel = new PIXI.Graphics();
+        whitePixel.beginFill(0xffffff, 1);
+        whitePixel.drawRect(0, 0, 1, 1);
+        whitePixel.closePath();
+        PIXI.whitePixel = whitePixel.generateTexture();
+
+        var gradient = new PIXI.Graphics();
+        var n = 256;
+        for (var i = 0; i < n; i++) {
+            gradient.beginFill(0xffffff, Math.pow(i / n, 2));
+            gradient.drawRect(0, i, 1, 1);
+            gradient.closePath();
+        }
+        PIXI.gradient = gradient.generateTexture();
     });
 
     PIXI.Color = {
@@ -1104,8 +1113,9 @@ var God = function (_PIXI$Container) {
         key: 'event',
         value: function event(what, scalar, where) {
             if (!this.events[what]) return;
-            if (scalar < 0) scalar *= 2;
             var change = this.events[what]() * scalar;
+            // Negative changes are slightly larger than positive to prevent abuse
+            if (change < 0) change *= 1.5;
             this.mood += change;
             this.lookAt(where);
         }
@@ -1993,7 +2003,7 @@ var Person = function (_PIXI$AnimatedSprite) {
     }, {
         key: 'update',
         value: function update(delta, game) {
-            if (this.health < 100) this.health = Math.min(this.health + 0.025, 100);
+            if (this.health < 100) this.health += 0.025;
             if (this.sinceTookDamage > 0) this.sinceTookDamage--;
             if (this.praying > 0) {
                 this.praying--;
@@ -2004,7 +2014,7 @@ var Person = function (_PIXI$AnimatedSprite) {
             if (this.job.update && this.job.update.apply(this, arguments)) return;
 
             // Movement
-            var dstToTarget = void 0;
+            var dstToTarget = 0;
             if (!this.target || this.x === this.target.x && this.y === this.target.y) {
                 if (this.target) {
                     this.island.people.remove(this);
@@ -2038,7 +2048,7 @@ var Person = function (_PIXI$AnimatedSprite) {
     }, {
         key: 'findNextTarget',
         value: function findNextTarget(game) {
-            if (this.job.findNextTarget && this.job.findNextTarget.apply(this, arguments)) return;
+            if (this.job.findNextTarget && this.job.findNextTarget.call(this, game)) return;
             this.movements.push(this.island.getRandomPoint());
             var wantsToLeave = Math.random() * (game.islands.length + 10) | 0;
             if (wantsToLeave < game.islands.length) this.moveTo(game.islands, wantsToLeave);
@@ -2064,23 +2074,26 @@ var Person = function (_PIXI$AnimatedSprite) {
             }
         }
     }, {
+        key: '_trgtIsl',
+        value: function _trgtIsl(dst2, filter, island) {
+            for (var i = island.people.length; i--;) {
+                var p = island.people[i];
+                if (p.kingdom !== this.kingdom && filter(p) && Math.dst2(this.x, this.y, p.x, p.y) < dst2) return p;
+            }
+            return null;
+        }
+    }, {
         key: 'findTarget',
         value: function findTarget(game, dst2) {
-            var _this3 = this;
-
-            var predicate = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : function () {
+            var filter = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : function () {
                 return true;
             };
 
-            var filter = function filter(p) {
-                return p.kingdom !== _this3.kingdom && predicate(p) && Math.dst2(_this3.x, _this3.y, p.x, p.y) < dst2;
-            };
-
-            var target = this.island.people.find(filter);
+            var target = this._trgtIsl(dst2, filter, this.island);
             if (target) return target;
 
             var toIsland = this.x - this.island.x;
-            if (toIsland > 150 && this.island.index + 1 < game.islands.length) return game.islands[this.island.index + 1].people.find(filter);else if (toIsland < -150 && this.island.index - 1 >= 0) return game.islands[this.island.index - 1].people.find(filter);
+            if (toIsland > 150 && this.island.index + 1 < game.islands.length) return this._trgtIsl(dst2, filter, game.islands[this.island.index + 1]);else if (toIsland < -150 && this.island.index - 1 >= 0) return this._trgtIsl(dst2, filter, game.islands[this.island.index - 1]);
         }
     }, {
         key: 'pray',
@@ -2176,12 +2189,12 @@ var Villager = new Job('villager', 'images/Villager.png', {
         this.sinceBaby = 0;
     },
     update: function update(delta, game) {
-        var _this4 = this;
+        var _this3 = this;
 
         this.sinceBaby++;
         if (this.island.kingdom !== this.kingdom) return;
         this.island.buildings.filter(function (b) {
-            return b.type === FallingTree && !b.finished && b.isInRadius(_this4);
+            return b.type === FallingTree && !b.finished && b.isInRadius(_this3);
         }).forEach(function (b) {
             return b.progressBuild(1, game);
         });
@@ -2206,14 +2219,14 @@ var Villager = new Job('villager', 'images/Villager.png', {
 }),
     Builder = new Job('builder', 'images/Builder.png', {
     update: function update(delta, game) {
-        var _this5 = this;
+        var _this4 = this;
 
         if (this.building && this.building.finished) this.building = null;
         if (this.island.kingdom !== this.kingdom) return;
         this.island.buildings.filter(function (b) {
-            return b.type !== FallingTree && b.type !== Tree && !b.finished && b.isInRadius(_this5);
+            return b.type !== FallingTree && b.type !== Tree && !b.finished && b.isInRadius(_this4);
         }).forEach(function (b) {
-            return b.progressBuild(3 + _this5.kingdom.workshopCount, game);
+            return b.progressBuild(3 + _this4.kingdom.workshopCount, game);
         });
     },
     findNextTarget: function findNextTarget(game) {
@@ -2394,6 +2407,12 @@ var Game = function (_PIXI$Container) {
             onFinished(win);
         };
 
+        _this2.bg = new PIXI.Sprite(PIXI.gradient);
+        _this2.bg.alpha = 0.25;
+        _this2.bg.anchor.y = 1;
+        _this2.bg.z = -200;
+        _this2.addChild(_this2.bg);
+
         // God
         _this2.god = new God();
         if (state.god) _this2.god.readState(state.god, _this2);
@@ -2453,28 +2472,28 @@ var Game = function (_PIXI$Container) {
     _createClass(Game, [{
         key: 'update',
         value: function update(delta) {
-            var _this3 = this;
-
             this.updateCounts();
 
-            this.children.forEach(function (child) {
-                return child.update && child.update(delta, _this3);
-            });
-            this.children = this.children.filter(function (child) {
-                return !child.shouldRemove;
-            });
+            for (var i = this.children.length; i--;) {
+                var child = this.children[i];
+                if (child.update) child.update(delta, this);
+                if (child.shouldRemove) this.children.splice(i, 1);
+            }
+            /*this.children.forEach(child =>
+                child.update && child.update(delta, this));
+            this.children = this.children.filter(child => !child.shouldRemove);*/
 
             if (this.player.linkedTo(this, this.ai)) Music.switchTo(musics.combat);else Music.switchTo(musics.regular);
         }
     }, {
         key: 'render',
         value: function render(delta, renderer) {
-            var _this4 = this;
-
             // Positions & limits
             var width = renderer.width,
                 height = renderer.height;
             if (this.down) this.updateDown(delta);
+            if (this.events.keys[37]) this.x += 5 + this.islands.length;
+            if (this.events.keys[39]) this.x -= 5 + this.islands.length;
             var totalWidth = this.islandsWidth;
             var target = void 0;
             if (this.islands.length === 1 || width > totalWidth) {
@@ -2484,6 +2503,11 @@ var Game = function (_PIXI$Container) {
             this.y = height - this.islBnds.bottom;
             this.god.x = -this.x + width / 2;
             this.god.y = -this.y;
+
+            this.bg.x = -this.x;
+            this.bg.y = this.islBnds.bottom;
+            this.bg.width = width;
+            this.bg.height = height;
 
             // Coloring
             var feeling = this.god.feeling(this.goal);
@@ -2497,13 +2521,16 @@ var Game = function (_PIXI$Container) {
             this.cloudStartBack.tint = this.cloudStartFront.tint = this.cloudEndBack.tint = this.cloudEndFront.tint = this.cloudColor;
             renderer.backgroundColor = this.backgroundColor;
 
-            this.children.forEach(function (child) {
-                return child.render && child.render(delta, _this4, renderer);
-            });
+            var min = -480;
+            var max = width + 480;
+            for (var i = this.children.length; i--;) {
+                var child = this.children[i];
+                var diff = child.x + this.x;
+                child.visible = diff > min && diff < max;
+                if (child.render) child.render(delta, this, renderer);
+            }
 
-            this.children.sort(function (a, b) {
-                return (a.z || 0) - (b.z || 0);
-            });
+            this.children.sort(Game.zSort);
             renderer.render(this);
         }
     }, {
@@ -2588,24 +2615,33 @@ var Game = function (_PIXI$Container) {
     }, {
         key: 'attachEvents',
         value: function attachEvents(container) {
-            var _this5 = this;
+            var _this3 = this;
 
             if (this.container) this.detachEvents();else {
                 this.events = {};
                 this.events.mousedown = function (ev) {
-                    return _this5.beginDown(ev.pageX, ev.pageY);
+                    return _this3.beginDown(ev.pageX, ev.pageY);
                 };
                 this.events.touchstart = Misc.wrap(Misc.touchToMouseEv, this.events.mousedown);
+
                 this.events.mousemove = function (ev) {
-                    return _this5.onMove(ev.pageX, ev.pageY);
+                    return _this3.onMove(ev.pageX, ev.pageY);
                 };
                 this.events.touchmove = Misc.wrap(Misc.touchToMouseEv, this.events.mousemove);
+
                 this.events.mouseup = function (ev) {
-                    return _this5.finishDown();
+                    return _this3.finishDown();
                 };
                 this.events.touchend = this.events.mouseup;
                 this.events.mousewheel = function (ev) {
-                    return _this5.x -= ev.deltaX;
+                    return _this3.x -= ev.deltaX;
+                };
+                this.events.keys = [];
+                this.events.keydown = function (ev) {
+                    return _this3.events.keys[ev.keyCode] = true;
+                };
+                this.events.keyup = function (ev) {
+                    return _this3.events.keys[ev.keyCode] = false;
                 };
             }
             this.container = container;
@@ -2617,6 +2653,8 @@ var Game = function (_PIXI$Container) {
             container.addEventListener('touchend', this.events.touchend);
             document.addEventListener('mouseup', this.events.mouseup);
             container.addEventListener('mousewheel', this.events.mousewheel);
+            document.addEventListener('keydown', this.events.keydown);
+            document.addEventListener('keyup', this.events.keyup);
         }
     }, {
         key: 'detachEvents',
@@ -2628,6 +2666,8 @@ var Game = function (_PIXI$Container) {
             document.removeEventListener('mouseup', this.events.mouseup);
             this.container.removeEventListener('touchend', this.events.touchend);
             this.container.removeEventListener('mousewheel', this.events.mousewheel);
+            document.removeEventListener('keydown', this.events.keydown);
+            document.removeEventListener('keyup', this.events.keyup);
             this.container = null;
         }
     }, {
@@ -2694,6 +2734,9 @@ var Game = function (_PIXI$Container) {
     return Game;
 }(PIXI.Container);
 
+Game.zSort = function (a, b) {
+    return (a.z || 0) - (b.z || 0);
+};
 Game.loadedHandlers = [];
 Object.defineProperty(Game, 'loaded', {
     get: function get() {

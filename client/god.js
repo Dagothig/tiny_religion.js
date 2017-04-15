@@ -201,8 +201,9 @@ class God extends PIXI.Container {
 
     event(what, scalar, where) {
         if (!this.events[what]) return;
-        if (scalar < 0) scalar *= 2;
         let change = this.events[what]() * scalar;
+        // Negative changes are slightly larger than positive to prevent abuse
+        if (change < 0) change *= 1.5;
         this.mood += change;
         this.lookAt(where);
     }
