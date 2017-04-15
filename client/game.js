@@ -144,9 +144,6 @@ class Game extends PIXI.Container {
             if (child.update) child.update(delta, this);
             if (child.shouldRemove) this.children.splice(i, 1);
         }
-        /*this.children.forEach(child =>
-            child.update && child.update(delta, this));
-        this.children = this.children.filter(child => !child.shouldRemove);*/
 
         if (this.player.linkedTo(this, this.ai)) Music.switchTo(musics.combat);
         else Music.switchTo(musics.regular);

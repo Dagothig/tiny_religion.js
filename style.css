@@ -186,9 +186,11 @@ canvas {
     flex-direction: row;
 }
 .group-select>.check, .group>div {
-    margin-left: 1px;
     flex-grow: 1;
     box-sizing: border-box;
+}
+.group-select>.check~.check, .group>div~div {
+    margin-left: 1px;
 }
 .group-select>.check, .btn, .tooltip {
     color: white;
@@ -502,8 +504,10 @@ canvas {
     }
     .group-select>.check, .group>div {
         height: initial;
-        margin-top: 1px;
+    }
+    .group-select>.check~.check, .group>div~div {
         margin-left: 0px;
+        margin-top: 1px;
     }
     .group-select>.check { width: 12rem; }
     .group>div { width: 14rem; }

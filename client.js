@@ -829,7 +829,7 @@ var Blood = new SFXType(4, 10, 0, 8),
 var SFX = function (_PIXI$TiledSprite) {
     _inherits(SFX, _PIXI$TiledSprite);
 
-    function SFX(x, y, type) {
+    function SFX(x, y, type, z) {
         _classCallCheck(this, SFX);
 
         var _this = _possibleConstructorReturn(this, (SFX.__proto__ || Object.getPrototypeOf(SFX)).call(this, type.texture));
@@ -838,6 +838,7 @@ var SFX = function (_PIXI$TiledSprite) {
         _this.decal = { x: type.decalX, y: type.decalY };
         _this.x = x;
         _this.y = y;
+        _this.z = z;
         if (Math.random() < 0.5) _this.scale.x = -1;
         _this.tileY = type.tileY;
         _this.type = type;
@@ -856,7 +857,10 @@ var SFX = function (_PIXI$TiledSprite) {
     }, {
         key: 'z',
         get: function get() {
-            return this.y + this.type.decalZ;
+            return Number.isFinite(this._z) ? this._z : this.y + this.type.decalZ;
+        },
+        set: function set(val) {
+            this._z = val;
         }
     }]);
 
@@ -992,6 +996,7 @@ var God = function (_PIXI$Container) {
         };
 
         _this.changePersonality(true);
+        _this.birds = [];
         return _this;
     }
 
@@ -1001,6 +1006,22 @@ var God = function (_PIXI$Container) {
             this.overallMood += this.mood;
             this.mood /= 1.01;
             if (Math.abs(this.mood) < 0.01) this.mood = 0;
+
+            // Birds
+            if (this.birds.length !== this.birdTarget && Math.random() < 0.01) if (this.birds.length < this.birdTarget) {
+                var bird = new Bird(game, this.x, this.y);
+                this.birds.add(bird);
+                game.addChild(bird);
+                game.addChild(new SFX(bird.x, bird.y, Summon, bird.z));
+            } else {
+                var _bird = this.birds.rand();
+                if (_bird) {
+                    game.addChild(new SFX(_bird.x, _bird.y, Lightning, _bird.z));
+                    _bird.die(game);
+                    this.birds.remove(_bird);
+                    this.lookAt(_bird);
+                }
+            }
 
             if (Math.random() < -this.feeling(game.goal) / 400) this.doSacrifice(game);
 
@@ -1079,6 +1100,7 @@ var God = function (_PIXI$Container) {
                 this.likesAttention = min + Math.random() * range;
                 this.likesManMade = min + Math.random() * range;
             }
+            this.birdTarget = 5 + 5 * (this.likesLife / God.preferenceModifier);
             this.updateColor();
         }
     }, {
@@ -2308,6 +2330,67 @@ var Villager = new Job('villager', 'images/Villager.png', {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Bird = function (_PIXI$AnimatedSprite) {
+    _inherits(Bird, _PIXI$AnimatedSprite);
+
+    function Bird(game, x, y) {
+        _classCallCheck(this, Bird);
+
+        var _this = _possibleConstructorReturn(this, (Bird.__proto__ || Object.getPrototypeOf(Bird)).call(this, Bird.texture, 4, true));
+
+        var bounds = game.getLocalBounds();
+        _this.x = _this.targetX = bounds.left + bounds.width * Math.random();
+        _this.y = _this.targetY = bounds.top + bounds.height * Math.random();
+        _this.movX = _this.movY = 0;
+        _this.anchor.x = _this.anchor.y = 0.5;
+        _this.z = 300;
+        return _this;
+    }
+
+    _createClass(Bird, [{
+        key: 'update',
+        value: function update(delta, game) {
+            _get(Bird.prototype.__proto__ || Object.getPrototypeOf(Bird.prototype), 'update', this).call(this, delta);
+
+            if (Math.dst2(this.x, this.y, this.targetX, this.targetY) < 64) {
+                var bounds = game.getLocalBounds();
+                this.targetX = 1.25 * (bounds.left + bounds.width * Math.random());
+                this.targetY = 1.25 * (bounds.top + bounds.height * Math.random());
+            }
+            var sX = Math.sign(this.targetX - this.x),
+                sY = Math.sign(this.targetY - this.y);
+            this.movX += 0.01 * sX;
+            this.movY += sY < 0 ? -0.005 : 0.02;
+            this.x += this.movX *= 0.99;
+            this.y += this.movY *= 0.99;
+            this.scale.x = this.movX < 0 ? -1 : 1;
+        }
+    }, {
+        key: 'die',
+        value: function die(game) {
+            this.shouldRemove = true;
+            game.addChild(new SFX(this.x, this.y, Blood, this.z));
+        }
+    }]);
+
+    return Bird;
+}(PIXI.AnimatedSprite);
+
+PIXI.loader.add('bird', 'images/Bird.png', null, function (res) {
+    Bird.texture = new PIXI.TiledTexture(res.texture, 8, 8);
+});
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -2477,9 +2560,6 @@ var Game = function (_PIXI$Container) {
                 if (child.update) child.update(delta, this);
                 if (child.shouldRemove) this.children.splice(i, 1);
             }
-            /*this.children.forEach(child =>
-                child.update && child.update(delta, this));
-            this.children = this.children.filter(child => !child.shouldRemove);*/
 
             if (this.player.linkedTo(this, this.ai)) Music.switchTo(musics.combat);else Music.switchTo(musics.regular);
         }

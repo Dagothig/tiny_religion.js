@@ -14,17 +14,23 @@ let Blood = new SFXType(4, 10, 0, 8),
     Lightning = new SFXType(16, 128, 0, 8);
 
 class SFX extends PIXI.TiledSprite {
-    constructor(x, y, type) {
+    constructor(x, y, type, z) {
         super(type.texture);
         this.currentFrame = type.frameDuration;
         this.decal = { x: type.decalX, y: type.decalY };
         this.x = x;
         this.y = y;
+        this.z = z;
         if (Math.random() < 0.5) this.scale.x = -1;
         this.tileY = type.tileY;
         this.type = type;
     }
-    get z() { return this.y + this.type.decalZ; }
+    get z() {
+        return Number.isFinite(this._z) ? this._z : this.y + this.type.decalZ;
+    }
+    set z(val) {
+        this._z = val;
+    }
     update() {
         this.currentFrame--;
         while (this.currentFrame < 0) {

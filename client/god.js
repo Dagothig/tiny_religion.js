@@ -73,6 +73,7 @@ class God extends PIXI.Container {
         };
 
         this.changePersonality(true);
+        this.birds = [];
     }
     get z() { return -200; }
     set tint(val) {
@@ -99,6 +100,23 @@ class God extends PIXI.Container {
         this.overallMood += this.mood;
         this.mood /= 1.01;
         if (Math.abs(this.mood) < 0.01) this.mood = 0;
+
+        // Birds
+        if (this.birds.length !== this.birdTarget && Math.random() < 0.01)
+            if (this.birds.length < this.birdTarget) {
+                let bird = new Bird(game, this.x, this.y);
+                this.birds.add(bird);
+                game.addChild(bird);
+                game.addChild(new SFX(bird.x, bird.y, Summon, bird.z));
+            } else {
+                let bird = this.birds.rand();
+                if (bird) {
+                    game.addChild(new SFX(bird.x, bird.y, Lightning, bird.z));
+                    bird.die(game);
+                    this.birds.remove(bird);
+                    this.lookAt(bird);
+                }
+            }
 
         if (Math.random() < -this.feeling(game.goal) / 400)
             this.doSacrifice(game);
@@ -172,6 +190,7 @@ class God extends PIXI.Container {
             this.likesAttention = min + Math.random() * range;
             this.likesManMade = min + Math.random() * range;
         }
+        this.birdTarget = 5 + 5 * (this.likesLife / God.preferenceModifier);
         this.updateColor();
     }
     updateColor(

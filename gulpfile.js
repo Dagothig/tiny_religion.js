@@ -19,6 +19,7 @@ gulp.task('client', function(cb) {
         "client/island.js",
         "client/building.js",
         "client/person.js",
+        "client/bird.js",
         "client/game.js",
 
         "client/ui.js",
