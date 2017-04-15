@@ -69,10 +69,16 @@ window.addEventListener("DOMContentLoaded", () => {
         let w = container.clientWidth, h = container.clientHeight;
         if (!h) return;
         scaling = 1;
-        if (h < 420) {
-            w *= 420 / h;
-            h = 420;
-            scaling++;
+        let minDst = 420;
+        if (h < minDst) {
+            scaling = minDst / h;
+            w *= minDst / h;
+            h = minDst;
+        }
+        while (h > minDst * 2) {
+            scaling /= 2;
+            w /= 2;
+            h /= 2;
         }
         renderer.resize(w, h);
     }

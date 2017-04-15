@@ -178,8 +178,6 @@ var Misc = {
         }, { pageX: 0, pageY: 0 });
         newEv.pageX /= ev.touches.length;
         newEv.pageY /= ev.touches.length;
-        newEv.pageX *= scaling;
-        newEv.pageY *= scaling;
         return newEv;
     },
     wrap: function wrap(f1, f2) {
@@ -2620,12 +2618,12 @@ var Game = function (_PIXI$Container) {
             if (this.container) this.detachEvents();else {
                 this.events = {};
                 this.events.mousedown = function (ev) {
-                    return _this3.beginDown(ev.pageX, ev.pageY);
+                    return _this3.beginDown(ev.pageX * scaling, ev.pageY * scaling);
                 };
                 this.events.touchstart = Misc.wrap(Misc.touchToMouseEv, this.events.mousedown);
 
                 this.events.mousemove = function (ev) {
-                    return _this3.onMove(ev.pageX, ev.pageY);
+                    return _this3.onMove(ev.pageX * scaling, ev.pageY * scaling);
                 };
                 this.events.touchmove = Misc.wrap(Misc.touchToMouseEv, this.events.mousemove);
 
@@ -3142,10 +3140,16 @@ window.addEventListener("DOMContentLoaded", function () {
             h = container.clientHeight;
         if (!h) return;
         scaling = 1;
-        if (h < 420) {
-            w *= 420 / h;
-            h = 420;
-            scaling++;
+        var minDst = 420;
+        if (h < minDst) {
+            scaling = minDst / h;
+            w *= minDst / h;
+            h = minDst;
+        }
+        while (h > minDst * 2) {
+            scaling /= 2;
+            w /= 2;
+            h /= 2;
         }
         renderer.resize(w, h);
     };

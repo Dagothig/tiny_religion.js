@@ -174,8 +174,6 @@ let Misc = {
         }, { pageX: 0, pageY: 0 });
         newEv.pageX /= ev.touches.length;
         newEv.pageY /= ev.touches.length;
-        newEv.pageX *= scaling;
-        newEv.pageY *= scaling;
         return newEv;
     },
     wrap(f1, f2) { return (...args) => f2(f1.apply(this, args)); }

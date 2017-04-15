@@ -301,12 +301,12 @@ class Game extends PIXI.Container {
         else {
             this.events = {};
             this.events.mousedown = ev =>
-                this.beginDown(ev.pageX, ev.pageY);
+                this.beginDown(ev.pageX * scaling, ev.pageY * scaling);
             this.events.touchstart =
                 Misc.wrap(Misc.touchToMouseEv, this.events.mousedown);
 
             this.events.mousemove = ev =>
-                this.onMove(ev.pageX, ev.pageY);
+                this.onMove(ev.pageX * scaling, ev.pageY * scaling);
             this.events.touchmove =
                 Misc.wrap(Misc.touchToMouseEv, this.events.mousemove);
 
