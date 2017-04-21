@@ -58,7 +58,7 @@ class Building extends PIXI.TiledSprite {
             this.finished = true;
             this.updateTextureState();
             if (this.kingdom.isPlayer) {
-                game.god.event(this.type.name, 1, this.position);
+                game.god.event(this.type.name, 0.5, this.position);
                 sounds.done.play();
             }
             if (this.type.onFinished) this.type.onFinished.call(this);
@@ -114,7 +114,7 @@ Tree = new BuildingType(
         },
         update(delta, game) {
             if (!this.finished)
-                this.progressBuild(2 + this.kingdom.greenHouseCount, game);
+                this.progressBuild(1, game);
         }
     }),
 FallingTree = new BuildingType(

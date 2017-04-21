@@ -10,23 +10,25 @@ let fetchSound = (src) => {
 class Sound {
     constructor(...paths) {
         this.paths = paths;
-        this.sounds = paths.map(p => {
+        this.sounds = paths.map((p, i) => {
             let snd = fetchSound(p);
             let self = this;
-            snd.onended = function() { self.available.add(this); };
+            snd.onended = function() { self.available[i].add(this); };
             return snd;
         });
-        this.available = this.sounds.map(s => [s]);
+        this.available = this.sounds.map(s => Object.merge([s], { total: 1 }));
     }
     play(onended, volume = 1) {
         if (Sound.mute) return;
         let i = this.sounds.rand_i();
         let sound = this.available[i].pop();
-        if (!sound) {
+        if (!sound && this.available[i].total < 5) {
             let base = this.sounds[i];
             sound = base.cloneNode();
             sound.onended = base.onended;
+            this.available[i].total++;
         }
+        if (!sound) return;
         if (onended) {
             let handler = () => {
                 onended();

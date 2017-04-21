@@ -1,50 +1,12 @@
 'use strict';
 
-class Overlay extends PIXI.Sprite {
-    constructor(texture = PIXI.whitePixel) {
-        super(texture);
-        this.flashes = [];
-    }
-    render(delta, game, renderer) {
-        this.x = -game.x;
-        this.y = -game.y;
-        this.width = renderer.width;
-        this.height = renderer.height;
-
-        let alpha = 0;
-        for (let i = this.flashes.length; i--;) {
-            let flash = this.flashes[i];
-            alpha = Math.max(flash.time / flash.duration, alpha);
-            flash.time--;
-            if (!flash.time) this.flashes.splice(i, 1);
-        }
-        this.alpha = alpha;
-    }
-    flash(duration) {
-        this.flashes.push({time: duration, duration: duration});
-    }
-    get z() { return 1000; }
-    outputState() {
-        return {
-            alpha: this.alpha,
-            flashes: this.flashes.slice()
-        };
-    }
-}
-Overlay.fromState = function(state, game) {
-    let overlay = new Overlay();
-    overlay.alpha = state.alpha;
-    overlay.flashes = state.flashes;
-    return overlay;
-};
-
 let darkSkyColor = 0x28162f,
     skyColor = 0xb2b8c0,
     goodSkyColor = 0x40c0ff,
 
     darkCloudColor = 0xa81c50,
-    cloudColor = 0x8ca0a4,
-    goodCloudColor = 0xd6f0ff,
+    cloudColor = 0x9ca8af,
+    goodCloudColor = 0xe6f2ff,
 
     darkGlobalColor = 0xff99cc,
     globalColor = 0xdddddd,
@@ -56,6 +18,7 @@ let darkSkyColor = 0x28162f,
 class Game extends PIXI.Container {
     constructor(onFinished, state = { x: 0, y: 0, goal: settings.goal }) {
         super();
+        this.eventListeners = {};
         this.x = state.x;
         this.y = state.y;
         this.goal = state.goal;
@@ -260,8 +223,8 @@ class Game extends PIXI.Container {
         this.addIsland(starting);
     }
     generateNewIsland() {
-        if (Math.random() < 1/(3+this.islands.length)) this.generateInhabited();
-        else this.generateUninhabited();
+        if (Math.random() < 2/(3+this.islands.length)) this.generateUninhabited();
+        else this.generateInhabited();
     }
     generateInhabited() {
         let count = Math.random() * this.islands.length;
@@ -371,6 +334,19 @@ class Game extends PIXI.Container {
         }
     }
 
+    listeners(name) {
+        return this.eventListeners[name] || (this.eventListeners[name] = []);
+    }
+    addEventListener(name, listener) {
+        this.listeners(name).add(listener);
+    }
+    removeEventListener(name, listener) {
+        this.listeners(name).remove(listener);
+    }
+    onGodChangePersonality() {
+        this.listeners('godChangePersonality').forEach(listener => listener());
+    }
+
     outputState() {
         return {
             x: this.x,
@@ -396,3 +372,4 @@ Game.onLoad = function(handler) {
     if (Game.loaded) handler();
     else Game.loadedHandlers.push(handler);
 }
+PIXI.loader.load(() => Game.loaded = true);

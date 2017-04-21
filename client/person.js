@@ -97,7 +97,7 @@ class Person extends PIXI.AnimatedSprite {
         this.tileY = Math.abs(this.movX) > Math.abs(this.movY) ?
             (this.movX > 0 ? this.tileY = 1 : this.tileY = 2) :
             (this.movY > 0 ? this.tileY = 3 : this.tileY = 4);
-        this.tint = this.sinceTookDamage > 4 ? 0xFFFFFF : this.kingdom.tint;
+        this.tint = this.sinceTookDamage > 4 ? 0xffffff : this.kingdom.tint;
     }
     findNextTarget(game) {
         if (this.job.findNextTarget &&
@@ -291,6 +291,7 @@ Priest = new Job('priest', 'images/Priest.png', {
         if (Math.random() * 1500 < 3 + this.kingdom.templeCount) {
             target.kingdom = this.kingdom;
             game.addChild(new SFX(target.x, target.y, Summon));
+            sounds.convert.play();
             if (this.kingdom.isPlayer) game.god.event('convert', 1, this.position);
         }
     },

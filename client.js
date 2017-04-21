@@ -465,22 +465,20 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
         return OscillatingSprite;
     }(Sprite);
 
-    requestAnimationFrame(function () {
-        var whitePixel = new PIXI.Graphics();
-        whitePixel.beginFill(0xffffff, 1);
-        whitePixel.drawRect(0, 0, 1, 1);
-        whitePixel.closePath();
-        PIXI.whitePixel = whitePixel.generateTexture();
+    var whitePixel = new PIXI.Graphics();
+    whitePixel.beginFill(0xffffff, 1);
+    whitePixel.drawRect(0, 0, 1, 1);
+    whitePixel.closePath();
+    PIXI.whitePixel = whitePixel.generateTexture();
 
-        var gradient = new PIXI.Graphics();
-        var n = 256;
-        for (var i = 0; i < n; i++) {
-            gradient.beginFill(0xffffff, Math.pow(i / n, 2));
-            gradient.drawRect(0, i, 1, 1);
-            gradient.closePath();
-        }
-        PIXI.gradient = gradient.generateTexture();
-    });
+    var gradient = new PIXI.Graphics();
+    var n = 256;
+    for (var i = 0; i < n; i++) {
+        gradient.beginFill(0xffffff, Math.pow(i / n, 2));
+        gradient.drawRect(0, i, 1, 1);
+        gradient.closePath();
+    }
+    PIXI.gradient = gradient.generateTexture();
 
     PIXI.Color = {
         interpolate: interpolateColors,
@@ -660,7 +658,8 @@ var settings = function (strat, confs) {
         short: 6000,
         medium: 12000,
         long: 24000
-    }]
+    }],
+    tips: [true, 'bool', 'usr']
 });
 'use strict';
 
@@ -686,16 +685,16 @@ var Sound = function () {
         }
 
         this.paths = paths;
-        this.sounds = paths.map(function (p) {
+        this.sounds = paths.map(function (p, i) {
             var snd = fetchSound(p);
             var self = _this;
             snd.onended = function () {
-                self.available.add(this);
+                self.available[i].add(this);
             };
             return snd;
         });
         this.available = this.sounds.map(function (s) {
-            return [s];
+            return Object.merge([s], { total: 1 });
         });
     }
 
@@ -707,11 +706,13 @@ var Sound = function () {
             if (Sound.mute) return;
             var i = this.sounds.rand_i();
             var sound = this.available[i].pop();
-            if (!sound) {
+            if (!sound && this.available[i].total < 5) {
                 var base = this.sounds[i];
                 sound = base.cloneNode();
                 sound.onended = base.onended;
+                this.available[i].total++;
             }
+            if (!sound) return;
             if (onended) {
                 var handler = function handler() {
                     onended();
@@ -802,6 +803,13 @@ Object.keys(musics).map(function (k) {
 }).forEach(function (m) {
     m.volume = 0.5;m.loop = true;
 });
+"use strict";
+
+// Title state
+var titleState = {};
+
+// Game state
+var gameState = {};
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -972,6 +980,9 @@ var God = function (_PIXI$Container) {
             tree: function tree() {
                 return _this.likesLife - _this.likesManMade;
             },
+            fallingTree: function fallingTree() {
+                return _this.likesManMade - _this.likesLife;
+            },
             sacrifice: function sacrifice() {
                 return _this.likesAttention - _this.likesLife * 2;
             },
@@ -1010,6 +1021,7 @@ var God = function (_PIXI$Container) {
             // Birds
             if (this.birds.length !== this.birdTarget && Math.random() < 0.01) if (this.birds.length < this.birdTarget) {
                 var bird = new Bird(game, this.x, this.y);
+                bird.tint = this.tint;
                 this.birds.add(bird);
                 game.addChild(bird);
                 game.addChild(new SFX(bird.x, bird.y, Summon, bird.z));
@@ -1093,7 +1105,7 @@ var God = function (_PIXI$Container) {
             if (base) {
                 this.likesLife = max;
                 this.likesAttention = max / 4;
-                this.likesManMade = min / 4;
+                this.likesManMade = -min;
                 this.sincePersonality = God.personalityLength * 4 / 5;
             } else {
                 this.likesLife = min + Math.random() * range;
@@ -1102,6 +1114,7 @@ var God = function (_PIXI$Container) {
             }
             this.birdTarget = 5 + 5 * (this.likesLife / God.preferenceModifier);
             this.updateColor();
+            if (game) game.onGodChangePersonality();
         }
     }, {
         key: 'updateColor',
@@ -1116,13 +1129,22 @@ var God = function (_PIXI$Container) {
 
             var hue = Math.shift(
             // From 0 to 1; +life+man; from teal-ish blue to purple
-            angle <= 1 ? 11 / 16 + angle * 3 / 16 :
+            angle <= 1 ? 8 / 16 + angle * 4 / 16 :
             // From 1 to 2; -life+man; from purple to orange-ish
-            angle <= 2 ? 14 / 16 + (angle - 1) * 3 / 16 :
+            angle <= 2 ? 12 / 16 + (angle - 1) * 4 / 16 :
             // From 2 to 3; -life-man; from orange-ish to green
-            angle <= 3 ? 1 / 16 + (angle - 2) * 3 / 16 :
+            angle <= 3 ? 0 / 16 + (angle - 2) * 4 / 16 :
             // From 3 to 5; -life+man; from green to teal-ish blue
-            4 / 16 + (angle - 3) * 7 / 16, 0, 1);
+            4 / 16 + (angle - 3) * 4 / 16, 0, 1);
+            /*let hue = Math.shift(
+                // From 0 to 1; +life+man; from teal-ish blue to purple
+                angle <= 1 ? (11/16 + angle * 3/16) :
+                // From 1 to 2; -life+man; from purple to orange-ish
+                angle <= 2 ? (14/16 + (angle - 1) * 3/16) :
+                // From 2 to 3; -life-man; from orange-ish to green
+                angle <= 3 ? (1/16 + (angle - 2) * 3/16) :
+                // From 3 to 5; -life+man; from green to teal-ish blue
+                (4/16 + (angle - 3) * 7/16), 0, 1);*/
             var saturation = Math.max(Math.abs(life), Math.abs(man));
             var lightness = attention / (attention < 0 ? 6 : 4) + 0.5;
             this.tint = PIXI.Color.fromHSL(hue, saturation, lightness);
@@ -1300,7 +1322,10 @@ var Kingdom = function () {
                     person.building = building;
                     person.movements.length = 0;
                 }
-                if (this.isPlayer) sounds.build.play();
+                if (this.isPlayer) {
+                    game.god.event(type.name, 0.5, building.position);
+                    sounds.build.play();
+                }
                 return true;
             }
             return false;
@@ -1329,20 +1354,26 @@ var Kingdom = function () {
                 person.building = bridge;
                 person.movements.length = 0;
             }
-            if (this.isPlayer) sounds.build.play();
+            if (this.isPlayer) {
+                game.god.event(Bridge.name, 0.5, bridge.position);
+                sounds.build.play();
+            }
             return true;
         }
     }, {
         key: 'forestate',
         value: function forestate(game) {
-            if (this.growing) return false;
+            if (this.growed) return false;
             for (var i = 0; i < game.islands.length * 3; i++) {
                 var island = game.islands.rand();
                 if (island.kingdom !== this) continue;
                 var tree = island.generateBuilding(Tree, false);
                 if (!tree) continue;
                 game.addChild(tree);
-                if (this.isPlayer) sounds.build.play();
+                if (this.isPlayer) {
+                    game.god.event(Tree.name, 0.5, tree.position);
+                    sounds.build.play();
+                }
                 return true;
             }
             return false;
@@ -1373,7 +1404,7 @@ var Kingdom = function () {
             game.addChild(felled);
             island.buildings.add(felled);
             if (this.isPlayer) {
-                game.god.event('tree', -1, felled.position);
+                game.god.event('fallingTree', 0.5, felled.position);
                 sounds.build.play();
             }
             return true;
@@ -1525,6 +1556,11 @@ var Kingdom = function () {
         key: 'builded',
         get: function get() {
             return this.unfinished >= this.maxUnfinished;
+        }
+    }, {
+        key: 'growed',
+        get: function get() {
+            return this.growing >= this.greenHouseCount + 1;
         }
     }]);
 
@@ -1857,7 +1893,7 @@ var Building = function (_PIXI$TiledSprite) {
                 this.finished = true;
                 this.updateTextureState();
                 if (this.kingdom.isPlayer) {
-                    game.god.event(this.type.name, 1, this.position);
+                    game.god.event(this.type.name, 0.5, this.position);
                     sounds.done.play();
                 }
                 if (this.type.onFinished) this.type.onFinished.call(this);
@@ -1934,7 +1970,7 @@ var Bridge = new BuildingType('bridge', 'images/Bridge.png', -10, -47, -30, fals
         this.rotation = (Math.random() - 0.5) * Math.PI / 16;
     },
     update: function update(delta, game) {
-        if (!this.finished) this.progressBuild(2 + this.kingdom.greenHouseCount, game);
+        if (!this.finished) this.progressBuild(1, game);
     }
 }),
     FallingTree = new BuildingType('fallingTree', 'images/FallingTree.png', 0, 4, 0, false, 15, 250, {
@@ -2063,7 +2099,7 @@ var Person = function (_PIXI$AnimatedSprite) {
         key: 'render',
         value: function render(delta, game, renderer) {
             this.tileY = Math.abs(this.movX) > Math.abs(this.movY) ? this.movX > 0 ? this.tileY = 1 : this.tileY = 2 : this.movY > 0 ? this.tileY = 3 : this.tileY = 4;
-            this.tint = this.sinceTookDamage > 4 ? 0xFFFFFF : this.kingdom.tint;
+            this.tint = this.sinceTookDamage > 4 ? 0xffffff : this.kingdom.tint;
         }
     }, {
         key: 'findNextTarget',
@@ -2308,6 +2344,7 @@ var Villager = new Job('villager', 'images/Villager.png', {
         if (Math.random() * 1500 < 3 + this.kingdom.templeCount) {
             target.kingdom = this.kingdom;
             game.addChild(new SFX(target.x, target.y, Summon));
+            sounds.convert.play();
             if (this.kingdom.isPlayer) game.god.event('convert', 1, this.position);
         }
     },
@@ -2387,7 +2424,7 @@ var Bird = function (_PIXI$AnimatedSprite) {
 PIXI.loader.add('bird', 'images/Bird.png', null, function (res) {
     Bird.texture = new PIXI.TiledTexture(res.texture, 8, 8);
 });
-'use strict';
+"use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -2412,7 +2449,7 @@ var Overlay = function (_PIXI$Sprite) {
     }
 
     _createClass(Overlay, [{
-        key: 'render',
+        key: "render",
         value: function render(delta, game, renderer) {
             this.x = -game.x;
             this.y = -game.y;
@@ -2429,12 +2466,12 @@ var Overlay = function (_PIXI$Sprite) {
             this.alpha = alpha;
         }
     }, {
-        key: 'flash',
+        key: "flash",
         value: function flash(duration) {
             this.flashes.push({ time: duration, duration: duration });
         }
     }, {
-        key: 'outputState',
+        key: "outputState",
         value: function outputState() {
             return {
                 alpha: this.alpha,
@@ -2442,7 +2479,7 @@ var Overlay = function (_PIXI$Sprite) {
             };
         }
     }, {
-        key: 'z',
+        key: "z",
         get: function get() {
             return 1000;
         }
@@ -2457,13 +2494,22 @@ Overlay.fromState = function (state, game) {
     overlay.flashes = state.flashes;
     return overlay;
 };
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var darkSkyColor = 0x28162f,
     skyColor = 0xb2b8c0,
     goodSkyColor = 0x40c0ff,
     darkCloudColor = 0xa81c50,
-    cloudColor = 0x8ca0a4,
-    goodCloudColor = 0xd6f0ff,
+    cloudColor = 0x9ca8af,
+    goodCloudColor = 0xe6f2ff,
     darkGlobalColor = 0xff99cc,
     globalColor = 0xdddddd,
     goodGlobalColor = 0xfff0dd,
@@ -2478,76 +2524,77 @@ var Game = function (_PIXI$Container) {
 
         _classCallCheck(this, Game);
 
-        var _this2 = _possibleConstructorReturn(this, (Game.__proto__ || Object.getPrototypeOf(Game)).call(this));
+        var _this = _possibleConstructorReturn(this, (Game.__proto__ || Object.getPrototypeOf(Game)).call(this));
 
-        _this2.x = state.x;
-        _this2.y = state.y;
-        _this2.goal = state.goal;
-        _this2.onFinished = function (win) {
+        _this.eventListeners = {};
+        _this.x = state.x;
+        _this.y = state.y;
+        _this.goal = state.goal;
+        _this.onFinished = function (win) {
             Music.stop();
             onFinished(win);
         };
 
-        _this2.bg = new PIXI.Sprite(PIXI.gradient);
-        _this2.bg.alpha = 0.25;
-        _this2.bg.anchor.y = 1;
-        _this2.bg.z = -200;
-        _this2.addChild(_this2.bg);
+        _this.bg = new PIXI.Sprite(PIXI.gradient);
+        _this.bg.alpha = 0.25;
+        _this.bg.anchor.y = 1;
+        _this.bg.z = -200;
+        _this.addChild(_this.bg);
 
         // God
-        _this2.god = new God();
-        if (state.god) _this2.god.readState(state.god, _this2);
-        _this2.addChild(_this2.god);
+        _this.god = new God();
+        if (state.god) _this.god.readState(state.god, _this);
+        _this.addChild(_this.god);
 
         // Kingdoms
-        _this2.player = new Kingdom('player', 0x113996, true);
-        _this2.ai = new Kingdom('ai', 0xab1705, false);
-        _this2.gaia = new Kingdom('gaia', 0x888888, false);
+        _this.player = new Kingdom('player', 0x113996, true);
+        _this.ai = new Kingdom('ai', 0xab1705, false);
+        _this.gaia = new Kingdom('gaia', 0x888888, false);
 
         // Clouds a
-        _this2.cloudStartBack = new PIXI.OscillatingSprite(Island.cloudStartBack, cloudBackCycle, 0, 0, 0, 8);
-        _this2.cloudStartBack.z = -101;
-        _this2.cloudStartFront = new PIXI.OscillatingSprite(Island.cloudStartFront, cloudFrontCycle, 0, 0, 0, 8);
-        _this2.cloudStartFront.z = -99;
+        _this.cloudStartBack = new PIXI.OscillatingSprite(Island.cloudStartBack, cloudBackCycle, 0, 0, 0, 8);
+        _this.cloudStartBack.z = -101;
+        _this.cloudStartFront = new PIXI.OscillatingSprite(Island.cloudStartFront, cloudFrontCycle, 0, 0, 0, 8);
+        _this.cloudStartFront.z = -99;
 
-        _this2.cloudEndBack = new PIXI.OscillatingSprite(Island.cloudStartBack, cloudBackCycle, 0, 0, 0, 8);
-        _this2.cloudEndBack.z = -101;
-        _this2.cloudEndFront = new PIXI.OscillatingSprite(Island.cloudStartFront, cloudFrontCycle, 0, 0, 0, 8);
-        _this2.cloudEndFront.z = -99;
-        _this2.cloudEndBack.scale.x = _this2.cloudEndFront.scale.x = -1;
+        _this.cloudEndBack = new PIXI.OscillatingSprite(Island.cloudStartBack, cloudBackCycle, 0, 0, 0, 8);
+        _this.cloudEndBack.z = -101;
+        _this.cloudEndFront = new PIXI.OscillatingSprite(Island.cloudStartFront, cloudFrontCycle, 0, 0, 0, 8);
+        _this.cloudEndFront.z = -99;
+        _this.cloudEndBack.scale.x = _this.cloudEndFront.scale.x = -1;
 
         // Islands
-        _this2.islands = [];
+        _this.islands = [];
         if (state.islands) {
             state.islands.forEach(function (s) {
-                return _this2.addIsland(Island.fromState(s, _this2));
+                return _this.addIsland(Island.fromState(s, _this));
             });
-            _this2.islands.forEach(function (island) {
-                return island.resolveIndices(_this2);
+            _this.islands.forEach(function (island) {
+                return island.resolveIndices(_this);
             });
-        } else _this2.generateInitial();
-        _this2.updateCounts();
+        } else _this.generateInitial();
+        _this.updateCounts();
 
         // Clouds b
-        _this2.cloudStartBack.x = _this2.cloudStartFront.x = _this2.islBnds.left;
-        _this2.cloudEndBack.x = _this2.cloudEndFront.x = _this2.islBnds.left + _this2.islandsWidth;
+        _this.cloudStartBack.x = _this.cloudStartFront.x = _this.islBnds.left;
+        _this.cloudEndBack.x = _this.cloudEndFront.x = _this.islBnds.left + _this.islandsWidth;
 
-        _this2.cloudStartBack.anchor.x = _this2.cloudStartFront.anchor.x = _this2.cloudEndBack.anchor.x = _this2.cloudEndFront.anchor.x = 1;
-        _this2.cloudStartBack.anchor.y = _this2.cloudStartFront.anchor.y = _this2.cloudEndBack.anchor.y = _this2.cloudEndFront.anchor.y = 0.3;
-        _this2.addChild(_this2.cloudStartBack, _this2.cloudStartFront, _this2.cloudEndBack, _this2.cloudEndFront);
+        _this.cloudStartBack.anchor.x = _this.cloudStartFront.anchor.x = _this.cloudEndBack.anchor.x = _this.cloudEndFront.anchor.x = 1;
+        _this.cloudStartBack.anchor.y = _this.cloudStartFront.anchor.y = _this.cloudEndBack.anchor.y = _this.cloudEndFront.anchor.y = 0.3;
+        _this.addChild(_this.cloudStartBack, _this.cloudStartFront, _this.cloudEndBack, _this.cloudEndFront);
 
-        _this2.skiesMood = 0;
-        _this2.cloudCycle = 0;
-        _this2.cloudBackY = 4;
-        _this2.cloudFrontY = 4;
+        _this.skiesMood = 0;
+        _this.cloudCycle = 0;
+        _this.cloudBackY = 4;
+        _this.cloudFrontY = 4;
 
         // Overlay
-        if (state.overlay) _this2.overlay = Overlay.fromState(state.overlay, _this2);else {
-            _this2.overlay = new Overlay();
-            _this2.overlay.flash(60);
+        if (state.overlay) _this.overlay = Overlay.fromState(state.overlay, _this);else {
+            _this.overlay = new Overlay();
+            _this.overlay.flash(60);
         }
-        _this2.addChild(_this2.overlay);
-        return _this2;
+        _this.addChild(_this.overlay);
+        return _this;
     }
 
     _createClass(Game, [{
@@ -2661,7 +2708,7 @@ var Game = function (_PIXI$Container) {
     }, {
         key: 'generateNewIsland',
         value: function generateNewIsland() {
-            if (Math.random() < 1 / (3 + this.islands.length)) this.generateInhabited();else this.generateUninhabited();
+            if (Math.random() < 2 / (3 + this.islands.length)) this.generateUninhabited();else this.generateInhabited();
         }
     }, {
         key: 'generateInhabited',
@@ -2693,33 +2740,33 @@ var Game = function (_PIXI$Container) {
     }, {
         key: 'attachEvents',
         value: function attachEvents(container) {
-            var _this3 = this;
+            var _this2 = this;
 
             if (this.container) this.detachEvents();else {
                 this.events = {};
                 this.events.mousedown = function (ev) {
-                    return _this3.beginDown(ev.pageX * scaling, ev.pageY * scaling);
+                    return _this2.beginDown(ev.pageX * scaling, ev.pageY * scaling);
                 };
                 this.events.touchstart = Misc.wrap(Misc.touchToMouseEv, this.events.mousedown);
 
                 this.events.mousemove = function (ev) {
-                    return _this3.onMove(ev.pageX * scaling, ev.pageY * scaling);
+                    return _this2.onMove(ev.pageX * scaling, ev.pageY * scaling);
                 };
                 this.events.touchmove = Misc.wrap(Misc.touchToMouseEv, this.events.mousemove);
 
                 this.events.mouseup = function (ev) {
-                    return _this3.finishDown();
+                    return _this2.finishDown();
                 };
                 this.events.touchend = this.events.mouseup;
                 this.events.mousewheel = function (ev) {
-                    return _this3.x -= ev.deltaX;
+                    return _this2.x -= ev.deltaX;
                 };
                 this.events.keys = [];
                 this.events.keydown = function (ev) {
-                    return _this3.events.keys[ev.keyCode] = true;
+                    return _this2.events.keys[ev.keyCode] = true;
                 };
                 this.events.keyup = function (ev) {
-                    return _this3.events.keys[ev.keyCode] = false;
+                    return _this2.events.keys[ev.keyCode] = false;
                 };
             }
             this.container = container;
@@ -2789,6 +2836,28 @@ var Game = function (_PIXI$Container) {
             }
         }
     }, {
+        key: 'listeners',
+        value: function listeners(name) {
+            return this.eventListeners[name] || (this.eventListeners[name] = []);
+        }
+    }, {
+        key: 'addEventListener',
+        value: function addEventListener(name, listener) {
+            this.listeners(name).add(listener);
+        }
+    }, {
+        key: 'removeEventListener',
+        value: function removeEventListener(name, listener) {
+            this.listeners(name).remove(listener);
+        }
+    }, {
+        key: 'onGodChangePersonality',
+        value: function onGodChangePersonality() {
+            this.listeners('godChangePersonality').forEach(function (listener) {
+                return listener();
+            });
+        }
+    }, {
         key: 'outputState',
         value: function outputState() {
             return {
@@ -2829,6 +2898,9 @@ Object.defineProperty(Game, 'loaded', {
 Game.onLoad = function (handler) {
     if (Game.loaded) handler();else Game.loadedHandlers.push(handler);
 };
+PIXI.loader.load(function () {
+    return Game.loaded = true;
+});
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -2944,6 +3016,26 @@ var UI = function () {
         this.createLink('Source', 'https://github.com/Dagothig/tiny_religion.js/').link.target = 'blank';
 
         this.menuContainerTag.appendChild(this.menuTag);
+
+        this.tips = {};
+        this.tipTag = document.createElement('div');
+        this.tipTag.classList.add('tip', 'initial');
+
+        this.tipTextTag = document.createElement('div');
+        this.tipTextTag.classList.add('text');
+        this.tipTag.appendChild(this.tipTextTag);
+
+        this.tipOkTag = document.createElement('button');
+        this.tipOkTag.innerHTML = 'gotcha';
+        this.tipOkTag.onclick = function () {
+            return (_this.tips[_this.tipId] = true) && _this.tipTag.classList.add('hidden');
+        };
+        this.tipTag.appendChild(this.tipOkTag);
+
+        gameContainer.appendChild(this.tipTag);
+        settings.bind('tips', function (t) {
+            return t ? _this.tips = {} : _this.tipTag.classList.add('hidden');
+        });
     }
 
     _createClass(UI, [{
@@ -3076,7 +3168,6 @@ var UI = function () {
                     var text = btn.update && btn.update();
                     if (btn.text !== text) btn.text = btn.textTag.innerHTML = text;
                 });
-                this.btnsTag.style.backgroundColor = '#' + game.god.offTint.toString('16').padStart(6, '0');
             }
         }
     }, {
@@ -3110,6 +3201,7 @@ var UI = function () {
             setTimeout(function () {
                 return _this3.titleTag.addEventListener('click', _this3.onTitle);
             }, 1000);
+            this.tipTag.classList.add('hidden');
         }
     }, {
         key: 'hideTitle',
@@ -3131,6 +3223,32 @@ var UI = function () {
             this.btns.forEach(function (btn) {
                 return btn.btn.disabled = false;
             });
+        }
+    }, {
+        key: 'tip',
+        value: function tip(id, text) {
+            if (!settings.tips) return;
+            if (this.tips[id]) return;
+            this.tipTag.classList.remove('hidden', 'initial');
+            this.tipTextTag.innerHTML = text;
+            this.tipId = id;
+        }
+    }, {
+        key: 'onGodChangePersonality',
+        value: function onGodChangePersonality(game) {
+            this.tipOkTag.style.backgroundColor = this.btnsTag.style.backgroundColor = '#' + game.god.offTint.toString('16').padStart(6, '0');
+            this.tip('color', "God has changed color!\nIs God the same?");
+        }
+    }, {
+        key: 'onNewGame',
+        value: function onNewGame(game) {
+            var _this4 = this;
+
+            this.onGodChangePersonality(game);
+            game.addEventListener('godChangePersonality', function () {
+                return _this4.onGodChangePersonality(game);
+            });
+            this.tip('please', "God demands pleasing!\nFind out what pleases God!");
         }
     }]);
 
@@ -3170,6 +3288,7 @@ function newGame() {
             game = null;
         }, state);
         game.attachEvents(container);
+        ui.onNewGame(game);
     });
 }
 
@@ -3193,16 +3312,11 @@ function restoreTemp() {
 }
 
 window.addEventListener("DOMContentLoaded", function () {
-    PIXI.loader.load(function () {
-        return Game.loaded = true;
-    });
-    // Remove the preload class from the body
-    setTimeout(function () {
-        return document.body.classList.remove('preload');
-    }, 1000);
 
-    // Setup container & ui
+    // Setup container
     document.body.appendChild(container);
+
+    // Setup ui
     document.body.appendChild(ui.titleTag);
     document.body.appendChild(ui.btnsTag);
     document.body.appendChild(ui.menuContainerTag);

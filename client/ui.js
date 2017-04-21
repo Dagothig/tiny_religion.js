@@ -116,6 +116,24 @@ class UI {
             .link.target = 'blank';
 
         this.menuContainerTag.appendChild(this.menuTag);
+
+        this.tips = {};
+        this.tipTag = document.createElement('div');
+        this.tipTag.classList.add('tip', 'initial');
+
+        this.tipTextTag = document.createElement('div');
+        this.tipTextTag.classList.add('text');
+        this.tipTag.appendChild(this.tipTextTag);
+
+        this.tipOkTag = document.createElement('button');
+        this.tipOkTag.innerHTML = 'gotcha';
+        this.tipOkTag.onclick = () =>
+            (this.tips[this.tipId] = true) && this.tipTag.classList.add('hidden');
+        this.tipTag.appendChild(this.tipOkTag);
+
+        gameContainer.appendChild(this.tipTag);
+        settings.bind('tips', t =>
+            t ? this.tips = {} : this.tipTag.classList.add('hidden'));
     }
     createGroup(name) {
         let group = {};
@@ -226,8 +244,6 @@ class UI {
                 let text = btn.update && btn.update();
                 if (btn.text !== text) btn.text = btn.textTag.innerHTML = text;
             });
-            this.btnsTag.style.backgroundColor =
-                '#' + game.god.offTint.toString('16').padStart(6, '0');
         }
     }
     show(group) {
@@ -252,6 +268,7 @@ class UI {
         if (window.android) android.updateStatusTint(0x193bcb);
         setTimeout(() =>
             this.titleTag.addEventListener('click', this.onTitle), 1000);
+        this.tipTag.classList.add('hidden');
     }
     hideTitle() {
         this.titleTag.classList.add('hidden');
@@ -260,4 +277,23 @@ class UI {
     }
     pause() { this.btns.forEach(btn => btn.btn.disabled = true); }
     resume() { this.btns.forEach(btn => btn.btn.disabled = false); }
+    tip(id, text) {
+        if (!settings.tips) return;
+        if (this.tips[id]) return;
+        this.tipTag.classList.remove('hidden', 'initial');
+        this.tipTextTag.innerHTML = text;
+        this.tipId = id;
+    }
+    onGodChangePersonality(game) {
+        this.tipOkTag.style.backgroundColor =
+        this.btnsTag.style.backgroundColor =
+            '#' + game.god.offTint.toString('16').padStart(6, '0');
+        this.tip('color', "God has changed color!\nIs God the same?");
+    }
+    onNewGame(game) {
+        this.onGodChangePersonality(game);
+        game.addEventListener('godChangePersonality', () =>
+            this.onGodChangePersonality(game));
+        this.tip('please', "God demands pleasing!\nFind out what pleases God!");
+    }
 }

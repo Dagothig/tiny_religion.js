@@ -205,22 +205,20 @@
         set y(val) { this.displayY = val; }
     }
 
-    requestAnimationFrame(() => {
-        let whitePixel = new PIXI.Graphics();
-        whitePixel.beginFill(0xffffff, 1);
-        whitePixel.drawRect(0, 0, 1, 1);
-        whitePixel.closePath();
-        PIXI.whitePixel = whitePixel.generateTexture();
+    let whitePixel = new PIXI.Graphics();
+    whitePixel.beginFill(0xffffff, 1);
+    whitePixel.drawRect(0, 0, 1, 1);
+    whitePixel.closePath();
+    PIXI.whitePixel = whitePixel.generateTexture();
 
-        let gradient = new PIXI.Graphics();
-        let n = 256;
-        for (let i = 0; i < n; i++) {
-            gradient.beginFill(0xffffff, Math.pow(i/n, 2));
-            gradient.drawRect(0, i, 1, 1);
-            gradient.closePath();
-        }
-        PIXI.gradient = gradient.generateTexture();
-    });
+    let gradient = new PIXI.Graphics();
+    let n = 256;
+    for (let i = 0; i < n; i++) {
+        gradient.beginFill(0xffffff, Math.pow(i/n, 2));
+        gradient.drawRect(0, i, 1, 1);
+        gradient.closePath();
+    }
+    PIXI.gradient = gradient.generateTexture();
 
     PIXI.Color = {
         interpolate: interpolateColors,

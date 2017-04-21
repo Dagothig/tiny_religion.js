@@ -127,5 +127,6 @@ let settings = ((strat, confs) => Object.keys(confs).reduce((settings, key) => {
         short: 6000,
         medium: 12000,
         long: 24000
-    }]
+    }],
+    tips: [true, 'bool', 'usr']
 });

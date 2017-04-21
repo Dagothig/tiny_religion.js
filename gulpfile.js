@@ -12,6 +12,7 @@ gulp.task('client', function(cb) {
         "client/settings.js",
 
         "client/sound.js",
+        "client/state.js",
 
         "client/sfx.js",
         "client/god.js",
@@ -20,6 +21,7 @@ gulp.task('client', function(cb) {
         "client/building.js",
         "client/person.js",
         "client/bird.js",
+        "client/overlay.js",
         "client/game.js",
 
         "client/ui.js",

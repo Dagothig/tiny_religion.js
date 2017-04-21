@@ -74,7 +74,10 @@ class Kingdom {
                 person.building = building;
                 person.movements.length = 0;
             }
-            if (this.isPlayer) sounds.build.play();
+            if (this.isPlayer) {
+                game.god.event(type.name, 0.5, building.position);
+                sounds.build.play();
+            }
             return true;
         }
         return false;
@@ -98,19 +101,25 @@ class Kingdom {
             person.building = bridge;
             person.movements.length = 0;
         }
-        if (this.isPlayer) sounds.build.play();
+        if (this.isPlayer) {
+            game.god.event(Bridge.name, 0.5, bridge.position);
+            sounds.build.play();
+        }
         return true;
     }
 
     forestate(game) {
-        if (this.growing) return false;
+        if (this.growed) return false;
         for (let i = 0; i < game.islands.length * 3; i++) {
             let island = game.islands.rand();
             if (island.kingdom !== this) continue;
             let tree = island.generateBuilding(Tree, false);
             if (!tree) continue;
             game.addChild(tree);
-            if (this.isPlayer) sounds.build.play();
+            if (this.isPlayer) {
+                game.god.event(Tree.name, 0.5, tree.position);
+                sounds.build.play();
+            }
             return true;
         }
         return false;
@@ -131,7 +140,7 @@ class Kingdom {
         game.addChild(felled);
         island.buildings.add(felled);
         if (this.isPlayer) {
-            game.god.event('tree', -1, felled.position);
+            game.god.event('fallingTree', 0.5, felled.position);
             sounds.build.play();
         }
         return true;
@@ -233,4 +242,5 @@ class Kingdom {
     get templed() { return this.summonCount >= this.maxSummon; }
     get maxUnfinished() { return Math.floor(this.islandCount / 2 + 1); }
     get builded() { return this.unfinished >= this.maxUnfinished;  }
+    get growed() { return this.growing >= this.greenHouseCount + 1; }
 }

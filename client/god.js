@@ -63,6 +63,7 @@ class God extends PIXI.Container {
             workshop: () => this.likesManMade * 4,
             greenhouse: () => -this.likesManMade * 3 + this.likesLife * 2,
             tree: () => this.likesLife - this.likesManMade,
+            fallingTree: () => this.likesManMade - this.likesLife,
             sacrifice: () => this.likesAttention - this.likesLife * 2,
             fight: () => -this.likesLife / 150,
             kill: () => -this.likesLife * 2,
@@ -105,6 +106,7 @@ class God extends PIXI.Container {
         if (this.birds.length !== this.birdTarget && Math.random() < 0.01)
             if (this.birds.length < this.birdTarget) {
                 let bird = new Bird(game, this.x, this.y);
+                bird.tint = this.tint;
                 this.birds.add(bird);
                 game.addChild(bird);
                 game.addChild(new SFX(bird.x, bird.y, Summon, bird.z));
@@ -183,7 +185,7 @@ class God extends PIXI.Container {
         if (base) {
             this.likesLife = max;
             this.likesAttention = max / 4;
-            this.likesManMade = min / 4;
+            this.likesManMade = -min;
             this.sincePersonality = God.personalityLength * 4 / 5;
         } else {
             this.likesLife = min + Math.random() * range;
@@ -192,6 +194,7 @@ class God extends PIXI.Container {
         }
         this.birdTarget = 5 + 5 * (this.likesLife / God.preferenceModifier);
         this.updateColor();
+        if (game) game.onGodChangePersonality();
     }
     updateColor(
         life = this.likesLife / God.preferenceModifier,
@@ -204,13 +207,22 @@ class God extends PIXI.Container {
 
         let hue = Math.shift(
             // From 0 to 1; +life+man; from teal-ish blue to purple
+            angle <= 1 ? (8/16 + angle * 4/16) :
+            // From 1 to 2; -life+man; from purple to orange-ish
+            angle <= 2 ? (12/16 + (angle - 1) * 4/16) :
+            // From 2 to 3; -life-man; from orange-ish to green
+            angle <= 3 ? (0/16 + (angle - 2) * 4/16) :
+            // From 3 to 5; -life+man; from green to teal-ish blue
+            (4/16 + (angle - 3) * 4/16), 0, 1);
+        /*let hue = Math.shift(
+            // From 0 to 1; +life+man; from teal-ish blue to purple
             angle <= 1 ? (11/16 + angle * 3/16) :
             // From 1 to 2; -life+man; from purple to orange-ish
             angle <= 2 ? (14/16 + (angle - 1) * 3/16) :
             // From 2 to 3; -life-man; from orange-ish to green
             angle <= 3 ? (1/16 + (angle - 2) * 3/16) :
             // From 3 to 5; -life+man; from green to teal-ish blue
-            (4/16 + (angle - 3) * 7/16), 0, 1);
+            (4/16 + (angle - 3) * 7/16), 0, 1);*/
         let saturation = Math.max(Math.abs(life), Math.abs(man));
         let lightness = attention / (attention < 0 ? 6 : 4) + 0.5;
         this.tint = PIXI.Color.fromHSL(hue, saturation, lightness);

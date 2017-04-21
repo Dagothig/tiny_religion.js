@@ -26,6 +26,7 @@ function newGame(state = undefined) {
             game = null;
         }, state);
         game.attachEvents(container);
+        ui.onNewGame(game);
     });
 }
 
@@ -47,12 +48,11 @@ function restoreTemp() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-    PIXI.loader.load(() => Game.loaded = true);
-    // Remove the preload class from the body
-    setTimeout(() => document.body.classList.remove('preload'), 1000);
 
-    // Setup container & ui
+    // Setup container
     document.body.appendChild(container);
+
+    // Setup ui
     document.body.appendChild(ui.titleTag);
     document.body.appendChild(ui.btnsTag);
     document.body.appendChild(ui.menuContainerTag);
