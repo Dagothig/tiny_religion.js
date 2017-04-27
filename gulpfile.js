@@ -1,7 +1,8 @@
 let gulp = require('gulp')
 
 gulp.task('client', function(cb) {
-    let babel = require('gulp-babel'),
+    let plumber = require('gulp-plumber'),
+        babel = require('gulp-babel'),
         concat = require('gulp-concat'),
         cached = require('gulp-cached'),
         remember = require('gulp-remember');
@@ -27,6 +28,12 @@ gulp.task('client', function(cb) {
         "client/ui.js",
         "client/main.js"
     ])
+    .pipe(plumber({
+        errorHandler: function(e) {
+            console.error(e.name, ':', e.message);
+            this.emit('end');
+        }
+    }))
     .pipe(cached('babel'))
     .pipe(babel({ presets: ['es2015'] }))
     .pipe(remember('babel'))

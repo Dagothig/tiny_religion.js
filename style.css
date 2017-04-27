@@ -50,14 +50,13 @@ canvas {
     image-rendering: pixelated;
 }
 
-.title {
+.splash, .title {
     position: absolute;
     left: 0;
     top: 0;
     right: 0;
     bottom: 0;
     display: flex;
-    background-color: #193bcb;
     align-items: center;
     justify-content: center;
     flex-direction: column;
@@ -65,7 +64,13 @@ canvas {
     text-align: center;
     overflow: hidden;
 }
-.title:before, .title:after {
+.splash {
+    background-color: #484848;
+}
+.title {
+    background-color: #193bcb;
+}
+.splash:after, .title:before, .title:after {
     content: "";
     display: block;
     max-width: 100%;
@@ -74,6 +79,11 @@ canvas {
     background-size: contain;
     background-position: center;
     image-rendering: pixelated;
+}
+.splash:after {
+    width: 512px;
+    height: 512px;
+    background-image: url('images/CoffeeBland.png');
 }
 .title:before {
     width: 640px;

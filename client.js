@@ -3339,8 +3339,7 @@ function restoreTemp() {
     tempState && newGame(tempState);
 }
 
-window.addEventListener("DOMContentLoaded", function () {
-
+function setupGame() {
     // Setup container
     document.body.appendChild(container);
 
@@ -3399,4 +3398,17 @@ window.addEventListener("DOMContentLoaded", function () {
         upd();
         resize();
     });
+}
+window.addEventListener("DOMContentLoaded", function () {
+    var splash = document.createElement('div');
+    splash.classList.add('splash');
+    var handler = function handler() {
+        if (!splash) return;
+        splash.remove();
+        splash = null;
+        setupGame();
+    };
+    splash.onclick = handler;
+    setTimeout(handler, 2000);
+    document.body.appendChild(splash);
 });

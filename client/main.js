@@ -47,8 +47,7 @@ function restoreTemp() {
     tempState && newGame(tempState);
 }
 
-window.addEventListener("DOMContentLoaded", () => {
-
+function setupGame() {
     // Setup container
     document.body.appendChild(container);
 
@@ -106,4 +105,17 @@ window.addEventListener("DOMContentLoaded", () => {
         upd();
         resize();
     });
+}
+window.addEventListener("DOMContentLoaded", () => {
+    let splash = document.createElement('div');
+    splash.classList.add('splash');
+    let handler = () => {
+        if (!splash) return;
+        splash.remove();
+        splash = null;
+        setupGame();
+    }
+    splash.onclick = handler;
+    setTimeout(handler, 2000);
+    document.body.appendChild(splash);
 });
