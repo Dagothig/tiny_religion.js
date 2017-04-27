@@ -437,15 +437,15 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
         }
 
         _createClass(OscillatingSprite, [{
-            key: "update",
+            key: 'update',
             value: function update(delta) {
                 this.time += this.mult * delta;
                 var moment = (Math.sin(this.time) + 1) / 2;
-                _set(OscillatingSprite.prototype.__proto__ || Object.getPrototypeOf(OscillatingSprite.prototype), "x", this.displayX + moment * this.rangeX + this.minX, this);
-                _set(OscillatingSprite.prototype.__proto__ || Object.getPrototypeOf(OscillatingSprite.prototype), "y", this.displayY + moment * this.rangeY + this.minY, this);
+                _set(OscillatingSprite.prototype.__proto__ || Object.getPrototypeOf(OscillatingSprite.prototype), 'x', this.displayX + moment * this.rangeX + this.minX, this);
+                _set(OscillatingSprite.prototype.__proto__ || Object.getPrototypeOf(OscillatingSprite.prototype), 'y', this.displayY + moment * this.rangeY + this.minY, this);
             }
         }, {
-            key: "x",
+            key: 'x',
             get: function get() {
                 return this.displayX;
             },
@@ -453,7 +453,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
                 this.displayX = val;
             }
         }, {
-            key: "y",
+            key: 'y',
             get: function get() {
                 return this.displayY;
             },
@@ -465,20 +465,22 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
         return OscillatingSprite;
     }(Sprite);
 
-    var whitePixel = new PIXI.Graphics();
-    whitePixel.beginFill(0xffffff, 1);
-    whitePixel.drawRect(0, 0, 1, 1);
-    whitePixel.closePath();
-    PIXI.whitePixel = whitePixel.generateTexture();
+    window.addEventListener('DOMContentLoaded', function () {
+        var whitePixel = new PIXI.Graphics();
+        whitePixel.beginFill(0xffffff, 1);
+        whitePixel.drawRect(0, 0, 1, 1);
+        whitePixel.closePath();
+        PIXI.whitePixel = whitePixel.generateTexture();
 
-    var gradient = new PIXI.Graphics();
-    var n = 256;
-    for (var i = 0; i < n; i++) {
-        gradient.beginFill(0xffffff, Math.pow(i / n, 2));
-        gradient.drawRect(0, i, 1, 1);
-        gradient.closePath();
-    }
-    PIXI.gradient = gradient.generateTexture();
+        var gradient = new PIXI.Graphics();
+        var n = 256;
+        for (var i = 0; i < n; i++) {
+            gradient.beginFill(0xffffff, Math.pow(i / n, 2));
+            gradient.drawRect(0, i, 1, 1);
+            gradient.closePath();
+        }
+        PIXI.gradient = gradient.generateTexture();
+    });
 
     PIXI.Color = {
         interpolate: interpolateColors,
@@ -2938,11 +2940,17 @@ var UI = function () {
         this.btnsTag.appendChild(this.groupsTag);
 
         this.trainGroup = this.createGroup('train');
-        this.show(this.trainGroup);
         this.untrainGroup = this.createGroup('untrain');
+        this.trainGroup.radio.onclick = this.untrainGroup.radio.onclick = function () {
+            return _this.tip('jobs', 'villagers make babies and cut trees' + '\npriests make summons and convert' + '\nwarriors fight, builders build');
+        };
         this.buildGroup = this.createGroup('build');
+        this.buildGroup.radio.onclick = function () {
+            return _this.tip('buildings', 'houses raise the pop limit' + '\nbarracks make warriors stronger' + '\ntemples raise the summon limit' + '\nand make priests better' + '\ngreenhouses raise the sapling limit' + '\nbridges discover new islands');
+        };
         this.doGroup = this.createGroup('do');
         this.moveGroup = this.createGroup('move');
+        this.show(this.doGroup);
 
         this.btns = ['train', 'untrain'].reduce(function (btns, act) {
             return [Builder, Warrior, Priest].reduce(function (btns, job) {
@@ -3018,6 +3026,7 @@ var UI = function () {
         this.menuContainerTag.appendChild(this.menuTag);
 
         this.tips = {};
+        this.tipsQueue = [];
         this.tipTag = document.createElement('div');
         this.tipTag.classList.add('tip', 'initial');
 
@@ -3028,13 +3037,16 @@ var UI = function () {
         this.tipOkTag = document.createElement('button');
         this.tipOkTag.innerHTML = 'gotcha';
         this.tipOkTag.onclick = function () {
-            return (_this.tips[_this.tipId] = true) && _this.tipTag.classList.add('hidden');
+            return _this.dequeueTip();
         };
         this.tipTag.appendChild(this.tipOkTag);
 
         gameContainer.appendChild(this.tipTag);
         settings.bind('tips', function (t) {
-            return t ? _this.tips = {} : _this.tipTag.classList.add('hidden');
+            if (t) return;
+            _this.tips = {};
+            _this.tipsQueue = [];
+            _this.tipTag.classList.add('hidden');
         });
     }
 
@@ -3068,7 +3080,7 @@ var UI = function () {
             this.groupSelectTag.appendChild(nameTag);
 
             var children = document.createElement('div');
-            children.classList.add('group', 'hidden');
+            children.classList.add('group');
             this.groupsTag.appendChild(children);
 
             group.radio = radio;
@@ -3229,14 +3241,30 @@ var UI = function () {
         value: function tip(id, text) {
             if (!settings.tips) return;
             if (this.tips[id]) return;
-            this.tipTag.classList.remove('hidden', 'initial');
-            this.tipTextTag.innerHTML = text;
-            this.tipId = id;
+            this.tips[id] = true;
+            this.tipsQueue.push({ id: id, text: text });
+            if (this.tipTag.classList.contains('hidden')) this.dequeueTip();
+        }
+    }, {
+        key: 'dequeueTip',
+        value: function dequeueTip() {
+            var tip = this.tipsQueue.shift();
+            if (tip) {
+                this.tipTag.classList.remove('hidden', 'initial');
+                this.tipTextTag.innerHTML = tip.text;
+            } else {
+                this.tipTag.classList.add('hidden');
+            }
+        }
+    }, {
+        key: 'updateToGodColor',
+        value: function updateToGodColor(game) {
+            this.tipOkTag.style.backgroundColor = this.btnsTag.style.backgroundColor = '#' + game.god.offTint.toString('16').padStart(6, '0');
         }
     }, {
         key: 'onGodChangePersonality',
         value: function onGodChangePersonality(game) {
-            this.tipOkTag.style.backgroundColor = this.btnsTag.style.backgroundColor = '#' + game.god.offTint.toString('16').padStart(6, '0');
+            this.updateToGodColor(game);
             this.tip('color', "God has changed color!\nIs God the same?");
         }
     }, {
@@ -3244,7 +3272,7 @@ var UI = function () {
         value: function onNewGame(game) {
             var _this4 = this;
 
-            this.onGodChangePersonality(game);
+            this.updateToGodColor(game);
             game.addEventListener('godChangePersonality', function () {
                 return _this4.onGodChangePersonality(game);
             });

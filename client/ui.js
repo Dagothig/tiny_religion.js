@@ -25,12 +25,26 @@ class UI {
         this.groupsTag.classList.add('groups');
         this.btnsTag.appendChild(this.groupsTag);
 
+
         this.trainGroup = this.createGroup('train');
-        this.show(this.trainGroup);
         this.untrainGroup = this.createGroup('untrain');
+        this.trainGroup.radio.onclick = this.untrainGroup.radio.onclick = () =>
+            this.tip('jobs',
+                'villagers make babies and cut trees' +
+                '\npriests make summons and convert' +
+                '\nwarriors fight, builders build');
         this.buildGroup = this.createGroup('build');
+        this.buildGroup.radio.onclick = () =>
+            this.tip('buildings',
+                'houses raise the pop limit' +
+                '\nbarracks make warriors stronger' +
+                '\ntemples raise the summon limit' +
+                '\nand make priests better' +
+                '\ngreenhouses raise the sapling limit' +
+                '\nbridges discover new islands');
         this.doGroup = this.createGroup('do');
         this.moveGroup = this.createGroup('move');
+        this.show(this.doGroup);
 
         this.btns =
         ['train', 'untrain'].reduce((btns, act) =>
@@ -118,6 +132,7 @@ class UI {
         this.menuContainerTag.appendChild(this.menuTag);
 
         this.tips = {};
+        this.tipsQueue = [];
         this.tipTag = document.createElement('div');
         this.tipTag.classList.add('tip', 'initial');
 
@@ -127,13 +142,16 @@ class UI {
 
         this.tipOkTag = document.createElement('button');
         this.tipOkTag.innerHTML = 'gotcha';
-        this.tipOkTag.onclick = () =>
-            (this.tips[this.tipId] = true) && this.tipTag.classList.add('hidden');
+        this.tipOkTag.onclick = () => this.dequeueTip();
         this.tipTag.appendChild(this.tipOkTag);
 
         gameContainer.appendChild(this.tipTag);
-        settings.bind('tips', t =>
-            t ? this.tips = {} : this.tipTag.classList.add('hidden'));
+        settings.bind('tips', t => {
+            if (t) return;
+            this.tips = {};
+            this.tipsQueue = [];
+            this.tipTag.classList.add('hidden')
+        });
     }
     createGroup(name) {
         let group = {};
@@ -159,7 +177,7 @@ class UI {
         this.groupSelectTag.appendChild(nameTag);
 
         let children = document.createElement('div');
-        children.classList.add('group', 'hidden');
+        children.classList.add('group');
         this.groupsTag.appendChild(children);
 
         group.radio = radio;
@@ -280,18 +298,30 @@ class UI {
     tip(id, text) {
         if (!settings.tips) return;
         if (this.tips[id]) return;
-        this.tipTag.classList.remove('hidden', 'initial');
-        this.tipTextTag.innerHTML = text;
-        this.tipId = id;
+        this.tips[id] = true;
+        this.tipsQueue.push({ id: id, text: text });
+        if (this.tipTag.classList.contains('hidden')) this.dequeueTip();
     }
-    onGodChangePersonality(game) {
+    dequeueTip() {
+        let tip = this.tipsQueue.shift();
+        if (tip) {
+            this.tipTag.classList.remove('hidden', 'initial');
+            this.tipTextTag.innerHTML = tip.text;
+        } else {
+            this.tipTag.classList.add('hidden');
+        }
+    }
+    updateToGodColor(game) {
         this.tipOkTag.style.backgroundColor =
         this.btnsTag.style.backgroundColor =
             '#' + game.god.offTint.toString('16').padStart(6, '0');
+    }
+    onGodChangePersonality(game) {
+        this.updateToGodColor(game);
         this.tip('color', "God has changed color!\nIs God the same?");
     }
     onNewGame(game) {
-        this.onGodChangePersonality(game);
+        this.updateToGodColor(game);
         game.addEventListener('godChangePersonality', () =>
             this.onGodChangePersonality(game));
         this.tip('please', "God demands pleasing!\nFind out what pleases God!");
