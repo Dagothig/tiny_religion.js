@@ -592,7 +592,6 @@ canvas {
 @media (min-aspect-ratio: 4/3) and (min-width: 600px) {
     .group-select>.check { width: 15rem; }
     .group>div { width: 18rem; }
-    .tip .text { font-size: 4rem; }
 }
 @media (min-aspect-ratio: 4/3) and (min-width: 700px) {
     .group-select>.check { width: 16.5rem; }
