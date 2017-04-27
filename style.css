@@ -79,9 +79,12 @@ canvas {
     image-rendering: pixelated;
 }
 .splash:after {
-    width: 512px;
-    height: 512px;
+    width: 256px;
+    height: 256px;
     background-image: url('images/CoffeeBland.png');
+}
+@media (min-width: 512px) and (min-height: 512px) {
+    .splash:after { width: 512px; height: 512px; }
 }
 .title:before, .title:after {
     max-width: 100%;
