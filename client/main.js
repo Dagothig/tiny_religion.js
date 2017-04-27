@@ -107,8 +107,7 @@ function setupGame() {
     });
 }
 window.addEventListener("DOMContentLoaded", () => {
-    let splash = document.createElement('div');
-    splash.classList.add('splash');
+    let splash = document.querySelector('.splash');
     let handler = () => {
         if (!splash) return;
         splash.remove();
@@ -116,6 +115,6 @@ window.addEventListener("DOMContentLoaded", () => {
         setupGame();
     }
     splash.onclick = handler;
-    setTimeout(handler, 2000);
+    //setTimeout(handler, 2000);
     document.body.appendChild(splash);
 });

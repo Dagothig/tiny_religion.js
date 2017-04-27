@@ -3400,8 +3400,7 @@ function setupGame() {
     });
 }
 window.addEventListener("DOMContentLoaded", function () {
-    var splash = document.createElement('div');
-    splash.classList.add('splash');
+    var splash = document.querySelector('.splash');
     var handler = function handler() {
         if (!splash) return;
         splash.remove();
@@ -3409,6 +3408,6 @@ window.addEventListener("DOMContentLoaded", function () {
         setupGame();
     };
     splash.onclick = handler;
-    setTimeout(handler, 2000);
+    //setTimeout(handler, 2000);
     document.body.appendChild(splash);
 });
