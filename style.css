@@ -515,6 +515,8 @@ canvas {
     flex-direction: row;
     top: 4rem;
     left: 4rem;
+    max-width: calc(100% - 8rem);
+    box-sizing: border-box;
     background: #d6d6d6;
     border: 1px solid #8c8c8c;
     box-shadow: 0 -0.75rem 0 0.25rem #b6b6b6 inset,
@@ -545,12 +547,13 @@ canvas {
     align-self: center;
 }
 .tip .text {
-    white-space: pre;
+    white-space: pre-wrap;
     text-transform: uppercase;
     color: black;
     text-shadow: 0 1px white;
     font-weight: 800;
-    font-size: 4rem;
+    font-size: 3rem;
+    line-height: 1.5em;
 }
 .tip button {
     text-transform: uppercase;
