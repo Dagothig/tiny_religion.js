@@ -3259,7 +3259,7 @@ var UI = function () {
     }, {
         key: 'updateToGodColor',
         value: function updateToGodColor(game) {
-            this.tipOkTag.style.backgroundColor = this.btnsTag.style.backgroundColor = '#' + game.god.offTint.toString('16').padStart(6, '0');
+            this.btnsTag.style.backgroundColor = '#' + game.god.offTint.toString('16').padStart(6, '0');
         }
     }, {
         key: 'onGodChangePersonality',

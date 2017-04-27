@@ -312,7 +312,6 @@ class UI {
         }
     }
     updateToGodColor(game) {
-        this.tipOkTag.style.backgroundColor =
         this.btnsTag.style.backgroundColor =
             '#' + game.god.offTint.toString('16').padStart(6, '0');
     }
