@@ -115,6 +115,6 @@ window.addEventListener("DOMContentLoaded", () => {
         setupGame();
     }
     splash.onclick = handler;
-    //setTimeout(handler, 2000);
+    setTimeout(handler, 2000);
     document.body.appendChild(splash);
 });

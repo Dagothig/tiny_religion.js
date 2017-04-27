@@ -3408,6 +3408,6 @@ window.addEventListener("DOMContentLoaded", function () {
         setupGame();
     };
     splash.onclick = handler;
-    //setTimeout(handler, 2000);
+    setTimeout(handler, 2000);
     document.body.appendChild(splash);
 });
