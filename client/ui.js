@@ -285,7 +285,8 @@ class UI {
                 this.titleTag.classList.add('lost');
             }
         } else sounds.titleScreen.play();
-        if (window.android) android.updateStatusTint(0x193bcb);
+        if (window.android)
+            requestAnimationFrame(() => android.updateStatusTint(0x193bcb));
         setTimeout(() =>
             this.titleTag.addEventListener('click', this.onTitle), 1000);
         this.tipTag.classList.add('hidden');
@@ -331,6 +332,8 @@ class UI {
     updateToGodColor(game) {
         this.btnsTag.style.backgroundColor =
             '#' + game.god.offTint.toString('16').padStart(6, '0');
+        if (window.android)
+            requestAnimationFrame(() => android.updateStatusTint(game.god.offTint));
     }
     onGodChangePersonality(game) {
         this.updateToGodColor(game);

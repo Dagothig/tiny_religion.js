@@ -1152,7 +1152,6 @@ var God = function (_PIXI$Container) {
             var lightness = attention / (attention < 0 ? 6 : 4) + 0.5;
             this.tint = PIXI.Color.fromHSL(hue, saturation, lightness);
             this.offTint = PIXI.Color.fromHSL(hue, saturation * 0.5, lightness * 0.5);
-            if (window.android) android.updateStatusTint(this.offTint);
         }
     }, {
         key: 'event',
@@ -3230,7 +3229,9 @@ var UI = function () {
                     this.titleTag.classList.add('lost');
                 }
             } else sounds.titleScreen.play();
-            if (window.android) android.updateStatusTint(0x193bcb);
+            if (window.android) requestAnimationFrame(function () {
+                return android.updateStatusTint(0x193bcb);
+            });
             setTimeout(function () {
                 return _this4.titleTag.addEventListener('click', _this4.onTitle);
             }, 1000);
@@ -3307,6 +3308,9 @@ var UI = function () {
         key: 'updateToGodColor',
         value: function updateToGodColor(game) {
             this.btnsTag.style.backgroundColor = '#' + game.god.offTint.toString('16').padStart(6, '0');
+            if (window.android) requestAnimationFrame(function () {
+                return android.updateStatusTint(game.god.offTint);
+            });
         }
     }, {
         key: 'onGodChangePersonality',
