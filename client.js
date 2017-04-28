@@ -3448,10 +3448,7 @@ function setupGame() {
         resize();
     });
 }
-var skipSplash = false;
 window.addEventListener("DOMContentLoaded", function () {
-    if (skipSplash) return setupGame();
-
     var splash = document.querySelector('.splash');
     var handler = function handler() {
         if (!splash) return;

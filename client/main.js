@@ -108,10 +108,7 @@ function setupGame() {
         resize();
     });
 }
-let skipSplash = false;
 window.addEventListener("DOMContentLoaded", () => {
-    if (skipSplash) return setupGame();
-
     let splash = document.querySelector('.splash');
     let handler = () => {
         if (!splash) return;
