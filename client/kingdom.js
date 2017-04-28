@@ -61,7 +61,7 @@ class Kingdom {
     }
 
     build(game, type) {
-        if (this.builded) return false;
+        if (this.builded) return 'project limit reached';
         for (let i = 0; i < game.islands.length * 8; i++) {
             let island = game.islands.rand();
             if (island.kingdom !== this) continue;
@@ -78,16 +78,16 @@ class Kingdom {
                 game.god.event(type.name, 0.5, building.position);
                 sounds.build.play();
             }
-            return true;
+            return 'project started';
         }
-        return false;
+        return 'suitable spot not found';
     }
 
     buildBridge(game) {
-        if (this.builded) return false;
+        if (this.builded) return 'project limit reached';
         let index = game.islands.findIndex(i => !i.bridge && i.kingdom === this);
         let island = game.islands[index];
-        if (!island) return false;
+        if (!island) return 'island not owned';
         let bridge = new Building(
             island.x + island.getLocalBounds().right,
             island.y, Bridge, this, island);
@@ -105,11 +105,12 @@ class Kingdom {
             game.god.event(Bridge.name, 0.5, bridge.position);
             sounds.build.play();
         }
-        return true;
+        return 'project started';
     }
 
     forestate(game) {
-        if (this.growed) return false;
+        if (this.growed)
+            return 'sapling limit reached';
         for (let i = 0; i < game.islands.length * 3; i++) {
             let island = game.islands.rand();
             if (island.kingdom !== this) continue;
@@ -120,20 +121,20 @@ class Kingdom {
                 game.god.event(Tree.name, 0.5, tree.position);
                 sounds.build.play();
             }
-            return true;
+            return 'tree planted';
         }
-        return false;
+        return 'suitable spot not found';
     }
     deforest(game) {
         let islands = game.islands.filter(island => island.kingdom === this);
-        if (!this.treeCount) return false;
+        if (!this.treeCount) return 'no tree to cut';
         let trees = null, island = null, maxTries = 10000;
         while (!trees || !trees.length) {
             island = islands[(Math.random() * islands.length)|0];
             trees = island.buildings.filter(b => b.type === Tree && b.finished);
-            if (!maxTries--) return false;
+            if (!maxTries--) return 'tree not found';
         }
-        if (!trees || !trees.length) return false;
+        if (!trees || !trees.length) return 'tree not found';
         let tree = trees[(Math.random() * trees.length)|0];
         tree.shouldRemove = true;
         let felled = new Building(tree.x, tree.y, FallingTree, this, island);
@@ -143,7 +144,7 @@ class Kingdom {
             game.god.event('fallingTree', 0.5, felled.position);
             sounds.build.play();
         }
-        return true;
+        return 'tree felled';
     }
     train(game, job) {
         let person = this.findOfJob(game, Villager);
@@ -154,7 +155,9 @@ class Kingdom {
                 game.god.event(job.name, 1, person.position);
                 sounds[job.name + 'Train'].play();
             }
+            return job.name + ' trained';
         }
+        return 'no villager found';
     }
     untrain(game, job) {
         let person = this.findOfJob(game, job);
@@ -165,23 +168,35 @@ class Kingdom {
                 game.god.event(job.name, -1, person.position);
                 sounds.untrain.play();
             }
+            return job.name + ' untrained';
         }
+        return 'no ' + job.name + ' found';
     }
     doBaby(game) {
+        if (this.housed) return 'pop limit reached';
         if (game.islands.find(island =>
                 island.people.find(person =>
                     person.kingdom === this && person.job === Villager &&
                     Villager.doBaby.call(person, game))) &&
             this.isPlayer
-        ) sounds.baby.play();
+        ) {
+            sounds.baby.play();
+            return 'baby made';
+        }
+        return 'baby making failed';
     }
     attemptSummon(game) {
+        if (this.templed) return 'pop limit reached';
         if (game.islands.find(island =>
             island.people.find(person =>
                 person.kingdom === this && person.job === Priest &&
                 Priest.doSummon.call(person, game))) &&
             this.isPlayer
-        ) sounds.summon.play();
+        ) {
+            sounds.summon.play();
+            return 'summon successful';
+        }
+        return 'summon failed';
     }
     pray(game) {
         let c = 0, p;

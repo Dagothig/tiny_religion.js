@@ -157,7 +157,7 @@ class God extends PIXI.Container {
         let islands = game.islands.filter(i =>
             i.people.find(p => p.kingdom === game.player));
         let island = islands.rand();
-        if (!island) return;
+        if (!island) return 'nobody do sacrifice';
         let dude;
         do { dude = island.people.rand() } while (!dude.kingdom === game.player);
         this.event('sacrifice', 1, dude.position);
@@ -165,6 +165,7 @@ class God extends PIXI.Container {
         sounds.lightning.play();
         game.overlay.flash(8);
         dude.die(game);
+        return 'boom!';
     }
 
     feeling(goal) {

@@ -542,6 +542,41 @@ canvas {
 }
 .tip button:focus { outline: none; }
 
+.notify {
+    position: absolute;
+    top: 4rem;
+    left: 4rem;
+    right: 4rem;
+    z-index: 1;
+    color: white;
+    text-transform: uppercase;
+    white-space: pre-wrap;
+    text-align: left;
+    pointer-events: none;
+    user-select: none;
+}
+.notify * {
+    position: absolute;
+}
+@keyframes notification {
+    0% {
+        transform: translateY(1rem);
+        opacity: 0;
+    }
+    10% {
+        transform: translateY(0rem);
+        opacity: 1;
+    }
+    75% {
+        transform: translateY(0rem);
+        opacity: 0.3;
+    }
+    100% {
+        transform: translateY(-1rem);
+        opacity: 0;
+    }
+}
+
 /* RESPONSIVE! */
 @media (max-width:640px) and (max-aspect-ratio: 640/600) {
     .title:before, .title:after { height: 0; }

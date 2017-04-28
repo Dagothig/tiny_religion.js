@@ -145,13 +145,15 @@ class UI {
         this.tipOkTag.onclick = () => this.dequeueTip();
         this.tipTag.appendChild(this.tipOkTag);
 
-        gameContainer.appendChild(this.tipTag);
         settings.bind('tips', t => {
             if (t) return;
             this.tips = {};
             this.tipsQueue = [];
             this.tipTag.classList.add('hidden')
         });
+
+        this.notifyTag = document.createElement('div');
+        this.notifyTag.classList.add('notify');
     }
     createGroup(name) {
         let group = {};
@@ -192,7 +194,7 @@ class UI {
         let btn = document.createElement('button');
         btn.classList.add('btn');
         btn.classList.add.apply(btn.classList, classes);
-        btn.onclick = onclick;
+        btn.onclick = () => this.notify(onclick());
         tag.appendChild(btn);
 
         let textTag = document.createElement('span');
@@ -310,6 +312,21 @@ class UI {
         } else {
             this.tipTag.classList.add('hidden');
         }
+    }
+    notify(str) {
+        let notif = document.createElement('div');
+        notif.innerHTML = str;
+        notif.addEventListener('animationend', () => notif.remove());
+        notif.style.animation = 'notification 2s linear';
+        this.notifyTag.appendChild(notif);
+
+        let height = notif.clientHeight;
+        let children = Array.from(this.notifyTag.children).filter(c => c !== notif);
+
+        notif.style.top =
+            [0].concat(children.map(c => c.offsetTop + c.clientHeight))
+            .filter(p => children.every(c => p >= c.offsetTop + c.clientHeight || p + height <= c.offsetTop))
+            .sort((a, b) => a - b)[0] + 'px';
     }
     updateToGodColor(game) {
         this.btnsTag.style.backgroundColor =

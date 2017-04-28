@@ -652,6 +652,7 @@ var settings = function (strat, confs) {
         return value;
     }
 }, {
+    tips: [true, 'bool', 'usr'],
     tooltips: [true, 'bool', 'usr'],
     music: [true, 'bool', 'usr'],
     sound: [true, 'bool', 'usr'],
@@ -660,8 +661,7 @@ var settings = function (strat, confs) {
         short: 6000,
         medium: 12000,
         long: 24000
-    }],
-    tips: [true, 'bool', 'usr']
+    }]
 });
 'use strict';
 
@@ -1076,7 +1076,7 @@ var God = function (_PIXI$Container) {
                 });
             });
             var island = islands.rand();
-            if (!island) return;
+            if (!island) return 'nobody do sacrifice';
             var dude = void 0;
             do {
                 dude = island.people.rand();
@@ -1086,6 +1086,7 @@ var God = function (_PIXI$Container) {
             sounds.lightning.play();
             game.overlay.flash(8);
             dude.die(game);
+            return 'boom!';
         }
     }, {
         key: 'feeling',
@@ -1309,7 +1310,7 @@ var Kingdom = function () {
     }, {
         key: 'build',
         value: function build(game, type) {
-            if (this.builded) return false;
+            if (this.builded) return 'project limit reached';
             for (var i = 0; i < game.islands.length * 8; i++) {
                 var island = game.islands.rand();
                 if (island.kingdom !== this) continue;
@@ -1328,21 +1329,21 @@ var Kingdom = function () {
                     game.god.event(type.name, 0.5, building.position);
                     sounds.build.play();
                 }
-                return true;
+                return 'project started';
             }
-            return false;
+            return 'suitable spot not found';
         }
     }, {
         key: 'buildBridge',
         value: function buildBridge(game) {
             var _this3 = this;
 
-            if (this.builded) return false;
+            if (this.builded) return 'project limit reached';
             var index = game.islands.findIndex(function (i) {
                 return !i.bridge && i.kingdom === _this3;
             });
             var island = game.islands[index];
-            if (!island) return false;
+            if (!island) return 'island not owned';
             var bridge = new Building(island.x + island.getLocalBounds().right, island.y, Bridge, this, island);
             game.addChild(bridge);
             island.buildings.add(bridge);
@@ -1360,12 +1361,12 @@ var Kingdom = function () {
                 game.god.event(Bridge.name, 0.5, bridge.position);
                 sounds.build.play();
             }
-            return true;
+            return 'project started';
         }
     }, {
         key: 'forestate',
         value: function forestate(game) {
-            if (this.growed) return false;
+            if (this.growed) return 'sapling limit reached';
             for (var i = 0; i < game.islands.length * 3; i++) {
                 var island = game.islands.rand();
                 if (island.kingdom !== this) continue;
@@ -1376,9 +1377,9 @@ var Kingdom = function () {
                     game.god.event(Tree.name, 0.5, tree.position);
                     sounds.build.play();
                 }
-                return true;
+                return 'tree planted';
             }
-            return false;
+            return 'suitable spot not found';
         }
     }, {
         key: 'deforest',
@@ -1388,7 +1389,7 @@ var Kingdom = function () {
             var islands = game.islands.filter(function (island) {
                 return island.kingdom === _this4;
             });
-            if (!this.treeCount) return false;
+            if (!this.treeCount) return 'no tree to cut';
             var trees = null,
                 island = null,
                 maxTries = 10000;
@@ -1397,9 +1398,9 @@ var Kingdom = function () {
                 trees = island.buildings.filter(function (b) {
                     return b.type === Tree && b.finished;
                 });
-                if (!maxTries--) return false;
+                if (!maxTries--) return 'tree not found';
             }
-            if (!trees || !trees.length) return false;
+            if (!trees || !trees.length) return 'tree not found';
             var tree = trees[Math.random() * trees.length | 0];
             tree.shouldRemove = true;
             var felled = new Building(tree.x, tree.y, FallingTree, this, island);
@@ -1409,7 +1410,7 @@ var Kingdom = function () {
                 game.god.event('fallingTree', 0.5, felled.position);
                 sounds.build.play();
             }
-            return true;
+            return 'tree felled';
         }
     }, {
         key: 'train',
@@ -1422,7 +1423,9 @@ var Kingdom = function () {
                     game.god.event(job.name, 1, person.position);
                     sounds[job.name + 'Train'].play();
                 }
+                return job.name + ' trained';
             }
+            return 'no villager found';
         }
     }, {
         key: 'untrain',
@@ -1435,29 +1438,41 @@ var Kingdom = function () {
                     game.god.event(job.name, -1, person.position);
                     sounds.untrain.play();
                 }
+                return job.name + ' untrained';
             }
+            return 'no ' + job.name + ' found';
         }
     }, {
         key: 'doBaby',
         value: function doBaby(game) {
             var _this5 = this;
 
+            if (this.housed) return 'pop limit reached';
             if (game.islands.find(function (island) {
                 return island.people.find(function (person) {
                     return person.kingdom === _this5 && person.job === Villager && Villager.doBaby.call(person, game);
                 });
-            }) && this.isPlayer) sounds.baby.play();
+            }) && this.isPlayer) {
+                sounds.baby.play();
+                return 'baby made';
+            }
+            return 'baby making failed';
         }
     }, {
         key: 'attemptSummon',
         value: function attemptSummon(game) {
             var _this6 = this;
 
+            if (this.templed) return 'pop limit reached';
             if (game.islands.find(function (island) {
                 return island.people.find(function (person) {
                     return person.kingdom === _this6 && person.job === Priest && Priest.doSummon.call(person, game);
                 });
-            }) && this.isPlayer) sounds.summon.play();
+            }) && this.isPlayer) {
+                sounds.summon.play();
+                return 'summon successful';
+            }
+            return 'summon failed';
         }
     }, {
         key: 'pray',
@@ -3041,13 +3056,15 @@ var UI = function () {
         };
         this.tipTag.appendChild(this.tipOkTag);
 
-        gameContainer.appendChild(this.tipTag);
         settings.bind('tips', function (t) {
             if (t) return;
             _this.tips = {};
             _this.tipsQueue = [];
             _this.tipTag.classList.add('hidden');
         });
+
+        this.notifyTag = document.createElement('div');
+        this.notifyTag.classList.add('notify');
     }
 
     _createClass(UI, [{
@@ -3092,6 +3109,8 @@ var UI = function () {
     }, {
         key: 'createBtn',
         value: function createBtn(parent, onclick, onupdate, name) {
+            var _this3 = this;
+
             var tag = document.createElement('div');
 
             var btn = document.createElement('button');
@@ -3102,7 +3121,9 @@ var UI = function () {
             }
 
             btn.classList.add.apply(btn.classList, classes);
-            btn.onclick = onclick;
+            btn.onclick = function () {
+                return _this3.notify(onclick());
+            };
             tag.appendChild(btn);
 
             var textTag = document.createElement('span');
@@ -3193,7 +3214,7 @@ var UI = function () {
     }, {
         key: 'showTitle',
         value: function showTitle() {
-            var _this3 = this;
+            var _this4 = this;
 
             var win = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 
@@ -3211,7 +3232,7 @@ var UI = function () {
             } else sounds.titleScreen.play();
             if (window.android) android.updateStatusTint(0x193bcb);
             setTimeout(function () {
-                return _this3.titleTag.addEventListener('click', _this3.onTitle);
+                return _this4.titleTag.addEventListener('click', _this4.onTitle);
             }, 1000);
             this.tipTag.classList.add('hidden');
         }
@@ -3257,6 +3278,32 @@ var UI = function () {
             }
         }
     }, {
+        key: 'notify',
+        value: function notify(str) {
+            var notif = document.createElement('div');
+            notif.innerHTML = str;
+            notif.addEventListener('animationend', function () {
+                return notif.remove();
+            });
+            notif.style.animation = 'notification 2s linear';
+            this.notifyTag.appendChild(notif);
+
+            var height = notif.clientHeight;
+            var children = Array.from(this.notifyTag.children).filter(function (c) {
+                return c !== notif;
+            });
+
+            notif.style.top = [0].concat(children.map(function (c) {
+                return c.offsetTop + c.clientHeight;
+            })).filter(function (p) {
+                return children.every(function (c) {
+                    return p >= c.offsetTop + c.clientHeight || p + height <= c.offsetTop;
+                });
+            }).sort(function (a, b) {
+                return a - b;
+            })[0] + 'px';
+        }
+    }, {
         key: 'updateToGodColor',
         value: function updateToGodColor(game) {
             this.btnsTag.style.backgroundColor = '#' + game.god.offTint.toString('16').padStart(6, '0');
@@ -3270,11 +3317,11 @@ var UI = function () {
     }, {
         key: 'onNewGame',
         value: function onNewGame(game) {
-            var _this4 = this;
+            var _this5 = this;
 
             this.updateToGodColor(game);
             game.addEventListener('godChangePersonality', function () {
-                return _this4.onGodChangePersonality(game);
+                return _this5.onGodChangePersonality(game);
             });
             this.tip('please', "God demands pleasing!\nFind out what pleases God!");
         }
@@ -3347,6 +3394,8 @@ function setupGame() {
     document.body.appendChild(ui.titleTag);
     document.body.appendChild(ui.btnsTag);
     document.body.appendChild(ui.menuContainerTag);
+    container.appendChild(ui.tipTag);
+    container.appendChild(ui.notifyTag);
     ui.showTitle();
 
     // Setup renderer
@@ -3399,7 +3448,10 @@ function setupGame() {
         resize();
     });
 }
+var skipSplash = false;
 window.addEventListener("DOMContentLoaded", function () {
+    if (skipSplash) return setupGame();
+
     var splash = document.querySelector('.splash');
     var handler = function handler() {
         if (!splash) return;

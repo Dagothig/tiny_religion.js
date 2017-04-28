@@ -55,6 +55,8 @@ function setupGame() {
     document.body.appendChild(ui.titleTag);
     document.body.appendChild(ui.btnsTag);
     document.body.appendChild(ui.menuContainerTag);
+    container.appendChild(ui.tipTag);
+    container.appendChild(ui.notifyTag);
     ui.showTitle();
 
     // Setup renderer
@@ -106,7 +108,10 @@ function setupGame() {
         resize();
     });
 }
+let skipSplash = false;
 window.addEventListener("DOMContentLoaded", () => {
+    if (skipSplash) return setupGame();
+
     let splash = document.querySelector('.splash');
     let handler = () => {
         if (!splash) return;
