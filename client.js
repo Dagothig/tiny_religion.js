@@ -3450,6 +3450,7 @@ function setupGame() {
 }
 window.addEventListener("DOMContentLoaded", function () {
     var splash = document.querySelector('.splash');
+    if (!splash) return setupGame();
     var handler = function handler() {
         if (!splash) return;
         splash.remove();

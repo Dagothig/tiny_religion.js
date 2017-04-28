@@ -110,6 +110,7 @@ function setupGame() {
 }
 window.addEventListener("DOMContentLoaded", () => {
     let splash = document.querySelector('.splash');
+    if (!splash) return setupGame();
     let handler = () => {
         if (!splash) return;
         splash.remove();
