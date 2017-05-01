@@ -104,9 +104,8 @@ class Person extends PIXI.AnimatedSprite {
             this.job.findNextTarget.call(this, game)
         ) return;
         this.movements.push(this.island.getRandomPoint());
-        let wantsToLeave = (Math.random() * (game.islands.length + 10))|0;
-        if (wantsToLeave < game.islands.length)
-            this.moveTo(game.islands, wantsToLeave);
+        if (Math.random() < 0.25)
+            this.moveTo(game.islands, (Math.random() * game.islands.length)|0);
     }
     moveTo(islands, index) {
         let dir = Math.sign(index - this.island.index);

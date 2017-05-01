@@ -242,10 +242,11 @@ class Game extends PIXI.Container {
                 }
             }
             if (i + 1 < count)
-                island.buildings.add(island.bridge = new Building(
+                island.generateBridge();
+                /*island.buildings.add(island.bridge = new Building(
                     island.x + island.getLocalBounds().right, island.y,
                     Bridge, this.ai, island, true
-                ));
+                ));*/
             this.addIsland(island);
         }
     }

@@ -62,11 +62,10 @@ class Kingdom {
 
     build(game, type) {
         if (this.builded) return 'project limit reached';
-        for (let i = 0; i < game.islands.length * 8; i++) {
-            let island = game.islands.rand();
-            if (island.kingdom !== this) continue;
-            let building = island.generateBuilding(type, false);
-            if (!building) continue;
+        if (game.islands.slice(0).sort(Math.random).find(isl => {
+            if (isl.kingdom !== this) return;
+            let building = isl.generateBuilding(type, false);
+            if (!building) return;
             game.addChild(building);
             for (let j = 0; j < 3; j++) {
                 let person = this.findOfJob(game, Builder, p => !p.building);
@@ -78,9 +77,9 @@ class Kingdom {
                 game.god.event(type.name, 0.5, building.position);
                 sounds.build.play();
             }
-            return 'project started';
-        }
-        return 'suitable spot not found';
+            return true;
+        })) return 'project started';
+        else return 'no suitable spot found';
     }
 
     buildBridge(game) {
@@ -88,12 +87,13 @@ class Kingdom {
         let index = game.islands.findIndex(i => !i.bridge && i.kingdom === this);
         let island = game.islands[index];
         if (!island) return 'island not owned';
-        let bridge = new Building(
+        let bridge = island.generateBridge(false);
+        /*let bridge = new Building(
             island.x + island.getLocalBounds().right,
             island.y, Bridge, this, island);
-        game.addChild(bridge);
         island.buildings.add(bridge);
-        island.bridge = bridge;
+        island.bridge = bridge;*/
+        game.addChild(bridge);
         if (index === game.islands.length - 1) game.generateNewIsland();
         for (let j = 0; j < 3; j++) {
             let person = this.findOfJob(game, Builder, p => !p.building);
@@ -183,7 +183,7 @@ class Kingdom {
             sounds.baby.play();
             return 'baby made';
         }
-        return 'baby making failed';
+        return 'baby attempted';
     }
     attemptSummon(game) {
         if (this.templed) return 'pop limit reached';
@@ -196,7 +196,7 @@ class Kingdom {
             sounds.summon.play();
             return 'summon successful';
         }
-        return 'summon failed';
+        return 'summon attempted';
     }
     pray(game) {
         let c = 0, p;
@@ -213,38 +213,39 @@ class Kingdom {
             sounds.pray.play(null, prop);
             game.god.event('pray', prop, p.position);
         }
+        return 'praying';
     }
     sendAttack(game) {
         let mean = game.islands.filter(isl => isl.kingdom !== this).rand();
-        if (!mean) return false;
+        if (!mean) return 'no enemy';
         game.islands.forEach(island =>
             island.kingdom === this &&
             island.people.forEach(person =>
                 person.kingdom === this &&
                 person.job === Warrior &&
                 person.moveTo(game.islands, mean.index)));
-        return true;
+        return 'warriors sent';
     }
     sendConvert(game) {
         let mean = game.islands.filter(isl => isl.kingdom !== this).rand();
-        if (!mean) return false;
+        if (!mean) return 'no enemy';
         game.islands.forEach(island =>
             island.kingdom === this &&
             island.people.forEach(person =>
                 person.kingdom === this &&
                 person.job === Priest &&
                 person.moveTo(game.islands, mean.index)));
-        return true;
+        return 'priests sent';
     }
     sendRetreat(game) {
         let ally = game.islands.filter(isl => isl.kingdom === this).rand();
-        if (!ally) return false;
+        if (!ally) return 'no one to retreat';
         game.islands.forEach(island =>
             island.kingdom !== this &&
             island.people.forEach(person =>
                 person.kingdom === this &&
                 person.moveTo(game.islands, ally.index)));
-        return true;
+        return 'retreating';
     }
 
     get maxPop() {

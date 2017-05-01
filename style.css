@@ -22,6 +22,8 @@ button {
     display: block;
     padding: 0;
     border: none;
+}
+button:not(:disabled) {
     cursor: pointer;
 }
 a {
@@ -259,6 +261,7 @@ canvas {
     margin-top: -1.5rem;
 }
 .btn:disabled {
+    background: none;
     filter: brightness(0.6) grayscale(1) !important;
 }
 .btn:disabled:after, .btn:disabled:before { animation-duration: 1000000s; }
@@ -282,6 +285,12 @@ canvas {
     background-image: url('images/Arrow.png');
     background-repeat: no-repeat;
     background-position: center;
+}
+.train span:first-child, .untrain span:first-child {
+    padding-right: 32px;
+}
+.train span:last-child, .untrain span:last-child {
+    padding-left: 32px;
 }
 .train:before, .untrain:before,
 .baby:before, .summon:before,
@@ -516,7 +525,8 @@ canvas {
 }
 @media (min-aspect-ratio: 4/3) {
     .tip { flex-direction: row; }
-    .tip .text { padding-right: 0; }
+    /* Gotta set the padding bottom in case we are exactly 4/3 */
+    .tip .text { padding-bottom: 4rem; padding-right: 0; }
 }
 .tip * {
     text-transform: uppercase;
@@ -622,6 +632,11 @@ canvas {
     }
 }
 
+@media (max-width: 380px), (max-height: 380px) {
+    .tooltip { font-size: 2rem; }
+    .tip button { font-size: 3.5rem; }
+    .tip .text { font-size: 2.5rem; }
+}
 @media (min-width: 840px) and (min-height: 840px) {
     html { font-size: 6px; }
 }
@@ -629,6 +644,10 @@ canvas {
     html { font-size: 8px; }
 }
 
+@media (max-aspect-ratio: 4/3) and (max-width: 280px),
+    (min-aspect-ratio: 4/3) and (max-height: 280px) {
+    .group-select>.check { font-size: 2.5rem; }
+}
 @media (min-aspect-ratio: 4/3) and (min-width: 500px) {
     .group-select>.check { width: 13.5rem; }
     .group>div { width: 16rem; }

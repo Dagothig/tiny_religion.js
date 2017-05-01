@@ -1309,44 +1309,47 @@ var Kingdom = function () {
     }, {
         key: 'build',
         value: function build(game, type) {
+            var _this3 = this;
+
             if (this.builded) return 'project limit reached';
-            for (var i = 0; i < game.islands.length * 8; i++) {
-                var island = game.islands.rand();
-                if (island.kingdom !== this) continue;
-                var building = island.generateBuilding(type, false);
-                if (!building) continue;
+            if (game.islands.slice(0).sort(Math.random).find(function (isl) {
+                if (isl.kingdom !== _this3) return;
+                var building = isl.generateBuilding(type, false);
+                if (!building) return;
                 game.addChild(building);
                 for (var j = 0; j < 3; j++) {
-                    var person = this.findOfJob(game, Builder, function (p) {
+                    var person = _this3.findOfJob(game, Builder, function (p) {
                         return !p.building;
                     });
                     if (!person) break;
                     person.building = building;
                     person.movements.length = 0;
                 }
-                if (this.isPlayer) {
+                if (_this3.isPlayer) {
                     game.god.event(type.name, 0.5, building.position);
                     sounds.build.play();
                 }
-                return 'project started';
-            }
-            return 'suitable spot not found';
+                return true;
+            })) return 'project started';else return 'no suitable spot found';
         }
     }, {
         key: 'buildBridge',
         value: function buildBridge(game) {
-            var _this3 = this;
+            var _this4 = this;
 
             if (this.builded) return 'project limit reached';
             var index = game.islands.findIndex(function (i) {
-                return !i.bridge && i.kingdom === _this3;
+                return !i.bridge && i.kingdom === _this4;
             });
             var island = game.islands[index];
             if (!island) return 'island not owned';
-            var bridge = new Building(island.x + island.getLocalBounds().right, island.y, Bridge, this, island);
-            game.addChild(bridge);
+            var bridge = island.generateBridge(false);
+            /*let bridge = new Building(
+                island.x + island.getLocalBounds().right,
+                island.y, Bridge, this, island);
             island.buildings.add(bridge);
-            island.bridge = bridge;
+            island.bridge = bridge;*/
+            game.addChild(bridge);
             if (index === game.islands.length - 1) game.generateNewIsland();
             for (var j = 0; j < 3; j++) {
                 var person = this.findOfJob(game, Builder, function (p) {
@@ -1383,10 +1386,10 @@ var Kingdom = function () {
     }, {
         key: 'deforest',
         value: function deforest(game) {
-            var _this4 = this;
+            var _this5 = this;
 
             var islands = game.islands.filter(function (island) {
-                return island.kingdom === _this4;
+                return island.kingdom === _this5;
             });
             if (!this.treeCount) return 'no tree to cut';
             var trees = null,
@@ -1444,45 +1447,45 @@ var Kingdom = function () {
     }, {
         key: 'doBaby',
         value: function doBaby(game) {
-            var _this5 = this;
+            var _this6 = this;
 
             if (this.housed) return 'pop limit reached';
             if (game.islands.find(function (island) {
                 return island.people.find(function (person) {
-                    return person.kingdom === _this5 && person.job === Villager && Villager.doBaby.call(person, game);
+                    return person.kingdom === _this6 && person.job === Villager && Villager.doBaby.call(person, game);
                 });
             }) && this.isPlayer) {
                 sounds.baby.play();
                 return 'baby made';
             }
-            return 'baby making failed';
+            return 'baby attempted';
         }
     }, {
         key: 'attemptSummon',
         value: function attemptSummon(game) {
-            var _this6 = this;
+            var _this7 = this;
 
             if (this.templed) return 'pop limit reached';
             if (game.islands.find(function (island) {
                 return island.people.find(function (person) {
-                    return person.kingdom === _this6 && person.job === Priest && Priest.doSummon.call(person, game);
+                    return person.kingdom === _this7 && person.job === Priest && Priest.doSummon.call(person, game);
                 });
             }) && this.isPlayer) {
                 sounds.summon.play();
                 return 'summon successful';
             }
-            return 'summon failed';
+            return 'summon attempted';
         }
     }, {
         key: 'pray',
         value: function pray(game) {
-            var _this7 = this;
+            var _this8 = this;
 
             var c = 0,
                 p = void 0;
             game.islands.forEach(function (island) {
                 return island.people.forEach(function (person) {
-                    if (person.kingdom !== _this7) return;
+                    if (person.kingdom !== _this8) return;
                     if (person.pray()) {
                         c++;
                         if (!p) p = person;
@@ -1494,54 +1497,55 @@ var Kingdom = function () {
                 sounds.pray.play(null, prop);
                 game.god.event('pray', prop, p.position);
             }
+            return 'praying';
         }
     }, {
         key: 'sendAttack',
         value: function sendAttack(game) {
-            var _this8 = this;
-
-            var mean = game.islands.filter(function (isl) {
-                return isl.kingdom !== _this8;
-            }).rand();
-            if (!mean) return false;
-            game.islands.forEach(function (island) {
-                return island.kingdom === _this8 && island.people.forEach(function (person) {
-                    return person.kingdom === _this8 && person.job === Warrior && person.moveTo(game.islands, mean.index);
-                });
-            });
-            return true;
-        }
-    }, {
-        key: 'sendConvert',
-        value: function sendConvert(game) {
             var _this9 = this;
 
             var mean = game.islands.filter(function (isl) {
                 return isl.kingdom !== _this9;
             }).rand();
-            if (!mean) return false;
+            if (!mean) return 'no enemy';
             game.islands.forEach(function (island) {
                 return island.kingdom === _this9 && island.people.forEach(function (person) {
-                    return person.kingdom === _this9 && person.job === Priest && person.moveTo(game.islands, mean.index);
+                    return person.kingdom === _this9 && person.job === Warrior && person.moveTo(game.islands, mean.index);
                 });
             });
-            return true;
+            return 'warriors sent';
+        }
+    }, {
+        key: 'sendConvert',
+        value: function sendConvert(game) {
+            var _this10 = this;
+
+            var mean = game.islands.filter(function (isl) {
+                return isl.kingdom !== _this10;
+            }).rand();
+            if (!mean) return 'no enemy';
+            game.islands.forEach(function (island) {
+                return island.kingdom === _this10 && island.people.forEach(function (person) {
+                    return person.kingdom === _this10 && person.job === Priest && person.moveTo(game.islands, mean.index);
+                });
+            });
+            return 'priests sent';
         }
     }, {
         key: 'sendRetreat',
         value: function sendRetreat(game) {
-            var _this10 = this;
+            var _this11 = this;
 
             var ally = game.islands.filter(function (isl) {
-                return isl.kingdom === _this10;
+                return isl.kingdom === _this11;
             }).rand();
-            if (!ally) return false;
+            if (!ally) return 'no one to retreat';
             game.islands.forEach(function (island) {
-                return island.kingdom !== _this10 && island.people.forEach(function (person) {
-                    return person.kingdom === _this10 && person.moveTo(game.islands, ally.index);
+                return island.kingdom !== _this11 && island.people.forEach(function (person) {
+                    return person.kingdom === _this11 && person.moveTo(game.islands, ally.index);
                 });
             });
-            return true;
+            return 'retreating';
         }
     }, {
         key: 'maxPop',
@@ -1663,6 +1667,17 @@ var Island = function (_PIXI$Container) {
             for (var i = 0; i < count; i++) {
                 this.generateBuilding.apply(this, args);
             }
+        }
+    }, {
+        key: 'generateBridge',
+        value: function generateBridge() {
+            var finished = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+
+            if (this.bridge) throw 'bridge already exists';
+            var bridge = new Building(this.x + this.getLocalBounds().right, this.y, Bridge, this.kingdom, this, finished);
+            this.buildings.add(bridge);
+            this.bridge = bridge;
+            return bridge;
         }
     }, {
         key: 'generateForest',
@@ -1977,11 +1992,11 @@ var Bridge = new BuildingType('bridge', 'images/Bridge.png', -10, -47, -30, fals
     }
 }),
     House = new BuildingType('house', 'images/House.png', 0, 0, 16, true, 20, 2000),
-    Barracks = new BuildingType('barracks', 'images/Barracks.png', 0, 0, 16, true, 35, 10000),
-    Workshop = new BuildingType('workshop', 'images/Workshop.png', 0, 0, 16, true, 35, 10000),
-    Temple = new BuildingType('temple', 'images/Temple.png', 0, 0, 16, true, 35, 10000),
-    GreenHouse = new BuildingType('greenHouse', 'images/GreenHouse.png', 0, 0, 16, true, 35, 10000),
-    Tree = new BuildingType('tree', 'images/Tree.png', 0, 4, 0, false, 15, 1000, {
+    Barracks = new BuildingType('barracks', 'images/Barracks.png', 0, 0, 16, true, 30, 10000),
+    Workshop = new BuildingType('workshop', 'images/Workshop.png', 0, 0, 16, true, 30, 10000),
+    Temple = new BuildingType('temple', 'images/Temple.png', 0, 0, 16, true, 30, 10000),
+    GreenHouse = new BuildingType('greenHouse', 'images/GreenHouse.png', 0, 0, 16, true, 30, 10000),
+    Tree = new BuildingType('tree', 'images/Tree.png', 0, 4, 0, false, 10, 1000, {
     building: function building() {
         this.rotation = (Math.random() - 0.5) * Math.PI / 16;
     },
@@ -1989,7 +2004,7 @@ var Bridge = new BuildingType('bridge', 'images/Bridge.png', -10, -47, -30, fals
         if (!this.finished) this.progressBuild(1, game);
     }
 }),
-    FallingTree = new BuildingType('fallingTree', 'images/FallingTree.png', 0, 4, 0, false, 15, 250, {
+    FallingTree = new BuildingType('fallingTree', 'images/FallingTree.png', 0, 4, 0, false, 10, 250, {
     onFinished: function onFinished() {
         this.shouldRemove = true;
     }
@@ -2122,8 +2137,7 @@ var Person = function (_PIXI$AnimatedSprite) {
         value: function findNextTarget(game) {
             if (this.job.findNextTarget && this.job.findNextTarget.call(this, game)) return;
             this.movements.push(this.island.getRandomPoint());
-            var wantsToLeave = Math.random() * (game.islands.length + 10) | 0;
-            if (wantsToLeave < game.islands.length) this.moveTo(game.islands, wantsToLeave);
+            if (Math.random() < 0.25) this.moveTo(game.islands, Math.random() * game.islands.length | 0);
         }
     }, {
         key: 'moveTo',
@@ -2742,7 +2756,11 @@ var Game = function (_PIXI$Container) {
                         island.generateCity();
                     }
                 }
-                if (i + 1 < count) island.buildings.add(island.bridge = new Building(island.x + island.getLocalBounds().right, island.y, Bridge, this.ai, island, true));
+                if (i + 1 < count) island.generateBridge();
+                /*island.buildings.add(island.bridge = new Building(
+                    island.x + island.getLocalBounds().right, island.y,
+                    Bridge, this.ai, island, true
+                ));*/
                 this.addIsland(island);
             }
         }
@@ -2977,9 +2995,9 @@ var UI = function () {
                 btns.add(_this.createBtn(_this[act + 'Group'].children, function () {
                     return _this.game.player[act](_this.game, job);
                 }, act === 'train' ? function () {
-                    return v() + '   ' + j();
+                    return [v(), j()];
                 } : function () {
-                    return j() + '   ' + v();
+                    return [j(), v()];
                 }, job.name, act, job.name));
                 return btns;
             }, btns);
@@ -3125,9 +3143,6 @@ var UI = function () {
             };
             tag.appendChild(btn);
 
-            var textTag = document.createElement('span');
-            btn.appendChild(textTag);
-
             var tooltip = document.createElement('div');
             tooltip.innerHTML = name;
             tooltip.classList.add('tooltip');
@@ -3138,9 +3153,8 @@ var UI = function () {
             return {
                 tag: tag,
                 btn: btn,
-                textTag: textTag,
+                textTags: [],
                 tooltip: tooltip,
-                text: '',
                 update: onupdate
             };
         }
@@ -3192,13 +3206,28 @@ var UI = function () {
             return { btn: btn, check: check };
         }
     }, {
+        key: 'updateText',
+        value: function updateText(btn, i, text) {
+            var span = btn.textTags[i];
+            if (!span) {
+                btn.textTags[i] = span = document.createElement('span');
+                btn.btn.appendChild(span);
+            }
+            if (span._text === text) return;
+            span.innerHTML = span._text = text;
+        }
+    }, {
         key: 'update',
         value: function update(delta, game) {
+            var _this4 = this;
+
             this.game = game;
             if (game) {
                 this.btns.forEach(function (btn) {
                     var text = btn.update && btn.update();
-                    if (btn.text !== text) btn.text = btn.textTag.innerHTML = text;
+                    if (text instanceof Array) text.forEach(function (t, i) {
+                        return _this4.updateText(btn, i, text[i]);
+                    });else _this4.updateText(btn, 0, text);
                 });
             }
         }
@@ -3213,7 +3242,7 @@ var UI = function () {
     }, {
         key: 'showTitle',
         value: function showTitle() {
-            var _this4 = this;
+            var _this5 = this;
 
             var win = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 
@@ -3229,11 +3258,9 @@ var UI = function () {
                     this.titleTag.classList.add('lost');
                 }
             } else sounds.titleScreen.play();
-            if (window.android) requestAnimationFrame(function () {
-                return android.updateStatusTint(0x193bcb);
-            });
+            if (window.android) android.updateStatusTint(0x193bcb);
             setTimeout(function () {
-                return _this4.titleTag.addEventListener('click', _this4.onTitle);
+                return _this5.titleTag.addEventListener('click', _this5.onTitle);
             }, 1000);
             this.tipTag.classList.add('hidden');
         }
@@ -3308,9 +3335,7 @@ var UI = function () {
         key: 'updateToGodColor',
         value: function updateToGodColor(game) {
             this.btnsTag.style.backgroundColor = '#' + game.god.offTint.toString('16').padStart(6, '0');
-            if (window.android) requestAnimationFrame(function () {
-                return android.updateStatusTint(game.god.offTint);
-            });
+            if (window.android) android.updateStatusTint(game.god.offTint);
         }
     }, {
         key: 'onGodChangePersonality',
@@ -3321,11 +3346,11 @@ var UI = function () {
     }, {
         key: 'onNewGame',
         value: function onNewGame(game) {
-            var _this5 = this;
+            var _this6 = this;
 
             this.updateToGodColor(game);
             game.addEventListener('godChangePersonality', function () {
-                return _this5.onGodChangePersonality(game);
+                return _this6.onGodChangePersonality(game);
             });
             this.tip('please', "God demands pleasing!\nFind out what pleases God!");
         }

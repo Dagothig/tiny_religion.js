@@ -100,15 +100,15 @@ let Bridge = new BuildingType(
 House = new BuildingType(
     'house', 'images/House.png', 0, 0, 16, true, 20, 2000),
 Barracks = new BuildingType(
-    'barracks', 'images/Barracks.png', 0, 0, 16, true, 35, 10000),
+    'barracks', 'images/Barracks.png', 0, 0, 16, true, 30, 10000),
 Workshop = new BuildingType(
-    'workshop', 'images/Workshop.png', 0, 0, 16, true, 35, 10000),
+    'workshop', 'images/Workshop.png', 0, 0, 16, true, 30, 10000),
 Temple = new BuildingType(
-    'temple', 'images/Temple.png', 0, 0, 16, true, 35, 10000),
+    'temple', 'images/Temple.png', 0, 0, 16, true, 30, 10000),
 GreenHouse = new BuildingType(
-    'greenHouse', 'images/GreenHouse.png', 0, 0, 16, true, 35, 10000),
+    'greenHouse', 'images/GreenHouse.png', 0, 0, 16, true, 30, 10000),
 Tree = new BuildingType(
-    'tree', 'images/Tree.png', 0, 4, 0, false, 15, 1000, {
+    'tree', 'images/Tree.png', 0, 4, 0, false, 10, 1000, {
         building() {
             this.rotation = (Math.random() - 0.5) * Math.PI / 16;
         },
@@ -118,6 +118,6 @@ Tree = new BuildingType(
         }
     }),
 FallingTree = new BuildingType(
-    'fallingTree', 'images/FallingTree.png', 0, 4, 0, false, 15, 250, {
+    'fallingTree', 'images/FallingTree.png', 0, 4, 0, false, 10, 250, {
         onFinished() { this.shouldRemove = true; }
     });

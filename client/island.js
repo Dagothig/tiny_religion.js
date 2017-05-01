@@ -43,6 +43,15 @@ class Island extends PIXI.Container {
         for (let i = 0; i < count; i++)
             this.generateBuilding.apply(this, args);
     }
+    generateBridge(finished = true) {
+        if (this.bridge) throw 'bridge already exists';
+        let bridge = new Building(
+            this.x + this.getLocalBounds().right, this.y,
+            Bridge, this.kingdom, this, finished);
+        this.buildings.add(bridge);
+        this.bridge = bridge;
+        return bridge;
+    }
     generateForest() {
         this.generateBuildings(Math.random() * 20 + 10, Tree);
     }

@@ -54,8 +54,8 @@ class UI {
                 btns.add(this.createBtn(this[act + 'Group'].children,
                     () => this.game.player[act](this.game, job),
                     act === 'train' ?
-                        () => v() + '   ' + j() :
-                        () => j() + '   ' + v(),
+                        () => [v(), j()] :
+                        () => [j(), v()],
                     job.name, act, job.name));
                 return btns;
             }, btns), [])
@@ -197,9 +197,6 @@ class UI {
         btn.onclick = () => this.notify(onclick());
         tag.appendChild(btn);
 
-        let textTag = document.createElement('span');
-        btn.appendChild(textTag);
-
         let tooltip = document.createElement('div');
         tooltip.innerHTML = name;
         tooltip.classList.add('tooltip');
@@ -210,9 +207,8 @@ class UI {
         return {
             tag: tag,
             btn: btn,
-            textTag: textTag,
+            textTags: [],
             tooltip: tooltip,
-            text: '',
             update: onupdate
         };
     }
@@ -257,12 +253,23 @@ class UI {
 
         return { btn: btn, check: check };
     }
+    updateText(btn, i, text) {
+        let span = btn.textTags[i];
+        if (!span) {
+            btn.textTags[i] = span = document.createElement('span');
+            btn.btn.appendChild(span);
+        }
+        if (span._text === text) return;
+        span.innerHTML = span._text = text;
+    }
     update(delta, game) {
         this.game = game;
         if (game) {
             this.btns.forEach(btn => {
                 let text = btn.update && btn.update();
-                if (btn.text !== text) btn.text = btn.textTag.innerHTML = text;
+                if (text instanceof Array) text.forEach((t, i) =>
+                    this.updateText(btn, i, text[i]));
+                else this.updateText(btn, 0, text);
             });
         }
     }
@@ -285,8 +292,7 @@ class UI {
                 this.titleTag.classList.add('lost');
             }
         } else sounds.titleScreen.play();
-        if (window.android)
-            requestAnimationFrame(() => android.updateStatusTint(0x193bcb));
+        if (window.android) android.updateStatusTint(0x193bcb);
         setTimeout(() =>
             this.titleTag.addEventListener('click', this.onTitle), 1000);
         this.tipTag.classList.add('hidden');
@@ -332,8 +338,7 @@ class UI {
     updateToGodColor(game) {
         this.btnsTag.style.backgroundColor =
             '#' + game.god.offTint.toString('16').padStart(6, '0');
-        if (window.android)
-            requestAnimationFrame(() => android.updateStatusTint(game.god.offTint));
+        if (window.android) android.updateStatusTint(game.god.offTint);
     }
     onGodChangePersonality(game) {
         this.updateToGodColor(game);
