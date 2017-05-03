@@ -46,6 +46,7 @@ a {
 }
 #container:active { cursor: move; }
 #container { overflow: hidden; }
+#container.paused{ filter: grayscale(0.5); }
 canvas {
     position: absolute;
     width: 100%;
@@ -119,11 +120,14 @@ canvas {
 .menu-container {
     position: absolute;
     top: 0;
+    bottom: 0;
     right: 0;
     text-align: right;
     user-select: none;
     z-index: 1;
+    pointer-events: none;
 }
+.menu-container * { pointer-events: all; }
 .menu-container .check {
     display: inline-block;
     width: 8rem;
@@ -145,19 +149,19 @@ canvas {
     text-transform: uppercase;
     text-align: left;
     font-size: 3.5rem;
+    max-height: calc(100% - 8rem);
+    overflow: auto;
+    background: rgba(0, 0, 0, 0.3);
 }
-.menu-btn:checked+.check+.menu {
-    display: block;
-}
+.menu-btn:checked+.check+.menu { display: block; }
 
 .menu div {
     display: flex;
     flex-flow: row;
     align-items: center;
+    position: relative;
 }
-.menu div:hover {
-    background-color: rgba(0, 0, 0, 0.1);
-}
+.menu div:hover { background-color: rgba(0, 0, 0, 0.1); }
 .menu label, .menu a {
     padding: 2rem 3rem;
     flex-grow: 1;
@@ -241,6 +245,7 @@ canvas {
     width: 0;
     display: flex;
     flex-direction: column;
+    position: relative;
 }
 
 .btn {
@@ -485,11 +490,16 @@ canvas {
 
 .tooltip {
     display: none;
-    width: 100%;
+    position: absolute;
+    pointer-events: none;
+    left: 0;
+    right: 0;
+    top: 10%;
+    padding: 0 1rem;
     font-size: 2.5rem;
-    margin-top: 1px;
-    padding: 1rem 0;
-    line-height: 2.75rem;
+    line-height: 2.5rem;
+    text-overflow: ellipsis;
+    overflow: hidden;
 }
 .tooltips .tooltip { display: block; }
 
@@ -633,7 +643,6 @@ canvas {
 }
 
 @media (max-width: 380px), (max-height: 380px) {
-    .tooltip { font-size: 2rem; }
     .tip button { font-size: 3.5rem; }
     .tip .text { font-size: 2.5rem; }
 }
@@ -644,6 +653,10 @@ canvas {
     html { font-size: 8px; }
 }
 
+@media (max-aspect-ratio: 4/3) and (max-width: 320px),
+    (min-aspect-ratio: 4/3) and (max-width: 500px) {
+    .tooltip { font-size: 2rem; }
+}
 @media (max-aspect-ratio: 4/3) and (max-width: 280px),
     (min-aspect-ratio: 4/3) and (max-height: 280px) {
     .group-select>.check { font-size: 2.5rem; }

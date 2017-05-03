@@ -3371,11 +3371,13 @@ var game = void 0;
 var paused = false;
 function resume() {
     paused = false;
+    container.classList.remove('paused');
     Music.resume();
     ui.resume();
 }
 function pause() {
     paused = true;
+    container.classList.add('paused');
     Music.pause();
     ui.pause();
 }
