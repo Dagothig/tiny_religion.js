@@ -1139,15 +1139,6 @@ var God = function (_PIXI$Container) {
             angle <= 3 ? 0 / 16 + (angle - 2) * 4 / 16 :
             // From 3 to 5; -life+man; from green to teal-ish blue
             4 / 16 + (angle - 3) * 4 / 16, 0, 1);
-            /*let hue = Math.shift(
-                // From 0 to 1; +life+man; from teal-ish blue to purple
-                angle <= 1 ? (11/16 + angle * 3/16) :
-                // From 1 to 2; -life+man; from purple to orange-ish
-                angle <= 2 ? (14/16 + (angle - 1) * 3/16) :
-                // From 2 to 3; -life-man; from orange-ish to green
-                angle <= 3 ? (1/16 + (angle - 2) * 3/16) :
-                // From 3 to 5; -life+man; from green to teal-ish blue
-                (4/16 + (angle - 3) * 7/16), 0, 1);*/
             var saturation = Math.max(Math.abs(life), Math.abs(man));
             var lightness = attention / (attention < 0 ? 6 : 4) + 0.5;
             this.tint = PIXI.Color.fromHSL(hue, saturation, lightness);
@@ -1345,11 +1336,6 @@ var Kingdom = function () {
             var island = game.islands[index];
             if (!island) return 'island not owned';
             var bridge = island.generateBridge(false);
-            /*let bridge = new Building(
-                island.x + island.getLocalBounds().right,
-                island.y, Bridge, this, island);
-            island.buildings.add(bridge);
-            island.bridge = bridge;*/
             game.addChild(bridge);
             if (index === game.islands.length - 1) game.generateNewIsland();
             for (var j = 0; j < 3; j++) {
@@ -2770,10 +2756,6 @@ var Game = function (_PIXI$Container) {
                     }
                 }
                 if (i + 1 < count) island.generateBridge();
-                /*island.buildings.add(island.bridge = new Building(
-                    island.x + island.getLocalBounds().right, island.y,
-                    Bridge, this.ai, island, true
-                ));*/
                 this.addIsland(island);
             }
         }

@@ -90,11 +90,6 @@ class Kingdom {
         let island = game.islands[index];
         if (!island) return 'island not owned';
         let bridge = island.generateBridge(false);
-        /*let bridge = new Building(
-            island.x + island.getLocalBounds().right,
-            island.y, Bridge, this, island);
-        island.buildings.add(bridge);
-        island.bridge = bridge;*/
         game.addChild(bridge);
         if (index === game.islands.length - 1) game.generateNewIsland();
         for (let j = 0; j < 3; j++) {

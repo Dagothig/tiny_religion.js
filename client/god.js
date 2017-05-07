@@ -215,15 +215,6 @@ class God extends PIXI.Container {
             angle <= 3 ? (0/16 + (angle - 2) * 4/16) :
             // From 3 to 5; -life+man; from green to teal-ish blue
             (4/16 + (angle - 3) * 4/16), 0, 1);
-        /*let hue = Math.shift(
-            // From 0 to 1; +life+man; from teal-ish blue to purple
-            angle <= 1 ? (11/16 + angle * 3/16) :
-            // From 1 to 2; -life+man; from purple to orange-ish
-            angle <= 2 ? (14/16 + (angle - 1) * 3/16) :
-            // From 2 to 3; -life-man; from orange-ish to green
-            angle <= 3 ? (1/16 + (angle - 2) * 3/16) :
-            // From 3 to 5; -life+man; from green to teal-ish blue
-            (4/16 + (angle - 3) * 7/16), 0, 1);*/
         let saturation = Math.max(Math.abs(life), Math.abs(man));
         let lightness = attention / (attention < 0 ? 6 : 4) + 0.5;
         this.tint = PIXI.Color.fromHSL(hue, saturation, lightness);
