@@ -62,10 +62,12 @@ class Kingdom {
 
     build(game, type) {
         if (this.builded) return 'project limit reached';
-        if (game.islands.slice(0).sort(Math.random).find(isl => {
-            if (isl.kingdom !== this) return;
+        let isls = game.islands.slice(0).sort(Math.random);
+        for (let i = 0; i < isls.length; i++) {
+            let isl = isls[i];
+            if (isl.kingdom !== this) continue;
             let building = isl.generateBuilding(type, false);
-            if (!building) return;
+            if (!building) continue;
             game.addChild(building);
             for (let j = 0; j < 3; j++) {
                 let person = this.findOfJob(game, Builder, p => !p.building);
@@ -77,9 +79,9 @@ class Kingdom {
                 game.god.event(type.name, 0.5, building.position);
                 sounds.build.play();
             }
-            return true;
-        })) return 'project started';
-        else return 'no suitable spot found';
+            return 'building ' + building.type.name;
+        }
+        return 'no suitable spot found';
     }
 
     buildBridge(game) {

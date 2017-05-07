@@ -1309,37 +1309,38 @@ var Kingdom = function () {
     }, {
         key: 'build',
         value: function build(game, type) {
-            var _this3 = this;
-
             if (this.builded) return 'project limit reached';
-            if (game.islands.slice(0).sort(Math.random).find(function (isl) {
-                if (isl.kingdom !== _this3) return;
+            var isls = game.islands.slice(0).sort(Math.random);
+            for (var i = 0; i < isls.length; i++) {
+                var isl = isls[i];
+                if (isl.kingdom !== this) continue;
                 var building = isl.generateBuilding(type, false);
-                if (!building) return;
+                if (!building) continue;
                 game.addChild(building);
                 for (var j = 0; j < 3; j++) {
-                    var person = _this3.findOfJob(game, Builder, function (p) {
+                    var person = this.findOfJob(game, Builder, function (p) {
                         return !p.building;
                     });
                     if (!person) break;
                     person.building = building;
                     person.movements.length = 0;
                 }
-                if (_this3.isPlayer) {
+                if (this.isPlayer) {
                     game.god.event(type.name, 0.5, building.position);
                     sounds.build.play();
                 }
-                return true;
-            })) return 'project started';else return 'no suitable spot found';
+                return 'building ' + building.type.name;
+            }
+            return 'no suitable spot found';
         }
     }, {
         key: 'buildBridge',
         value: function buildBridge(game) {
-            var _this4 = this;
+            var _this3 = this;
 
             if (this.builded) return 'project limit reached';
             var index = game.islands.findIndex(function (i) {
-                return !i.bridge && i.kingdom === _this4;
+                return !i.bridge && i.kingdom === _this3;
             });
             var island = game.islands[index];
             if (!island) return 'island not owned';
@@ -1386,10 +1387,10 @@ var Kingdom = function () {
     }, {
         key: 'deforest',
         value: function deforest(game) {
-            var _this5 = this;
+            var _this4 = this;
 
             var islands = game.islands.filter(function (island) {
-                return island.kingdom === _this5;
+                return island.kingdom === _this4;
             });
             if (!this.treeCount) return 'no tree to cut';
             var trees = null,
@@ -1447,12 +1448,12 @@ var Kingdom = function () {
     }, {
         key: 'doBaby',
         value: function doBaby(game) {
-            var _this6 = this;
+            var _this5 = this;
 
             if (this.housed) return 'pop limit reached';
             if (game.islands.find(function (island) {
                 return island.people.find(function (person) {
-                    return person.kingdom === _this6 && person.job === Villager && Villager.doBaby.call(person, game);
+                    return person.kingdom === _this5 && person.job === Villager && Villager.doBaby.call(person, game);
                 });
             }) && this.isPlayer) {
                 sounds.baby.play();
@@ -1463,12 +1464,12 @@ var Kingdom = function () {
     }, {
         key: 'attemptSummon',
         value: function attemptSummon(game) {
-            var _this7 = this;
+            var _this6 = this;
 
             if (this.templed) return 'pop limit reached';
             if (game.islands.find(function (island) {
                 return island.people.find(function (person) {
-                    return person.kingdom === _this7 && person.job === Priest && Priest.doSummon.call(person, game);
+                    return person.kingdom === _this6 && person.job === Priest && Priest.doSummon.call(person, game);
                 });
             }) && this.isPlayer) {
                 sounds.summon.play();
@@ -1479,13 +1480,13 @@ var Kingdom = function () {
     }, {
         key: 'pray',
         value: function pray(game) {
-            var _this8 = this;
+            var _this7 = this;
 
             var c = 0,
                 p = void 0;
             game.islands.forEach(function (island) {
                 return island.people.forEach(function (person) {
-                    if (person.kingdom !== _this8) return;
+                    if (person.kingdom !== _this7) return;
                     if (person.pray()) {
                         c++;
                         if (!p) p = person;
@@ -1502,6 +1503,22 @@ var Kingdom = function () {
     }, {
         key: 'sendAttack',
         value: function sendAttack(game) {
+            var _this8 = this;
+
+            var mean = game.islands.filter(function (isl) {
+                return isl.kingdom !== _this8;
+            }).rand();
+            if (!mean) return 'no enemy';
+            game.islands.forEach(function (island) {
+                return island.kingdom === _this8 && island.people.forEach(function (person) {
+                    return person.kingdom === _this8 && person.job === Warrior && person.moveTo(game.islands, mean.index);
+                });
+            });
+            return 'warriors sent';
+        }
+    }, {
+        key: 'sendConvert',
+        value: function sendConvert(game) {
             var _this9 = this;
 
             var mean = game.islands.filter(function (isl) {
@@ -1510,23 +1527,7 @@ var Kingdom = function () {
             if (!mean) return 'no enemy';
             game.islands.forEach(function (island) {
                 return island.kingdom === _this9 && island.people.forEach(function (person) {
-                    return person.kingdom === _this9 && person.job === Warrior && person.moveTo(game.islands, mean.index);
-                });
-            });
-            return 'warriors sent';
-        }
-    }, {
-        key: 'sendConvert',
-        value: function sendConvert(game) {
-            var _this10 = this;
-
-            var mean = game.islands.filter(function (isl) {
-                return isl.kingdom !== _this10;
-            }).rand();
-            if (!mean) return 'no enemy';
-            game.islands.forEach(function (island) {
-                return island.kingdom === _this10 && island.people.forEach(function (person) {
-                    return person.kingdom === _this10 && person.job === Priest && person.moveTo(game.islands, mean.index);
+                    return person.kingdom === _this9 && person.job === Priest && person.moveTo(game.islands, mean.index);
                 });
             });
             return 'priests sent';
@@ -1534,15 +1535,15 @@ var Kingdom = function () {
     }, {
         key: 'sendRetreat',
         value: function sendRetreat(game) {
-            var _this11 = this;
+            var _this10 = this;
 
             var ally = game.islands.filter(function (isl) {
-                return isl.kingdom === _this11;
+                return isl.kingdom === _this10;
             }).rand();
             if (!ally) return 'no one to retreat';
             game.islands.forEach(function (island) {
-                return island.kingdom !== _this11 && island.people.forEach(function (person) {
-                    return person.kingdom === _this11 && person.moveTo(game.islands, ally.index);
+                return island.kingdom !== _this10 && island.people.forEach(function (person) {
+                    return person.kingdom === _this10 && person.moveTo(game.islands, ally.index);
                 });
             });
             return 'retreating';
@@ -1925,10 +1926,16 @@ var Building = function (_PIXI$TiledSprite) {
                 this.updateTextureState();
                 if (this.kingdom.isPlayer) {
                     game.god.event(this.type.name, 0.5, this.position);
+                    this.notifyCompletion();
                     sounds.done.play();
                 }
                 if (this.type.onFinished) this.type.onFinished.call(this);
             }
+        }
+    }, {
+        key: 'notifyCompletion',
+        value: function notifyCompletion() {
+            if (this.type.notifyCompletion) this.type.notifyCompletion.call(this);else ui.notify(this.type.name + ' built');
         }
     }, {
         key: 'update',
@@ -2002,11 +2009,17 @@ var Bridge = new BuildingType('bridge', 'images/Bridge.png', -10, -47, -30, fals
     },
     update: function update(delta, game) {
         if (!this.finished) this.progressBuild(1, game);
+    },
+    notifyCompletion: function notifyCompletion() {
+        ui.notify('tree grown');
     }
 }),
     FallingTree = new BuildingType('fallingTree', 'images/FallingTree.png', 0, 4, 0, false, 10, 250, {
     onFinished: function onFinished() {
         this.shouldRemove = true;
+    },
+    notifyCompletion: function notifyCompletion() {
+        ui.notify('stump removed');
     }
 });
 'use strict';

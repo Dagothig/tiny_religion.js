@@ -59,10 +59,15 @@ class Building extends PIXI.TiledSprite {
             this.updateTextureState();
             if (this.kingdom.isPlayer) {
                 game.god.event(this.type.name, 0.5, this.position);
+                this.notifyCompletion();
                 sounds.done.play();
             }
             if (this.type.onFinished) this.type.onFinished.call(this);
         }
+    }
+    notifyCompletion() {
+        if (this.type.notifyCompletion) this.type.notifyCompletion.call(this);
+        else ui.notify(this.type.name + ' built');
     }
     update(delta, game) {
         if (this.type.update) this.type.update.apply(this, arguments);
@@ -115,9 +120,11 @@ Tree = new BuildingType(
         update(delta, game) {
             if (!this.finished)
                 this.progressBuild(1, game);
-        }
+        },
+        notifyCompletion() { ui.notify('tree grown') }
     }),
 FallingTree = new BuildingType(
     'fallingTree', 'images/FallingTree.png', 0, 4, 0, false, 10, 250, {
-        onFinished() { this.shouldRemove = true; }
+        onFinished() { this.shouldRemove = true; },
+        notifyCompletion() { ui.notify('stump removed') }
     });
