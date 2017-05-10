@@ -220,7 +220,6 @@ class Game extends PIXI.Container {
             new Person(0, 0, Priest, this.player, starting),
             new Person(0, 0, Builder, this.player, starting)
         );
-        for(let i = 500; i--;) starting.people.add(new Person(0, 0, Villager, this.player, starting));
         this.addIsland(starting);
     }
     generateNewIsland() {

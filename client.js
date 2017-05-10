@@ -2745,9 +2745,7 @@ var Game = function (_PIXI$Container) {
             starting.generateBuilding(House, true);
             starting.generatePlain();
             starting.people.add(new Person(0, 0, Villager, this.player, starting), new Person(0, 0, Villager, this.player, starting), new Person(0, 0, Warrior, this.player, starting), new Person(0, 0, Priest, this.player, starting), new Person(0, 0, Builder, this.player, starting));
-            for (var i = 500; i--;) {
-                starting.people.add(new Person(0, 0, Villager, this.player, starting));
-            }this.addIsland(starting);
+            this.addIsland(starting);
         }
     }, {
         key: 'generateNewIsland',
