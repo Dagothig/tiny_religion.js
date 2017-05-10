@@ -154,20 +154,26 @@ Object.merge = function merge(to) {
     });
     return to;
 };
-Array.prototype.add = Array.prototype.push;
-Array.prototype.remove = function () {
-    for (var i = 0; i < arguments.length; i++) {
-        var index = this.indexOf(arguments[i]);
-        if (index === -1) continue;
-        this.splice(index, 1);
+Object.merge(Array.prototype, {
+    add: Array.prototype.push,
+    remove: function remove() {
+        for (var i = 0; i < arguments.length; i++) {
+            var index = this.indexOf(arguments[i]);
+            if (index === -1) continue;
+            this.splice(index, 1);
+        }
+    },
+    rand_i: function rand_i() {
+        return Math.random() * this.length | 0;
+    },
+    rand: function rand() {
+        return this[this.rand_i()];
+    },
+
+    get last() {
+        return this[this.length - 1];
     }
-};
-Array.prototype.rand_i = function () {
-    return Math.random() * this.length | 0;
-};
-Array.prototype.rand = function () {
-    return this[this.rand_i()];
-};
+});
 
 var Misc = {
     touchToMouseEv: function touchToMouseEv(ev) {
@@ -1599,7 +1605,7 @@ var Island = function (_PIXI$Container) {
         _this.cloudBack = new PIXI.OscillatingSprite(Island.cloudBack, cloudBackCycle, 0, 0, 0, 8);
         _this.cloudFront = new PIXI.OscillatingSprite(Island.cloudFront, cloudFrontCycle, 0, 0, 0, 8);
         _this.ground.anchor.x = _this.cloudBack.anchor.x = _this.cloudFront.anchor.x = 0.525;
-        _this.ground.anchor.y = _this.cloudBack.anchor.y = _this.cloudFront.anchor.y = 0.3;
+        _this.ground.anchor.y = _this.cloudBack.anchor.y = _this.cloudFront.anchor.y = 0.275;
         _this.addChild(_this.cloudBack, _this.ground, _this.cloudFront);
         _this.buildings = [];
         _this.people = [];
@@ -1978,7 +1984,7 @@ Building.fromState = function (s, island, game) {
     return b;
 };
 Building.types = [];
-var Bridge = new BuildingType('bridge', 'images/Bridge.png', -10, -47, -30, false, 200, 10000, {
+var Bridge = new BuildingType('bridge', 'images/Bridge.png', -10, -52, -30, false, 200, 10000, {
     building: function building() {
         this.island.bridge = this;
         this.scale.x = 1;
@@ -2123,6 +2129,9 @@ var Person = function (_PIXI$AnimatedSprite) {
                 this.y += this.movY;
             }
 
+            var bounds = this.island.getLocalBounds();
+            if (this.x > this.island.x + bounds.right + 16 || this.x < this.island.x + bounds.left - 16) throw 'NOOOO';
+
             _get(Person.prototype.__proto__ || Object.getPrototypeOf(Person.prototype), 'update', this).call(this, delta);
         }
     }, {
@@ -2151,6 +2160,10 @@ var Person = function (_PIXI$AnimatedSprite) {
                     x: bridge.x - dir * 90,
                     y: bridge.y + Math.random() * 20 - 15,
                     island: prev
+                }, {
+                    x: bridge.x,
+                    y: bridge.y + Math.random() * 20 - 15,
+                    island: next
                 }, {
                     x: bridge.x + dir * 90,
                     y: bridge.y + Math.random() * 20 - 15,
@@ -2609,7 +2622,7 @@ var Game = function (_PIXI$Container) {
         _this.cloudEndBack.x = _this.cloudEndFront.x = _this.islBnds.left + _this.islandsWidth;
 
         _this.cloudStartBack.anchor.x = _this.cloudStartFront.anchor.x = _this.cloudEndBack.anchor.x = _this.cloudEndFront.anchor.x = 1;
-        _this.cloudStartBack.anchor.y = _this.cloudStartFront.anchor.y = _this.cloudEndBack.anchor.y = _this.cloudEndFront.anchor.y = 0.3;
+        _this.cloudStartBack.anchor.y = _this.cloudStartFront.anchor.y = _this.cloudEndBack.anchor.y = _this.cloudEndFront.anchor.y = 0.275;
         _this.addChild(_this.cloudStartBack, _this.cloudStartFront, _this.cloudEndBack, _this.cloudEndFront);
 
         _this.skiesMood = 0;
@@ -2732,7 +2745,9 @@ var Game = function (_PIXI$Container) {
             starting.generateBuilding(House, true);
             starting.generatePlain();
             starting.people.add(new Person(0, 0, Villager, this.player, starting), new Person(0, 0, Villager, this.player, starting), new Person(0, 0, Warrior, this.player, starting), new Person(0, 0, Priest, this.player, starting), new Person(0, 0, Builder, this.player, starting));
-            this.addIsland(starting);
+            for (var i = 500; i--;) {
+                starting.people.add(new Person(0, 0, Villager, this.player, starting));
+            }this.addIsland(starting);
         }
     }, {
         key: 'generateNewIsland',

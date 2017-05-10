@@ -13,7 +13,7 @@ class Island extends PIXI.Container {
         this.ground.anchor.x = this.cloudBack.anchor.x = this.cloudFront.anchor.x =
             0.525;
         this.ground.anchor.y = this.cloudBack.anchor.y = this.cloudFront.anchor.y =
-            0.3;
+            0.275;
         this.addChild(this.cloudBack, this.ground, this.cloudFront);
         this.buildings = [];
         this.people = [];

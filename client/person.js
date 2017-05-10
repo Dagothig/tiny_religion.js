@@ -91,6 +91,10 @@ class Person extends PIXI.AnimatedSprite {
             this.y += this.movY;
         }
 
+        let bounds = this.island.getLocalBounds();
+        if (this.x > this.island.x + bounds.right + 16 || this.x < this.island.x + bounds.left - 16)
+            throw 'NOOOO';
+
         super.update(delta);
     }
     render(delta, game, renderer) {
@@ -117,6 +121,10 @@ class Person extends PIXI.AnimatedSprite {
                 x: bridge.x - dir * 90,
                 y: bridge.y + Math.random() * 20 - 15,
                 island: prev
+            }, {
+                x: bridge.x,
+                y: bridge.y + Math.random() * 20 - 15,
+                island: next
             }, {
                 x: bridge.x + dir * 90,
                 y: bridge.y + Math.random() * 20 - 15,

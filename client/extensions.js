@@ -150,20 +150,25 @@ Object.merge = function merge(to) {
     });
     return to;
 }
-Array.prototype.add = Array.prototype.push;
-Array.prototype.remove = function() {
-    for (let i = 0; i < arguments.length; i++) {
-        let index = this.indexOf(arguments[i]);
-        if (index === -1) continue;
-        this.splice(index, 1);
+Object.merge(Array.prototype, {
+    add: Array.prototype.push,
+    remove() {
+        for (let i = 0; i < arguments.length; i++) {
+            let index = this.indexOf(arguments[i]);
+            if (index === -1) continue;
+            this.splice(index, 1);
+        }
+    },
+    rand_i() {
+        return (Math.random() * this.length)|0;
+    },
+    rand() {
+        return this[this.rand_i()];
+    },
+    get last() {
+        return this[this.length - 1];
     }
-}
-Array.prototype.rand_i = function() {
-    return (Math.random() * this.length)|0;
-}
-Array.prototype.rand = function() {
-    return this[this.rand_i()];
-}
+});
 
 let Misc = {
     touchToMouseEv(ev) {

@@ -75,7 +75,7 @@ class Game extends PIXI.Container {
         this.cloudStartBack.anchor.x = this.cloudStartFront.anchor.x =
         this.cloudEndBack.anchor.x = this.cloudEndFront.anchor.x = 1;
         this.cloudStartBack.anchor.y = this.cloudStartFront.anchor.y =
-        this.cloudEndBack.anchor.y = this.cloudEndFront.anchor.y = 0.3;
+        this.cloudEndBack.anchor.y = this.cloudEndFront.anchor.y = 0.275;
         this.addChild(
             this.cloudStartBack, this.cloudStartFront,
             this.cloudEndBack, this.cloudEndFront
@@ -220,6 +220,7 @@ class Game extends PIXI.Container {
             new Person(0, 0, Priest, this.player, starting),
             new Person(0, 0, Builder, this.player, starting)
         );
+        for(let i = 500; i--;) starting.people.add(new Person(0, 0, Villager, this.player, starting));
         this.addIsland(starting);
     }
     generateNewIsland() {

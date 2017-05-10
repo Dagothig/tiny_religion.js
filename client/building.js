@@ -96,7 +96,7 @@ Building.fromState = function(s, island, game) {
 }
 Building.types = [];
 let Bridge = new BuildingType(
-    'bridge', 'images/Bridge.png', -10, -47, -30, false, 200, 10000, {
+    'bridge', 'images/Bridge.png', -10, -52, -30, false, 200, 10000, {
         building() {
             this.island.bridge = this;
             this.scale.x = 1;
