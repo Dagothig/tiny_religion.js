@@ -2114,7 +2114,7 @@ var Person = function (_PIXI$AnimatedSprite) {
                     this.island.people.add(this);
                 }
                 if (!this.movements.length) this.findNextTarget(game);
-                this.speed = (Math.random() + 1) / 4 + this.kingdom.islandCount / 10;
+                this.speed = (Math.random() + 1) / 4;
                 this.target = this.movements.shift();
                 dstToTarget = Math.dst(this.x, this.y, this.target.x, this.target.y);
                 var ratio = this.speed / dstToTarget;
@@ -2592,6 +2592,7 @@ var Game = function (_PIXI$Container) {
         _this.player = new Kingdom('player', 0x113996, true);
         _this.ai = new Kingdom('ai', 0xab1705, false);
         _this.gaia = new Kingdom('gaia', 0x888888, false);
+        _this.kingdoms = [_this.player, _this.ai, _this.gaia];
 
         // Clouds a
         _this.cloudStartBack = new PIXI.OscillatingSprite(Island.cloudStartBack, cloudBackCycle, 0, 0, 0, 8);
@@ -2619,7 +2620,7 @@ var Game = function (_PIXI$Container) {
 
         // Clouds b
         _this.cloudStartBack.x = _this.cloudStartFront.x = _this.islBnds.left;
-        _this.cloudEndBack.x = _this.cloudEndFront.x = _this.islBnds.left + _this.islandsWidth;
+        _this.updateClouds();
 
         _this.cloudStartBack.anchor.x = _this.cloudStartFront.anchor.x = _this.cloudEndBack.anchor.x = _this.cloudEndFront.anchor.x = 1;
         _this.cloudStartBack.anchor.y = _this.cloudStartFront.anchor.y = _this.cloudEndBack.anchor.y = _this.cloudEndFront.anchor.y = 0.275;
@@ -2703,9 +2704,11 @@ var Game = function (_PIXI$Container) {
     }, {
         key: 'updateCounts',
         value: function updateCounts() {
-            this.player.count(this);
-            this.ai.count(this);
-            this.gaia.count(this);
+            var _this2 = this;
+
+            this.kingdoms.forEach(function (k) {
+                return k.count(_this2);
+            });
         }
     }, {
         key: 'checkForEnd',
@@ -2736,15 +2739,22 @@ var Game = function (_PIXI$Container) {
             this.addChild(island);
             if (island.buildings.length) this.addChild.apply(this, island.buildings);
             if (island.people.length) this.addChild.apply(this, island.people);
+            this.updateClouds();
+        }
+    }, {
+        key: 'updateClouds',
+        value: function updateClouds() {
             if (this.cloudEndBack) this.cloudEndBack.x = this.cloudEndFront.x = this.islBnds.width * (this.islands.length - 1) + this.islBnds.right;
         }
     }, {
         key: 'generateInitial',
         value: function generateInitial() {
-            var starting = new Island(this.islandsWidth, 0, this.player);
+            var kingdom = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.player;
+
+            var starting = new Island(this.islandsWidth, 0, kingdom);
             starting.generateBuilding(House, true);
             starting.generatePlain();
-            starting.people.add(new Person(0, 0, Villager, this.player, starting), new Person(0, 0, Villager, this.player, starting), new Person(0, 0, Warrior, this.player, starting), new Person(0, 0, Priest, this.player, starting), new Person(0, 0, Builder, this.player, starting));
+            starting.people.add(new Person(0, 0, Villager, kingdom, starting), new Person(0, 0, Villager, kingdom, starting), new Person(0, 0, Warrior, kingdom, starting), new Person(0, 0, Priest, kingdom, starting), new Person(0, 0, Builder, kingdom, starting));
             this.addIsland(starting);
         }
     }, {
@@ -2755,9 +2765,11 @@ var Game = function (_PIXI$Container) {
     }, {
         key: 'generateInhabited',
         value: function generateInhabited() {
+            var kingdom = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.ai;
+
             var count = Math.random() * this.islands.length;
             for (var i = 0; i < count; i++) {
-                var island = new Island(this.islandsWidth, 0, this.ai);
+                var island = new Island(this.islandsWidth, 0, kingdom);
                 if (i === 0) island.generateOutpost();else {
                     var rnd = Math.random();
                     if (rnd < 0.33) {
@@ -2782,33 +2794,33 @@ var Game = function (_PIXI$Container) {
     }, {
         key: 'attachEvents',
         value: function attachEvents(container) {
-            var _this2 = this;
+            var _this3 = this;
 
             if (this.container) this.detachEvents();else {
                 this.events = {};
                 this.events.mousedown = function (ev) {
-                    return _this2.beginDown(ev.pageX * scaling, ev.pageY * scaling);
+                    return _this3.beginDown(ev.pageX * scaling, ev.pageY * scaling);
                 };
                 this.events.touchstart = Misc.wrap(Misc.touchToMouseEv, this.events.mousedown);
 
                 this.events.mousemove = function (ev) {
-                    return _this2.onMove(ev.pageX * scaling, ev.pageY * scaling);
+                    return _this3.onMove(ev.pageX * scaling, ev.pageY * scaling);
                 };
                 this.events.touchmove = Misc.wrap(Misc.touchToMouseEv, this.events.mousemove);
 
                 this.events.mouseup = function (ev) {
-                    return _this2.finishDown();
+                    return _this3.finishDown();
                 };
                 this.events.touchend = this.events.mouseup;
                 this.events.mousewheel = function (ev) {
-                    return _this2.x -= ev.deltaX;
+                    return _this3.x -= ev.deltaX;
                 };
                 this.events.keys = [];
                 this.events.keydown = function (ev) {
-                    return _this2.events.keys[ev.keyCode] = true;
+                    return _this3.events.keys[ev.keyCode] = true;
                 };
                 this.events.keyup = function (ev) {
-                    return _this2.events.keys[ev.keyCode] = false;
+                    return _this3.events.keys[ev.keyCode] = false;
                 };
             }
             this.container = container;

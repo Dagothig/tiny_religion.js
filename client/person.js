@@ -74,7 +74,7 @@ class Person extends PIXI.AnimatedSprite {
                 this.island.people.add(this);
             }
             if (!this.movements.length) this.findNextTarget(game);
-            this.speed = (Math.random() + 1) / 4 + this.kingdom.islandCount / 10;
+            this.speed = (Math.random() + 1) / 4;
             this.target = this.movements.shift();
             dstToTarget = Math.dst(this.x, this.y, this.target.x, this.target.y);
             let ratio = this.speed / dstToTarget;

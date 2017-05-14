@@ -42,6 +42,7 @@ class Game extends PIXI.Container {
         this.player = new Kingdom('player', 0x113996, true);
         this.ai = new Kingdom('ai', 0xab1705, false);
         this.gaia = new Kingdom('gaia', 0x888888, false);
+        this.kingdoms = [this.player, this.ai, this.gaia];
 
         // Clouds a
         this.cloudStartBack = new PIXI.OscillatingSprite(
@@ -69,8 +70,7 @@ class Game extends PIXI.Container {
 
         // Clouds b
         this.cloudStartBack.x = this.cloudStartFront.x = this.islBnds.left;
-        this.cloudEndBack.x = this.cloudEndFront.x =
-            this.islBnds.left + this.islandsWidth;
+        this.updateClouds();
 
         this.cloudStartBack.anchor.x = this.cloudStartFront.anchor.x =
         this.cloudEndBack.anchor.x = this.cloudEndFront.anchor.x = 1;
@@ -167,9 +167,7 @@ class Game extends PIXI.Container {
         renderer.render(this);
     }
     updateCounts() {
-        this.player.count(this);
-        this.ai.count(this);
-        this.gaia.count(this);
+        this.kingdoms.forEach(k => k.count(this));
     }
     checkForEnd() {
         if (!this.player.peopleCount && !this.player.summonCount)
@@ -206,19 +204,22 @@ class Game extends PIXI.Container {
             this.addChild.apply(this, island.buildings);
         if (island.people.length)
             this.addChild.apply(this, island.people);
+        this.updateClouds();
+    }
+    updateClouds() {
         if (this.cloudEndBack) this.cloudEndBack.x = this.cloudEndFront.x =
             this.islBnds.width * (this.islands.length - 1) + this.islBnds.right;
     }
-    generateInitial() {
-        let starting = new Island(this.islandsWidth, 0, this.player);
+    generateInitial(kingdom = this.player) {
+        let starting = new Island(this.islandsWidth, 0, kingdom);
         starting.generateBuilding(House, true);
         starting.generatePlain();
         starting.people.add(
-            new Person(0, 0, Villager, this.player, starting),
-            new Person(0, 0, Villager, this.player, starting),
-            new Person(0, 0, Warrior, this.player, starting),
-            new Person(0, 0, Priest, this.player, starting),
-            new Person(0, 0, Builder, this.player, starting)
+            new Person(0, 0, Villager, kingdom, starting),
+            new Person(0, 0, Villager, kingdom, starting),
+            new Person(0, 0, Warrior, kingdom, starting),
+            new Person(0, 0, Priest, kingdom, starting),
+            new Person(0, 0, Builder, kingdom, starting)
         );
         this.addIsland(starting);
     }
@@ -226,10 +227,10 @@ class Game extends PIXI.Container {
         if (Math.random() < 2/(3+this.islands.length)) this.generateUninhabited();
         else this.generateInhabited();
     }
-    generateInhabited() {
+    generateInhabited(kingdom = this.ai) {
         let count = Math.random() * this.islands.length;
         for (let i = 0; i < count; i++) {
-            let island = new Island(this.islandsWidth, 0, this.ai);
+            let island = new Island(this.islandsWidth, 0, kingdom);
             if (i === 0) island.generateOutpost();
             else {
                 let rnd = Math.random();
