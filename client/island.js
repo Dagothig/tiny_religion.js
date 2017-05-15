@@ -121,14 +121,10 @@ class Island extends PIXI.Container {
         });
         if (!alliedPresence && enemyPresence) this.changeKingdom(enemyPresence);
 
-        let buildingCount = 0, treeCount = 0;
-        this.buildings = this.buildings.filter(b => {
-            if (b.type === Tree) treeCount++;
-            else if (b.type === FallingTree){}
-            else if (b.type !== Bridge) buildingCount++;
-            return !b.shouldRemove;
-        });
-        this.ground.tileX = (Math.bounded(buildingCount/3 - treeCount/6, 0, 3)|0);
+        let eco = 0;
+        this.buildings = this.buildings.filter(b =>
+            (eco += b.finished ? b.eco : 0, !b.shouldRemove));
+        this.ground.tileX = Math.bounded(eco, 0, 3)|0;
 
         this.cloudBack.update(delta);
         this.cloudFront.update(delta);

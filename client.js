@@ -1750,13 +1750,11 @@ var Island = function (_PIXI$Container) {
             });
             if (!alliedPresence && enemyPresence) this.changeKingdom(enemyPresence);
 
-            var buildingCount = 0,
-                treeCount = 0;
+            var eco = 0;
             this.buildings = this.buildings.filter(function (b) {
-                if (b.type === Tree) treeCount++;else if (b.type === FallingTree) {} else if (b.type !== Bridge) buildingCount++;
-                return !b.shouldRemove;
+                return eco += b.finished ? b.eco : 0, !b.shouldRemove;
             });
-            this.ground.tileX = Math.bounded(buildingCount / 3 - treeCount / 6, 0, 3) | 0;
+            this.ground.tileX = Math.bounded(eco, 0, 3) | 0;
 
             this.cloudBack.update(delta);
             this.cloudFront.update(delta);
@@ -1843,13 +1841,13 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var BuildingType = function () {
-    function BuildingType(name, path, decalX, decalY, decalZ, playerColored, radius, buildTime, ext) {
+    function BuildingType(name, path, decalX, decalY, decalZ, playerColored, radius, eco, buildTime, ext) {
         var _this = this;
 
         _classCallCheck(this, BuildingType);
 
-        this.name = name;
         Building.types.add(this);
+        this.name = name;
         PIXI.loader.add(name, path, null, function (res) {
             return _this.init(res.texture);
         });
@@ -1858,6 +1856,7 @@ var BuildingType = function () {
         this.decalZ = decalZ;
         this.playerColored = playerColored;
         this.radius = radius;this.radius2 = radius * radius;
+        this.eco = eco;
         this.buildTime = buildTime;
         if (ext) Object.merge(this, ext);
     }
@@ -1965,6 +1964,11 @@ var Building = function (_PIXI$TiledSprite) {
             return this.type.radius2;
         }
     }, {
+        key: 'eco',
+        get: function get() {
+            return this.type.eco;
+        }
+    }, {
         key: 'z',
         get: function get() {
             return this.y + this.type.decalZ;
@@ -1984,18 +1988,18 @@ Building.fromState = function (s, island, game) {
     return b;
 };
 Building.types = [];
-var Bridge = new BuildingType('bridge', 'images/Bridge.png', -10, -52, -30, false, 200, 10000, {
+var Bridge = new BuildingType('bridge', 'images/Bridge.png', -10, -52, -30, false, 200, 0, 10000, {
     building: function building() {
         this.island.bridge = this;
         this.scale.x = 1;
     }
 }),
-    House = new BuildingType('house', 'images/House.png', 0, 0, 16, true, 20, 2000),
-    Barracks = new BuildingType('barracks', 'images/Barracks.png', 0, 0, 16, true, 30, 10000),
-    Workshop = new BuildingType('workshop', 'images/Workshop.png', 0, 0, 16, true, 30, 10000),
-    Temple = new BuildingType('temple', 'images/Temple.png', 0, 0, 16, true, 30, 10000),
-    GreenHouse = new BuildingType('greenHouse', 'images/GreenHouse.png', 0, 0, 16, true, 30, 10000),
-    Tree = new BuildingType('tree', 'images/Tree.png', 0, 4, 0, false, 10, 1000, {
+    House = new BuildingType('house', 'images/House.png', 0, 0, 16, true, 20, 1 / 3, 2000),
+    Barracks = new BuildingType('barracks', 'images/Barracks.png', 0, 0, 16, true, 30, 1 / 2, 10000),
+    Workshop = new BuildingType('workshop', 'images/Workshop.png', 0, 0, 16, true, 30, 1, 10000),
+    Temple = new BuildingType('temple', 'images/Temple.png', 0, 0, 16, true, 30, 1 / 2, 10000),
+    GreenHouse = new BuildingType('greenHouse', 'images/GreenHouse.png', 0, 0, 16, true, 30, -1 / 6, 10000),
+    Tree = new BuildingType('tree', 'images/Tree.png', 0, 4, 0, false, 10, -1 / 6, 1000, {
     building: function building() {
         this.rotation = (Math.random() - 0.5) * Math.PI / 16;
     },
@@ -2006,7 +2010,7 @@ var Bridge = new BuildingType('bridge', 'images/Bridge.png', -10, -52, -30, fals
         ui.notify('tree grown');
     }
 }),
-    FallingTree = new BuildingType('fallingTree', 'images/FallingTree.png', 0, 4, 0, false, 10, 250, {
+    FallingTree = new BuildingType('fallingTree', 'images/FallingTree.png', 0, 4, 0, false, 10, 0, 250, {
     onFinished: function onFinished() {
         this.shouldRemove = true;
     },

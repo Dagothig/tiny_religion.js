@@ -2,10 +2,12 @@
 
 class BuildingType {
     constructor(
-        name, path, decalX, decalY, decalZ, playerColored, radius, buildTime, ext
+        name, path,
+        decalX, decalY, decalZ,
+        playerColored, radius, eco, buildTime, ext
     ) {
-        this.name = name;
         Building.types.add(this);
+        this.name = name;
         PIXI.loader.add(name, path, null,
             res => this.init(res.texture));
         this.decalX = decalX;
@@ -13,6 +15,7 @@ class BuildingType {
         this.decalZ = decalZ;
         this.playerColored = playerColored;
         this.radius = radius; this.radius2 = radius * radius
+        this.eco = eco;
         this.buildTime = buildTime;
         if (ext) Object.merge(this, ext);
     }
@@ -40,6 +43,7 @@ class Building extends PIXI.TiledSprite {
     }
     get radius() { return this.type.radius; }
     get radius2() { return this.type.radius2; }
+    get eco() { return this.type.eco; }
     get z() { return this.y + this.type.decalZ; }
 
     isInRadius(o, radius) {
@@ -96,24 +100,24 @@ Building.fromState = function(s, island, game) {
 }
 Building.types = [];
 let Bridge = new BuildingType(
-    'bridge', 'images/Bridge.png', -10, -52, -30, false, 200, 10000, {
+    'bridge', 'images/Bridge.png', -10, -52, -30, false, 200, 0, 10000, {
         building() {
             this.island.bridge = this;
             this.scale.x = 1;
         }
     }),
 House = new BuildingType(
-    'house', 'images/House.png', 0, 0, 16, true, 20, 2000),
+    'house', 'images/House.png', 0, 0, 16, true, 20, 1/3, 2000),
 Barracks = new BuildingType(
-    'barracks', 'images/Barracks.png', 0, 0, 16, true, 30, 10000),
+    'barracks', 'images/Barracks.png', 0, 0, 16, true, 30, 1/2, 10000),
 Workshop = new BuildingType(
-    'workshop', 'images/Workshop.png', 0, 0, 16, true, 30, 10000),
+    'workshop', 'images/Workshop.png', 0, 0, 16, true, 30, 1, 10000),
 Temple = new BuildingType(
-    'temple', 'images/Temple.png', 0, 0, 16, true, 30, 10000),
+    'temple', 'images/Temple.png', 0, 0, 16, true, 30, 1/2, 10000),
 GreenHouse = new BuildingType(
-    'greenHouse', 'images/GreenHouse.png', 0, 0, 16, true, 30, 10000),
+    'greenHouse', 'images/GreenHouse.png', 0, 0, 16, true, 30, -1/6, 10000),
 Tree = new BuildingType(
-    'tree', 'images/Tree.png', 0, 4, 0, false, 10, 1000, {
+    'tree', 'images/Tree.png', 0, 4, 0, false, 10, -1/6, 1000, {
         building() {
             this.rotation = (Math.random() - 0.5) * Math.PI / 16;
         },
@@ -124,7 +128,7 @@ Tree = new BuildingType(
         notifyCompletion() { ui.notify('tree grown') }
     }),
 FallingTree = new BuildingType(
-    'fallingTree', 'images/FallingTree.png', 0, 4, 0, false, 10, 250, {
+    'fallingTree', 'images/FallingTree.png', 0, 4, 0, false, 10, 0, 250, {
         onFinished() { this.shouldRemove = true; },
         notifyCompletion() { ui.notify('stump removed') }
     });
