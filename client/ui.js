@@ -154,6 +154,9 @@ class UI {
 
         this.notifyTag = document.createElement('div');
         this.notifyTag.classList.add('notify');
+
+        this.fpsCounter = new FPSCounter();
+        this.gameContainer.appendChild(this.fpsCounter.tag);
     }
     createGroup(name) {
         let group = {};
@@ -272,6 +275,8 @@ class UI {
                 else this.updateText(btn, 0, text);
             });
         }
+
+        this.fpsCounter.update(delta);
     }
     show(group) {
         for (let i = this.groupsTag.children.length; i--;)

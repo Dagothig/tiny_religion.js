@@ -25,6 +25,7 @@ gulp.task('client', function(cb) {
         "client/overlay.js",
         "client/game.js",
 
+        "client/fps-counter.js",
         "client/ui.js",
         "client/main.js"
     ])

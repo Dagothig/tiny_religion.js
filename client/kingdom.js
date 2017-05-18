@@ -62,7 +62,7 @@ class Kingdom {
 
     build(game, type) {
         if (this.builded) return 'project limit reached';
-        let isls = game.islands.slice(0).sort(Math.random);
+        let isls = game.islands.slice(0).sort(() => Math.random() - 0.5);
         for (let i = 0; i < isls.length; i++) {
             let isl = isls[i];
             if (isl.kingdom !== this) continue;

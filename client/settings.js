@@ -129,4 +129,5 @@ let settings = ((strat, confs) => Object.keys(confs).reduce((settings, key) => {
         medium: 12000,
         long: 24000
     }],
+    fps: [false, 'bool', 'user']
 });

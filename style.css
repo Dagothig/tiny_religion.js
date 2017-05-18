@@ -597,6 +597,16 @@ canvas {
     }
 }
 
+.fps-counter {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    margin: 1rem;
+    z-index: 1;
+    user-select: none;
+    pointer-events: none;
+}
+
 /* RESPONSIVE! */
 @media (max-width:640px) and (max-aspect-ratio: 640/600) {
     .title:before, .title:after { height: 0; }

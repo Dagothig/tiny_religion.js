@@ -667,7 +667,8 @@ var settings = function (strat, confs) {
         short: 6000,
         medium: 12000,
         long: 24000
-    }]
+    }],
+    fps: [false, 'bool', 'user']
 });
 'use strict';
 
@@ -1307,7 +1308,9 @@ var Kingdom = function () {
         key: 'build',
         value: function build(game, type) {
             if (this.builded) return 'project limit reached';
-            var isls = game.islands.slice(0).sort(Math.random);
+            var isls = game.islands.slice(0).sort(function () {
+                return Math.random() - 0.5;
+            });
             for (var i = 0; i < isls.length; i++) {
                 var isl = isls[i];
                 if (isl.kingdom !== this) continue;
@@ -2965,6 +2968,40 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+var FPSCounter = function () {
+    function FPSCounter() {
+        var _this = this;
+
+        _classCallCheck(this, FPSCounter);
+
+        this.tag = document.createElement('div');
+        this.tag.classList.add('fps-counter');
+        settings.bind('fps', function (t) {
+            return _this.tag.classList[t ? 'remove' : 'add']('hidden');
+        });
+
+        this.fps = 60;
+        this.lastDelta = 0;
+    }
+
+    _createClass(FPSCounter, [{
+        key: 'update',
+        value: function update(delta) {
+            var fpsFromDelta = 1000 / delta;
+            this.fps = this.fps * 0.9 + fpsFromDelta * 0.1;
+            this.lastDelta = delta;
+            this.tag.innerHTML = this.fps | 0;
+        }
+    }]);
+
+    return FPSCounter;
+}();
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
 var UI = function () {
     function UI(gameContainer, onTitle) {
         var _this = this;
@@ -3106,6 +3143,9 @@ var UI = function () {
 
         this.notifyTag = document.createElement('div');
         this.notifyTag.classList.add('notify');
+
+        this.fpsCounter = new FPSCounter();
+        this.gameContainer.appendChild(this.fpsCounter.tag);
     }
 
     _createClass(UI, [{
@@ -3254,6 +3294,8 @@ var UI = function () {
                     });else _this4.updateText(btn, 0, text);
                 });
             }
+
+            this.fpsCounter.update(delta);
         }
     }, {
         key: 'show',
