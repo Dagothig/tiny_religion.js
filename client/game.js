@@ -154,17 +154,19 @@ class Game extends PIXI.Container {
         this.cloudEndBack.tint = this.cloudEndFront.tint = this.cloudColor;
         renderer.backgroundColor = this.backgroundColor;
 
-        let min = -480;
-        let max = width + 480;
-        for (let i = this.children.length; i--;) {
-            let child = this.children[i];
-            let diff = child.x + this.x;
-            child.visible = diff > min && diff < max;
-            if (child.render) child.render(delta, this, renderer);
-        }
-
-        this.children.sort(Game.zSort);
+        // We could do smarter culling using the bounds, but it turns out that it's
+        // more performant to just assume everything is 480 wide (this works
+        // because our largest images are 480 wide).
+        let min = 0 - this.x - this.islBnds.right,
+            max = width - this.x - this.islBnds.left;
+        let children = this.children;
+        this.children = children
+            .filter(c =>
+                (c.nonCullable || c.x >= min && c.x <= max) &&
+                (!c.render || c.render(delta, this, renderer) || true))
+            .sort(Game.zSort);
         renderer.render(this);
+        this.children = children;
     }
     updateCounts() {
         this.kingdoms.forEach(k => k.count(this));

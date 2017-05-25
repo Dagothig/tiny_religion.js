@@ -605,6 +605,7 @@ canvas {
     z-index: 1;
     user-select: none;
     pointer-events: none;
+    text-shadow: 0 1px white;
 }
 
 /* RESPONSIVE! */

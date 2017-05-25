@@ -2052,6 +2052,18 @@ var Job = function () {
         value: function init(texture) {
             this.texture = new PIXI.TiledTexture(texture, 8, 12);
         }
+    }, {
+        key: 'update',
+        value: function update() {}
+    }, {
+        key: 'findNextTarget',
+        value: function findNextTarget() {}
+    }, {
+        key: 'outputState',
+        value: function outputState() {}
+    }, {
+        key: 'resolveIndices',
+        value: function resolveIndices() {}
     }]);
 
     return Job;
@@ -2110,7 +2122,7 @@ var Person = function (_PIXI$AnimatedSprite) {
                 return;
             }
 
-            if (this.job.update && this.job.update.apply(this, arguments)) return;
+            if (this.job.update.apply(this, arguments)) return;
 
             // Movement
             var dstToTarget = 0;
@@ -2136,9 +2148,6 @@ var Person = function (_PIXI$AnimatedSprite) {
                 this.y += this.movY;
             }
 
-            var bounds = this.island.getLocalBounds();
-            if (this.x > this.island.x + bounds.right + 16 || this.x < this.island.x + bounds.left - 16) throw 'NOOOO';
-
             _get(Person.prototype.__proto__ || Object.getPrototypeOf(Person.prototype), 'update', this).call(this, delta);
         }
     }, {
@@ -2150,7 +2159,7 @@ var Person = function (_PIXI$AnimatedSprite) {
     }, {
         key: 'findNextTarget',
         value: function findNextTarget(game) {
-            if (this.job.findNextTarget && this.job.findNextTarget.call(this, game)) return;
+            if (this.job.findNextTarget.call(this, game)) return;
             this.movements.push(this.island.getRandomPoint());
             if (Math.random() < 0.25) this.moveTo(game.islands, Math.random() * game.islands.length | 0);
         }
@@ -2183,17 +2192,13 @@ var Person = function (_PIXI$AnimatedSprite) {
         value: function _trgtIsl(dst2, filter, island) {
             for (var i = island.people.length; i--;) {
                 var p = island.people[i];
-                if (p.kingdom !== this.kingdom && filter(p) && Math.dst2(this.x, this.y, p.x, p.y) < dst2) return p;
+                if (p.kingdom !== this.kingdom && (!filter || filter(p)) && Math.dst2(this.x, this.y, p.x, p.y) < dst2) return p;
             }
             return null;
         }
     }, {
         key: 'findTarget',
-        value: function findTarget(game, dst2) {
-            var filter = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : function () {
-                return true;
-            };
-
+        value: function findTarget(game, dst2, filter) {
             var target = this._trgtIsl(dst2, filter, this.island);
             if (target) return target;
 
@@ -2493,6 +2498,7 @@ var Overlay = function (_PIXI$Sprite) {
 
         var _this = _possibleConstructorReturn(this, (Overlay.__proto__ || Object.getPrototypeOf(Overlay)).call(this, texture));
 
+        _this.nonCullable = true;
         _this.flashes = [];
         return _this;
     }
@@ -2663,6 +2669,8 @@ var Game = function (_PIXI$Container) {
     }, {
         key: 'render',
         value: function render(delta, renderer) {
+            var _this2 = this;
+
             // Positions & limits
             var width = renderer.width,
                 height = renderer.height;
@@ -2696,25 +2704,25 @@ var Game = function (_PIXI$Container) {
             this.cloudStartBack.tint = this.cloudStartFront.tint = this.cloudEndBack.tint = this.cloudEndFront.tint = this.cloudColor;
             renderer.backgroundColor = this.backgroundColor;
 
-            var min = -480;
-            var max = width + 480;
-            for (var i = this.children.length; i--;) {
-                var child = this.children[i];
-                var diff = child.x + this.x;
-                child.visible = diff > min && diff < max;
-                if (child.render) child.render(delta, this, renderer);
-            }
-
-            this.children.sort(Game.zSort);
+            // We could do smarter culling using the bounds, but it turns out that it's
+            // more performant to just assume everything is 480 wide (this works
+            // because our largest images are 480 wide).
+            var min = 0 - this.x - this.islBnds.right,
+                max = width - this.x - this.islBnds.left;
+            var children = this.children;
+            this.children = children.filter(function (c) {
+                return (c.nonCullable || c.x >= min && c.x <= max) && (!c.render || c.render(delta, _this2, renderer) || true);
+            }).sort(Game.zSort);
             renderer.render(this);
+            this.children = children;
         }
     }, {
         key: 'updateCounts',
         value: function updateCounts() {
-            var _this2 = this;
+            var _this3 = this;
 
             this.kingdoms.forEach(function (k) {
-                return k.count(_this2);
+                return k.count(_this3);
             });
         }
     }, {
@@ -2801,33 +2809,33 @@ var Game = function (_PIXI$Container) {
     }, {
         key: 'attachEvents',
         value: function attachEvents(container) {
-            var _this3 = this;
+            var _this4 = this;
 
             if (this.container) this.detachEvents();else {
                 this.events = {};
                 this.events.mousedown = function (ev) {
-                    return _this3.beginDown(ev.pageX * scaling, ev.pageY * scaling);
+                    return _this4.beginDown(ev.pageX * scaling, ev.pageY * scaling);
                 };
                 this.events.touchstart = Misc.wrap(Misc.touchToMouseEv, this.events.mousedown);
 
                 this.events.mousemove = function (ev) {
-                    return _this3.onMove(ev.pageX * scaling, ev.pageY * scaling);
+                    return _this4.onMove(ev.pageX * scaling, ev.pageY * scaling);
                 };
                 this.events.touchmove = Misc.wrap(Misc.touchToMouseEv, this.events.mousemove);
 
                 this.events.mouseup = function (ev) {
-                    return _this3.finishDown();
+                    return _this4.finishDown();
                 };
                 this.events.touchend = this.events.mouseup;
                 this.events.mousewheel = function (ev) {
-                    return _this3.x -= ev.deltaX;
+                    return _this4.x -= ev.deltaX;
                 };
                 this.events.keys = [];
                 this.events.keydown = function (ev) {
-                    return _this3.events.keys[ev.keyCode] = true;
+                    return _this4.events.keys[ev.keyCode] = true;
                 };
                 this.events.keyup = function (ev) {
-                    return _this3.events.keys[ev.keyCode] = false;
+                    return _this4.events.keys[ev.keyCode] = false;
                 };
             }
             this.container = container;

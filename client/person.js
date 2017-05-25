@@ -10,6 +10,10 @@ class Job {
     init(texture) {
         this.texture = new PIXI.TiledTexture(texture, 8, 12);
     }
+    update() {}
+    findNextTarget() {}
+    outputState() {}
+    resolveIndices() {}
 }
 class Person extends PIXI.AnimatedSprite {
     constructor(x, y, job, kingdom, island, isSummon = false) {
@@ -63,7 +67,7 @@ class Person extends PIXI.AnimatedSprite {
             return;
         }
 
-        if (this.job.update && this.job.update.apply(this, arguments)) return;
+        if (this.job.update.apply(this, arguments)) return;
 
         // Movement
         let dstToTarget = 0;
@@ -91,10 +95,6 @@ class Person extends PIXI.AnimatedSprite {
             this.y += this.movY;
         }
 
-        let bounds = this.island.getLocalBounds();
-        if (this.x > this.island.x + bounds.right + 16 || this.x < this.island.x + bounds.left - 16)
-            throw 'NOOOO';
-
         super.update(delta);
     }
     render(delta, game, renderer) {
@@ -104,9 +104,7 @@ class Person extends PIXI.AnimatedSprite {
         this.tint = this.sinceTookDamage > 4 ? 0xffffff : this.kingdom.tint;
     }
     findNextTarget(game) {
-        if (this.job.findNextTarget &&
-            this.job.findNextTarget.call(this, game)
-        ) return;
+        if (this.job.findNextTarget.call(this, game)) return;
         this.movements.push(this.island.getRandomPoint());
         if (Math.random() < 0.25)
             this.moveTo(game.islands, (Math.random() * game.islands.length)|0);
@@ -137,13 +135,13 @@ class Person extends PIXI.AnimatedSprite {
         for (let i = island.people.length; i--;) {
             let p = island.people[i];
             if (p.kingdom !== this.kingdom
-                && filter(p)
+                && (!filter || filter(p))
                 && Math.dst2(this.x, this.y, p.x, p.y) < dst2
             ) return p;
         }
         return null;
     }
-    findTarget(game, dst2, filter = () => true) {
+    findTarget(game, dst2, filter) {
         let target = this._trgtIsl(dst2, filter, this.island);
         if (target) return target;
 

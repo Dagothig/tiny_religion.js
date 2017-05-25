@@ -1,6 +1,7 @@
 class Overlay extends PIXI.Sprite {
     constructor(texture = PIXI.whitePixel) {
         super(texture);
+        this.nonCullable = true;
         this.flashes = [];
     }
     render(delta, game, renderer) {
