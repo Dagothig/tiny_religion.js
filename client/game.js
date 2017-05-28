@@ -66,7 +66,6 @@ class Game extends PIXI.Container {
             state.islands.forEach(s => this.addIsland(Island.fromState(s, this)));
             this.islands.forEach(island => island.resolveIndices(this));
         } else this.generateInitial();
-        this.updateCounts();
 
         // Clouds b
         this.cloudStartBack.x = this.cloudStartFront.x = this.islBnds.left;
@@ -99,13 +98,18 @@ class Game extends PIXI.Container {
         return this.islBnds ? this.islands.length * this.islBnds.width : 0;
     }
 
+    addChild(child) {
+        PIXI.Container.prototype.addChild.apply(this, arguments);
+        if (arguments.length === 1 && child.onAdd) child.onAdd();
+    }
     update(delta) {
-        this.updateCounts();
-
         for (let i = this.children.length; i--;) {
             let child = this.children[i];
             if (child.update) child.update(delta, this);
-            if (child.shouldRemove) this.children.splice(i, 1);
+            if (child.shouldRemove) {
+                this.removeChildAt(i);
+                if (child.onRemove) child.onRemove();
+            }
         }
 
         if (this.player.linkedTo(this, this.ai)) Music.switchTo(musics.combat);
@@ -167,9 +171,6 @@ class Game extends PIXI.Container {
             .sort(Game.zSort);
         renderer.render(this);
         this.children = children;
-    }
-    updateCounts() {
-        this.kingdoms.forEach(k => k.count(this));
     }
     checkForEnd() {
         if (!this.player.peopleCount && !this.player.summonCount)

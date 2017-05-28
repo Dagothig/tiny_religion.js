@@ -4,6 +4,7 @@ class Job {
     constructor(name, path, ext) {
         this.name = name;
         Person.jobs.add(this);
+        Person.jobs[name] = this;
         PIXI.loader.add(name, path, null, res => this.init(res.texture));
         Object.merge(this, ext);
     }
@@ -56,6 +57,18 @@ class Person extends PIXI.AnimatedSprite {
         this.shouldRemove = true;
         game.addChild(new SFX(this.x, this.y, Blood));
         sounds.death.play();
+    }
+    changeKingdom(newKingdom) {
+        this.kingdom.removeFromPersonCount(this);
+        this.kingdom = newKingdom;
+        this.kingdom.addToPersonCount(this);
+    }
+    onAdd() { this.kingdom.addToPersonCount(this); }
+    onRemove() { this.kingdom.removeFromPersonCount(this); }
+    changeJob(newJob) {
+        this.kingdom.removeFromPersonCount(this);
+        this.job = newJob;
+        this.kingdom.addToPersonCount(this);
     }
 
     update(delta, game) {
@@ -189,8 +202,7 @@ class Person extends PIXI.AnimatedSprite {
     }
 }
 Person.fromState = function(s, island, game) {
-    let job = Person.jobs.find(j => j.name === s.job);
-    let kingdom = game[s.kingdom];
+    let job = Person.jobs[s.job], kingdom = game[s.kingdom];
     let p = new Person(s.x, s.y, job, kingdom, island, s.isSummon);
     p.health = s.health;
     p.sinceTookDamage = s.sinceTookDamage;
@@ -294,7 +306,7 @@ Priest = new Job('priest', 'images/Priest.png', {
         if (!target) return;
         if (this.kingdom.isPlayer) game.god.event('converting', 1, this.position);
         if (Math.random() * 1500 < 3 + this.kingdom.templeCount) {
-            target.kingdom = this.kingdom;
+            target.changeKingdom(this.kingdom);
             game.addChild(new SFX(target.x, target.y, Summon));
             sounds.convert.play();
             if (this.kingdom.isPlayer) game.god.event('convert', 1, this.position);
@@ -314,3 +326,4 @@ Priest = new Job('priest', 'images/Priest.png', {
     },
     outputState() { return { sinceSummon: this.sinceSummon }; }
 });
+Person.jobs.forEach(job => Person[job.name] = job);

@@ -5,18 +5,35 @@ class Kingdom {
         this.name = name;
         this.tint = tint;
         this.isPlayer = isPlayer;
-        this.resetCount = x => this[x.name + 'Count'] = 0;
-        this.addToPersonCount = x => {
-            if (x.kingdom !== this) return;
-            if (x.isSummon) this.summonCount++;
-            else this.peopleCount++;
-            this[x.job.name + 'Count']++;
-        };
-        this.addToBuildingCount = x =>
-            x.finished ? this[x.type.name + 'Count']++ :
-            x.type === Tree ? this.growing++ :
-            x.type !== FallingTree ? this.unfinished++ :
+
+        let resetCount = x => this[x.name + 'Count'] = 0;
+
+        this.islandCount = 0;
+        this.unfinished = 0;
+        this.growing = 0;
+        Building.types.forEach(resetCount);
+        this.peopleCount = 0;
+        this.summonCount = 0;
+        Person.jobs.forEach(resetCount);
+
+        let personCount = amount => x =>
+            x.kingdom === this && (
+            (x.isSummon ? this.summonCount += amount : this.peopleCount += amount),
+            this[x.job.name + 'Count'] += amount);
+        this.addToPersonCount = personCount(1);
+        this.removeFromPersonCount = personCount(-1);
+
+        let buildingCount = amount => x =>
+            x.finished ? this[x.type.name + 'Count'] += amount :
+            x.type === Tree ? this.growing += amount :
+            x.type !== FallingTree ? this.unfinished += amount :
             null;
+        this.addToBuildingCount = buildingCount(1);
+        this.removeFromBuildingCount = buildingCount(-1);
+
+        let islandCount = amount => x => this.islandCount += amount;
+        this.addToIslandCount = islandCount(1);
+        this.removeFromIslandCount = islandCount(-1);
     }
 
     count(game) {
@@ -147,7 +164,7 @@ class Kingdom {
         let person = this.findOfJob(game, Villager);
         if (person) {
             game.addChild(new SFX(person.x, person.y, Summon));
-            person.job = job;
+            person.changeJob(job);
             if (this.isPlayer) {
                 game.god.event(job.name, 1, person.position);
                 sounds[job.name + 'Train'].play();
@@ -160,7 +177,7 @@ class Kingdom {
         let person = this.findOfJob(game, job);
         if (person) {
             game.addChild(new SFX(person.x, person.y, Summon));
-            person.job = Villager;
+            person.changeJob(Villager);
             if (this.isPlayer) {
                 game.god.event(job.name, -1, person.position);
                 sounds.untrain.play();

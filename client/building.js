@@ -52,6 +52,14 @@ class Building extends PIXI.TiledSprite {
             Math.dst(this.x, this.y, o.x, o.y) < this.radius + radius :
             Math.dst2(this.x, this.y, o.x, o.y) < this.radius2;
     }
+    changeKingdom(newKingdom) {
+        this.kingdom.removeFromBuildingCount(this);
+        this.kingdom = newKingdom;
+        this.kingdom.addToBuildingCount(this);
+        this.updateTextureState();
+    }
+    onAdd() { this.kingdom.addToBuildingCount(this); }
+    onRemove() { this.kingdom.removeFromBuildingCount(this); }
     updateTextureState() {
         this.tileX = !this.type.playerColored || this.kingdom.isPlayer ? 0 : 1;
         this.tileY = this.finished ? 1 : 0;
@@ -59,7 +67,10 @@ class Building extends PIXI.TiledSprite {
     progressBuild(amount, game) {
         this.buildTime -= amount;
         if (this.buildTime <= 0) {
+            this.kingdom.removeFromBuildingCount(this);
             this.finished = true;
+            this.kingdom.addToBuildingCount(this);
+
             this.updateTextureState();
             if (this.kingdom.isPlayer) {
                 game.god.event(this.type.name, 0.5, this.position);

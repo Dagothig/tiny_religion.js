@@ -136,14 +136,16 @@ class Island extends PIXI.Container {
     }
 
     changeKingdom(newKingdom) {
+        this.kingdom.removeFromIslandCount(this);
         this.kingdom = newKingdom;
+        this.kingdom.addToIslandCount(this);
+        this.buildings.forEach(b => b.changeKingdom(newKingdom));
+
         if (this.kingdom.isPlayer) sounds.islandWin.play();
         else sounds.islandLose.play();
-        this.buildings.forEach(b => {
-            b.kingdom = newKingdom;
-            b.updateTextureState();
-        });
     }
+    onAdd() { this.kingdom.addToIslandCount(this); }
+    onRemove() { this.kingdom.removeFromIslandCount(this); }
 
     outputState() {
         return {

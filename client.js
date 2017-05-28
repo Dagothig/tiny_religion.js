@@ -1250,17 +1250,42 @@ var Kingdom = function () {
         this.name = name;
         this.tint = tint;
         this.isPlayer = isPlayer;
-        this.resetCount = function (x) {
+
+        var resetCount = function resetCount(x) {
             return _this[x.name + 'Count'] = 0;
         };
-        this.addToPersonCount = function (x) {
-            if (x.kingdom !== _this) return;
-            if (x.isSummon) _this.summonCount++;else _this.peopleCount++;
-            _this[x.job.name + 'Count']++;
+
+        this.islandCount = 0;
+        this.unfinished = 0;
+        this.growing = 0;
+        Building.types.forEach(resetCount);
+        this.peopleCount = 0;
+        this.summonCount = 0;
+        Person.jobs.forEach(resetCount);
+
+        var personCount = function personCount(amount) {
+            return function (x) {
+                return x.kingdom === _this && (x.isSummon ? _this.summonCount += amount : _this.peopleCount += amount, _this[x.job.name + 'Count'] += amount);
+            };
         };
-        this.addToBuildingCount = function (x) {
-            return x.finished ? _this[x.type.name + 'Count']++ : x.type === Tree ? _this.growing++ : x.type !== FallingTree ? _this.unfinished++ : null;
+        this.addToPersonCount = personCount(1);
+        this.removeFromPersonCount = personCount(-1);
+
+        var buildingCount = function buildingCount(amount) {
+            return function (x) {
+                return x.finished ? _this[x.type.name + 'Count'] += amount : x.type === Tree ? _this.growing += amount : x.type !== FallingTree ? _this.unfinished += amount : null;
+            };
         };
+        this.addToBuildingCount = buildingCount(1);
+        this.removeFromBuildingCount = buildingCount(-1);
+
+        var islandCount = function islandCount(amount) {
+            return function (x) {
+                return _this.islandCount += amount;
+            };
+        };
+        this.addToIslandCount = islandCount(1);
+        this.removeFromIslandCount = islandCount(-1);
     }
 
     _createClass(Kingdom, [{
@@ -1416,7 +1441,7 @@ var Kingdom = function () {
             var person = this.findOfJob(game, Villager);
             if (person) {
                 game.addChild(new SFX(person.x, person.y, Summon));
-                person.job = job;
+                person.changeJob(job);
                 if (this.isPlayer) {
                     game.god.event(job.name, 1, person.position);
                     sounds[job.name + 'Train'].play();
@@ -1431,7 +1456,7 @@ var Kingdom = function () {
             var person = this.findOfJob(game, job);
             if (person) {
                 game.addChild(new SFX(person.x, person.y, Summon));
-                person.job = Villager;
+                person.changeJob(Villager);
                 if (this.isPlayer) {
                     game.god.event(job.name, -1, person.position);
                     sounds.untrain.play();
@@ -1772,12 +1797,24 @@ var Island = function (_PIXI$Container) {
     }, {
         key: 'changeKingdom',
         value: function changeKingdom(newKingdom) {
+            this.kingdom.removeFromIslandCount(this);
             this.kingdom = newKingdom;
-            if (this.kingdom.isPlayer) sounds.islandWin.play();else sounds.islandLose.play();
+            this.kingdom.addToIslandCount(this);
             this.buildings.forEach(function (b) {
-                b.kingdom = newKingdom;
-                b.updateTextureState();
+                return b.changeKingdom(newKingdom);
             });
+
+            if (this.kingdom.isPlayer) sounds.islandWin.play();else sounds.islandLose.play();
+        }
+    }, {
+        key: 'onAdd',
+        value: function onAdd() {
+            this.kingdom.addToIslandCount(this);
+        }
+    }, {
+        key: 'onRemove',
+        value: function onRemove() {
+            this.kingdom.removeFromIslandCount(this);
         }
     }, {
         key: 'outputState',
@@ -1906,6 +1943,24 @@ var Building = function (_PIXI$TiledSprite) {
             return radius ? Math.dst(this.x, this.y, o.x, o.y) < this.radius + radius : Math.dst2(this.x, this.y, o.x, o.y) < this.radius2;
         }
     }, {
+        key: 'changeKingdom',
+        value: function changeKingdom(newKingdom) {
+            this.kingdom.removeFromBuildingCount(this);
+            this.kingdom = newKingdom;
+            this.kingdom.addToBuildingCount(this);
+            this.updateTextureState();
+        }
+    }, {
+        key: 'onAdd',
+        value: function onAdd() {
+            this.kingdom.addToBuildingCount(this);
+        }
+    }, {
+        key: 'onRemove',
+        value: function onRemove() {
+            this.kingdom.removeFromBuildingCount(this);
+        }
+    }, {
         key: 'updateTextureState',
         value: function updateTextureState() {
             this.tileX = !this.type.playerColored || this.kingdom.isPlayer ? 0 : 1;
@@ -1916,7 +1971,10 @@ var Building = function (_PIXI$TiledSprite) {
         value: function progressBuild(amount, game) {
             this.buildTime -= amount;
             if (this.buildTime <= 0) {
+                this.kingdom.removeFromBuildingCount(this);
                 this.finished = true;
+                this.kingdom.addToBuildingCount(this);
+
                 this.updateTextureState();
                 if (this.kingdom.isPlayer) {
                     game.god.event(this.type.name, 0.5, this.position);
@@ -2041,6 +2099,7 @@ var Job = function () {
 
         this.name = name;
         Person.jobs.add(this);
+        Person.jobs[name] = this;
         PIXI.loader.add(name, path, null, function (res) {
             return _this.init(res.texture);
         });
@@ -2110,6 +2169,30 @@ var Person = function (_PIXI$AnimatedSprite) {
             this.shouldRemove = true;
             game.addChild(new SFX(this.x, this.y, Blood));
             sounds.death.play();
+        }
+    }, {
+        key: 'changeKingdom',
+        value: function changeKingdom(newKingdom) {
+            this.kingdom.removeFromPersonCount(this);
+            this.kingdom = newKingdom;
+            this.kingdom.addToPersonCount(this);
+        }
+    }, {
+        key: 'onAdd',
+        value: function onAdd() {
+            this.kingdom.addToPersonCount(this);
+        }
+    }, {
+        key: 'onRemove',
+        value: function onRemove() {
+            this.kingdom.removeFromPersonCount(this);
+        }
+    }, {
+        key: 'changeJob',
+        value: function changeJob(newJob) {
+            this.kingdom.removeFromPersonCount(this);
+            this.job = newJob;
+            this.kingdom.addToPersonCount(this);
         }
     }, {
         key: 'update',
@@ -2272,10 +2355,8 @@ var Person = function (_PIXI$AnimatedSprite) {
 }(PIXI.AnimatedSprite);
 
 Person.fromState = function (s, island, game) {
-    var job = Person.jobs.find(function (j) {
-        return j.name === s.job;
-    });
-    var kingdom = game[s.kingdom];
+    var job = Person.jobs[s.job],
+        kingdom = game[s.kingdom];
     var p = new Person(s.x, s.y, job, kingdom, island, s.isSummon);
     p.health = s.health;
     p.sinceTookDamage = s.sinceTookDamage;
@@ -2396,7 +2477,7 @@ var Villager = new Job('villager', 'images/Villager.png', {
         if (!target) return;
         if (this.kingdom.isPlayer) game.god.event('converting', 1, this.position);
         if (Math.random() * 1500 < 3 + this.kingdom.templeCount) {
-            target.kingdom = this.kingdom;
+            target.changeKingdom(this.kingdom);
             game.addChild(new SFX(target.x, target.y, Summon));
             sounds.convert.play();
             if (this.kingdom.isPlayer) game.god.event('convert', 1, this.position);
@@ -2416,6 +2497,9 @@ var Villager = new Job('villager', 'images/Villager.png', {
     outputState: function outputState() {
         return { sinceSummon: this.sinceSummon };
     }
+});
+Person.jobs.forEach(function (job) {
+    return Person[job.name] = job;
 });
 'use strict';
 
@@ -2629,7 +2713,6 @@ var Game = function (_PIXI$Container) {
                 return island.resolveIndices(_this);
             });
         } else _this.generateInitial();
-        _this.updateCounts();
 
         // Clouds b
         _this.cloudStartBack.x = _this.cloudStartFront.x = _this.islBnds.left;
@@ -2654,14 +2737,21 @@ var Game = function (_PIXI$Container) {
     }
 
     _createClass(Game, [{
+        key: 'addChild',
+        value: function addChild(child) {
+            PIXI.Container.prototype.addChild.apply(this, arguments);
+            if (arguments.length === 1 && child.onAdd) child.onAdd();
+        }
+    }, {
         key: 'update',
         value: function update(delta) {
-            this.updateCounts();
-
             for (var i = this.children.length; i--;) {
                 var child = this.children[i];
                 if (child.update) child.update(delta, this);
-                if (child.shouldRemove) this.children.splice(i, 1);
+                if (child.shouldRemove) {
+                    this.removeChildAt(i);
+                    if (child.onRemove) child.onRemove();
+                }
             }
 
             if (this.player.linkedTo(this, this.ai)) Music.switchTo(musics.combat);else Music.switchTo(musics.regular);
@@ -2715,15 +2805,6 @@ var Game = function (_PIXI$Container) {
             }).sort(Game.zSort);
             renderer.render(this);
             this.children = children;
-        }
-    }, {
-        key: 'updateCounts',
-        value: function updateCounts() {
-            var _this3 = this;
-
-            this.kingdoms.forEach(function (k) {
-                return k.count(_this3);
-            });
         }
     }, {
         key: 'checkForEnd',
@@ -2809,33 +2890,33 @@ var Game = function (_PIXI$Container) {
     }, {
         key: 'attachEvents',
         value: function attachEvents(container) {
-            var _this4 = this;
+            var _this3 = this;
 
             if (this.container) this.detachEvents();else {
                 this.events = {};
                 this.events.mousedown = function (ev) {
-                    return _this4.beginDown(ev.pageX * scaling, ev.pageY * scaling);
+                    return _this3.beginDown(ev.pageX * scaling, ev.pageY * scaling);
                 };
                 this.events.touchstart = Misc.wrap(Misc.touchToMouseEv, this.events.mousedown);
 
                 this.events.mousemove = function (ev) {
-                    return _this4.onMove(ev.pageX * scaling, ev.pageY * scaling);
+                    return _this3.onMove(ev.pageX * scaling, ev.pageY * scaling);
                 };
                 this.events.touchmove = Misc.wrap(Misc.touchToMouseEv, this.events.mousemove);
 
                 this.events.mouseup = function (ev) {
-                    return _this4.finishDown();
+                    return _this3.finishDown();
                 };
                 this.events.touchend = this.events.mouseup;
                 this.events.mousewheel = function (ev) {
-                    return _this4.x -= ev.deltaX;
+                    return _this3.x -= ev.deltaX;
                 };
                 this.events.keys = [];
                 this.events.keydown = function (ev) {
-                    return _this4.events.keys[ev.keyCode] = true;
+                    return _this3.events.keys[ev.keyCode] = true;
                 };
                 this.events.keyup = function (ev) {
-                    return _this4.events.keys[ev.keyCode] = false;
+                    return _this3.events.keys[ev.keyCode] = false;
                 };
             }
             this.container = container;
