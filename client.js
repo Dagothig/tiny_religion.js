@@ -3515,6 +3515,8 @@ var UI = function () {
 }();
 'use strict';
 
+PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
+
 var scaling = 1;
 var container = document.createElement('div');
 container.id = 'container';
@@ -3585,7 +3587,6 @@ function setupGame() {
     ui.showTitle();
 
     // Setup renderer
-    PIXI.scaleModes.DEFAULT = PIXI.scaleModes.NEAREST;
     var renderer = PIXI.autoDetectRenderer();
     renderer.roundPixels = true;
     container.appendChild(renderer.view);

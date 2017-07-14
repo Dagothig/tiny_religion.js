@@ -1,3 +1,5 @@
+PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
+
 let scaling = 1;
 let container = document.createElement('div');
 container.id = 'container';
@@ -62,7 +64,6 @@ function setupGame() {
     ui.showTitle();
 
     // Setup renderer
-    PIXI.scaleModes.DEFAULT = PIXI.scaleModes.NEAREST;
     let renderer = PIXI.autoDetectRenderer();
     renderer.roundPixels = true;
     container.appendChild(renderer.view);
