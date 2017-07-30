@@ -547,8 +547,9 @@ canvas {
 }
 .tip .text {
     flex-grow: 1;
-    white-space: pre-wrap;
+    white-space: pre-line;
     font-size: 3rem;
+    pointer-events: none;
 }
 .tip button {
     cursor: pointer;
@@ -575,8 +576,13 @@ canvas {
     pointer-events: none;
     user-select: none;
 }
-.notify * {
+.notify>div {
     position: absolute;
+    animation-name: notification;
+    animation-timing-function: linear;
+}
+.notify .extra {
+    font-size: 0.8em;
 }
 @keyframes notification {
     0% {

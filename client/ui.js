@@ -8,42 +8,27 @@ class UI {
             this.titleTag.removeEventListener('click', this.onTitle);
             onTitle();
         };
-        this.titleTag = document.createElement('div');
-        this.titleTag.classList.add('hidden', 'title');
-        this.titleTag.addEventListener('click', this.onTitle)
 
-        this.btnsTag = document.createElement('div');
-        this.btnsTag.classList.add('hidden', 'btns');
+        this.titleTag = dom('div', { class: 'hidden title', click: this.onTitle });
+
+        this.btnsTag = dom('div', { class: 'hidden btns' },
+            this.groupSelectTag = dom('div', { class: 'group-select' }),
+            this.groupsTag = dom('div', { class: 'groups' }));
+
         settings.bind('tooltips', t =>
             this.btnsTag.classList[t ? 'add' : 'remove']('tooltips'));
 
-        this.groupSelectTag = document.createElement('div');
-        this.groupSelectTag.classList.add('group-select');
-        this.btnsTag.appendChild(this.groupSelectTag);
-
-        this.groupsTag = document.createElement('div');
-        this.groupsTag.classList.add('groups');
-        this.btnsTag.appendChild(this.groupsTag);
-
-
         this.trainGroup = this.createGroup('train');
         this.untrainGroup = this.createGroup('untrain');
-        this.trainGroup.radio.onclick = this.untrainGroup.radio.onclick = () =>
-            this.tip('jobs',
-                'villagers make babies and cut trees' +
-                '\npriests make summons and convert' +
-                '\nwarriors fight, builders build');
+        this.trainGroup.radio.onclick = this.untrainGroup.radio.onclick =
+            () => this.tip('jobs');
+
         this.buildGroup = this.createGroup('build');
-        this.buildGroup.radio.onclick = () =>
-            this.tip('buildings',
-                'houses raise the pop limit' +
-                '\nbarracks make warriors stronger' +
-                '\ntemples raise the summon limit' +
-                '\nand make priests better' +
-                '\ngreenhouses raise the sapling limit' +
-                '\nbridges discover new islands');
+        this.buildGroup.radio.onclick = () => this.tip('buildings');
+
         this.doGroup = this.createGroup('do');
         this.moveGroup = this.createGroup('move');
+
         this.show(this.doGroup);
 
         this.btns =
@@ -74,7 +59,7 @@ class UI {
                 'bridge', 'build', 'bridge'),
             this.createBtn(this.doGroup.children,
                 () => this.game.player.forestate(this.game),
-                () => this.game.player.treeCount,
+                () => this.game.player.treeCount + this.game.player.bigTreeCount,
                 'forestate', 'forestate'),
             this.createBtn(this.doGroup.children,
                 () => this.game.player.deforest(this.game),
@@ -112,150 +97,92 @@ class UI {
                 'retreat', 'retreat')
         ]);
 
-        this.menuContainerTag = document.createElement('div');
-        this.menuContainerTag.classList.add('menu-container');
-
-        this.createMenuBtn('pause-btn')
-            .btn.onchange = ev => ev.target.checked ? pause(): resume();
-        this.createMenuBtn('menu-btn');
-
-        this.menuTag = document.createElement('div');
-        this.menuTag.classList.add('menu');
-
-        settings.all.map(n => this.createSettings(n));
-        this.createLink('New', 'javascript:newGame()');
-        this.createLink('Save', 'javascript:save()');
-        this.createLink('Restore', 'javascript:restore()');
-        this.createLink('Source', 'https://github.com/Dagothig/tiny_religion.js/')
-            .link.target = 'blank';
-
-        this.menuContainerTag.appendChild(this.menuTag);
+        this.menuContainerTag = dom('div', { class: 'menu-container' },
+            this.menuBtn('pause-btn', ev => ev.target.checked ? pause() : resume()),
+            this.menuBtn('menu-btn'),
+            this.menuTag = dom('div', { class: 'menu' },
+                settings.usr.map(n =>
+                    dom('div', {},
+                        dom('label', { textContent: n, htmlFor: n }),
+                        settings.inputFor(n))),
+                dom('div', {},
+                    dom('a', { href: 'javascript:newGame()'}, 'new'),
+                    settings.inputFor('goal')),
+                dom('div', {},
+                    dom('a', { href: 'javascript:save()' }, 'save')),
+                dom('div', {},
+                    dom('a', { href: 'javascript:restore()' }, 'restore')),
+                dom('div', {},
+                    dom('a', {
+                        href: 'https://github.com/Dagothig/tiny_religion.js/',
+                        target: 'blank'
+                    }, 'source'))));
 
         this.tips = {};
         this.tipsQueue = [];
-        this.tipTag = document.createElement('div');
-        this.tipTag.classList.add('tip', 'initial');
-
-        this.tipTextTag = document.createElement('div');
-        this.tipTextTag.classList.add('text');
-        this.tipTag.appendChild(this.tipTextTag);
-
-        this.tipOkTag = document.createElement('button');
-        this.tipOkTag.innerHTML = 'gotcha';
-        this.tipOkTag.onclick = () => this.dequeueTip();
-        this.tipTag.appendChild(this.tipOkTag);
+        this.tipTag = dom('div', { class: 'tip initial' },
+            this.tipTextTag = dom('div', { class: 'text' }),
+            this.tipOkTag = dom('button', {
+                click: () => this.dequeueTip()
+            }, 'gotcha'));
+        this.gameContainer.appendChild(this.tipTag);
 
         settings.bind('tips', t => {
             if (t) return;
             this.tips = {};
             this.tipsQueue = [];
-            this.tipTag.classList.add('hidden')
+            this.tipTag.classList.add('hidden');
         });
 
-        this.notifyTag = document.createElement('div');
-        this.notifyTag.classList.add('notify');
+        this.notifyTag = dom('div', { class: 'notify' });
+        this.gameContainer.appendChild(this.notifyTag);
 
         this.fpsCounter = new FPSCounter();
         this.gameContainer.appendChild(this.fpsCounter.tag);
     }
     createGroup(name) {
         let group = {};
+        group.radio = dom('input', {
+            id: name, name: 'group', type: 'radio', class: 'checked', value: name,
+            change: () => this.show(group)
+        });
+        group.nameTag = dom('label', { class: 'check', htmlFor: name },
+            group.nameContent = dom('span', {}, name));
+        group.children = dom('div', { class: 'group' })
 
-        let radio = document.createElement('input');
-        radio.id = name;
-        radio.type = 'radio';
-        radio.name = 'group';
-        radio.classList.add('checked');
-        radio.value = name;
-        radio.onchange = ev => this.show(group);
+        this.groupSelectTag.appendChild(group.radio);
+        this.groupSelectTag.appendChild(group.nameTag);
+        this.groupsTag.appendChild(group.children);
 
-        this.groupSelectTag.appendChild(radio);
-
-        let nameTag = document.createElement('label');
-        nameTag.classList.add('check');
-        nameTag.htmlFor = name;
-
-        let nameContent = document.createElement('span');
-        nameContent.innerHTML = name;
-        nameTag.appendChild(nameContent);
-
-        this.groupSelectTag.appendChild(nameTag);
-
-        let children = document.createElement('div');
-        children.classList.add('group');
-        this.groupsTag.appendChild(children);
-
-        group.radio = radio;
-        group.nameTag = nameTag;
-        group.nameContent = nameContent;
-        group.children = children;
         return group;
     }
     createBtn(parent, onclick, onupdate, name, ...classes) {
-        let tag = document.createElement('div');
-
-        let btn = document.createElement('button');
-        btn.classList.add('btn');
-        btn.classList.add.apply(btn.classList, classes);
-        btn.onclick = () => this.notify(onclick());
-        tag.appendChild(btn);
-
-        let tooltip = document.createElement('div');
-        tooltip.innerHTML = name;
-        tooltip.classList.add('tooltip');
-        tag.appendChild(tooltip);
-
-        parent.appendChild(tag);
-
-        return {
-            tag: tag,
-            btn: btn,
-            textTags: [],
-            tooltip: tooltip,
-            update: onupdate
-        };
+        var obj = { update: onupdate, textTags: [] };
+        obj.tag = dom('div', {},
+            obj.btn = dom('button', {
+                class: 'btn ' + classes.join(' '),
+                click: () => this.notify(onclick())
+            }),
+            obj.tooltip = dom('div', { class: 'tooltip' }, name));
+        parent.appendChild(obj.tag);
+        return obj;
     }
-    createLink(name, href) {
-        let linkContainer = document.createElement('div');
-        let link = document.createElement('a');
-        link.href = href;
-        link.innerHTML = name;
-        linkContainer.appendChild(link);
-        this.menuTag.appendChild(linkContainer);
-        return {
-            container: linkContainer,
-            link: link
-        };
+    menuBtn(name, change) {
+        return [
+            dom('input', {
+                id: name,
+                name: name,
+                type: 'checkbox',
+                class: `checked ${name}`,
+                change: change
+            }),
+            dom('label', {
+                class: 'check',
+                htmlFor: name
+            })
+        ];
     }
-    createSettings(name) {
-        let container = document.createElement('div');
 
-        let lbl = document.createElement('label');
-        lbl.innerHTML = name;
-        lbl.htmlFor = name;
-
-        let input = settings.inputFor(name);
-
-        container.appendChild(lbl);
-        container.appendChild(input);
-        this.menuTag.appendChild(container);
-
-        return container;
-    }
-    createMenuBtn(name) {
-        let btn = document.createElement('input');
-        btn.name = btn.id = name;
-        btn.type = 'checkbox';
-        btn.classList.add('checked', name);
-        this.menuContainerTag.appendChild(btn);
-
-        let check = document.createElement('label');
-        check.classList.add('check');
-        check.htmlFor = name;
-        this.menuContainerTag.appendChild(check);
-
-        return { btn: btn, check: check };
-    }
     updateText(btn, i, text) {
         let span = btn.textTags[i];
         if (!span) {
@@ -263,7 +190,7 @@ class UI {
             btn.btn.appendChild(span);
         }
         if (span._text === text) return;
-        span.innerHTML = span._text = text;
+        span.textContent = span._text = text;
     }
     update(delta, game) {
         this.game = game;
@@ -298,8 +225,7 @@ class UI {
             }
         } else sounds.titleScreen.play();
         if (window.android) android.updateStatusTint(0x193bcb);
-        setTimeout(() =>
-            this.titleTag.addEventListener('click', this.onTitle), 1000);
+        this.titleTag.addEventListener('click', this.onTitle);
         this.tipTag.classList.add('hidden');
     }
     hideTitle() {
@@ -309,9 +235,8 @@ class UI {
     }
     pause() { this.btns.forEach(btn => btn.btn.disabled = true); }
     resume() { this.btns.forEach(btn => btn.btn.disabled = false); }
-    tip(id, text) {
-        if (!settings.tips) return;
-        if (this.tips[id]) return;
+    tip(id, text = strs.tips[id]) {
+        if (!settings.tips || this.tips[id]) return;
         this.tips[id] = true;
         this.tipsQueue.push({ id: id, text: text });
         if (this.tipTag.classList.contains('hidden')) this.dequeueTip();
@@ -320,24 +245,29 @@ class UI {
         let tip = this.tipsQueue.shift();
         if (tip) {
             this.tipTag.classList.remove('hidden', 'initial');
-            this.tipTextTag.innerHTML = tip.text;
+            this.tipTextTag.textContent = tip.text;
         } else {
             this.tipTag.classList.add('hidden');
         }
     }
-    notify(str) {
-        let notif = document.createElement('div');
-        notif.innerHTML = str;
-        notif.addEventListener('animationend', () => notif.remove());
-        notif.style.animation = 'notification 2s linear';
+    notify(msg) {
+        let notif = dom('div', {
+            animationend: () => notif.remove(),
+            style: `animation-duration: ${msg.extra && settings.tips ? 4 : 2}s;`
+        },
+            msg.message || msg,
+            settings.tips && msg.extra && dom('div', { class: 'extra' }, msg.extra)
+        );
         this.notifyTag.appendChild(notif);
 
         let height = notif.clientHeight;
         let children = Array.from(this.notifyTag.children).filter(c => c !== notif);
 
-        notif.style.top =
-            [0].concat(children.map(c => c.offsetTop + c.clientHeight))
-            .filter(p => children.every(c => p >= c.offsetTop + c.clientHeight || p + height <= c.offsetTop))
+        notif.style.top = [0]
+            .concat(children.map(c => c.offsetTop + c.clientHeight))
+            .filter(p =>
+                children.every(c =>
+                    p >= c.offsetTop + c.clientHeight || p + height <= c.offsetTop))
             .sort((a, b) => a - b)[0] + 'px';
     }
     updateToGodColor(game) {
@@ -347,12 +277,12 @@ class UI {
     }
     onGodChangePersonality(game) {
         this.updateToGodColor(game);
-        this.tip('color', "God has changed color!\nIs God the same?");
+        this.tip('color');
     }
     onNewGame(game) {
         this.updateToGodColor(game);
         game.addEventListener('godChangePersonality', () =>
             this.onGodChangePersonality(game));
-        this.tip('please', "God demands pleasing!\nFind out what pleases God!");
+        this.tip('please');
     }
 }

@@ -1,12 +1,5 @@
 'use strict';
 
-// personalityColors[life][manMade]
-let personalityColors = [
-    [, 0x00ff00, ],
-    [, 0xffffff, ],
-    [, 0xff0088, ]
-];
-
 class God extends PIXI.Container {
     constructor() {
         super();
@@ -97,6 +90,13 @@ class God extends PIXI.Container {
         this.rightBrow.tileY = val;
     }
 
+    get lifeModifier() { return Math.max(this.likesLife, 0); }
+    get deathModifier() { return -Math.min(this.likesLife, 0); }
+    get manMadeModifier() { return Math.max(this.likesManMade, 0); }
+    get natureModifier() { return -Math.min(this.likesManMade, 0); }
+    get attentionModifier() { return Math.max(this.likesAttention, 0); }
+    get hermitModifier() { return -Math.min(this.likesAttention, 0); }
+
     update(delta, game) {
         this.overallMood += this.mood;
         this.mood /= 1.01;
@@ -120,8 +120,24 @@ class God extends PIXI.Container {
                 }
             }
 
-        if (Math.random() < -this.feeling(game.goal) / 400)
-            this.doSacrifice(game);
+        let feeling = this.feeling(game.goal);
+
+        if (feeling < 0) {
+            feeling *= -1;
+            // Check for punish
+            if (Math.random() < feeling * this.deathModifier / 400)
+                this.doSacrifice(game);
+
+            if (Math.random() < feeling * this.natureModifier / 400)
+                this.convertToTree(game);
+        } else {
+            // Check for reward
+            if (Math.random() < feeling * this.deathModifier / 400)
+                this.convertToMinotaur(game);
+
+            if (Math.random() < feeling * this.natureModifier / 600)
+                this.convertToBigTree(game);
+        }
 
         if (this.mood > 0) {
             this.satisfaction += this.mood;
@@ -153,19 +169,79 @@ class God extends PIXI.Container {
         this.rightEye.y = 4 * (this.lookAtY - y) / dstToRightEye;
     }
 
-    doSacrifice(game) {
+    randomPerson(game, filter) {
         let islands = game.islands.filter(i =>
             i.people.find(p => p.kingdom === game.player));
         let island = islands.rand();
-        if (!island) return 'nobody do sacrifice';
-        let dude;
-        do { dude = island.people.rand() } while (!dude.kingdom === game.player);
+        if (!island) return null;
+        let dude, i = 10;
+        do { dude = island.people.rand(); }
+        while (!(dude.kingdom === game.player && (!filter || filter(dude))) && i--);
+        return i+1 && dude;
+    }
+
+    randomBuilding(game, filter) {
+        let island = game.islands.filter(i => i.kingdom === game.player).rand();
+        return island && island.buildings.filter(filter || (() => true)).rand();
+    }
+
+    doSacrifice(game) {
+        let dude = this.randomPerson(game);
+        if (!dude) return strs.msgs.noSacrifice;
         this.event('sacrifice', 1, dude.position);
         game.addChild(new SFX(dude.x, dude.y, Lightning));
         sounds.lightning.play();
         game.overlay.flash(8);
         dude.die(game);
-        return 'boom!';
+        return strs.msgs.sacrificing;
+    }
+
+    convertToBird(game) {
+        let dude = this.randomPerson(game);
+    }
+
+    convertToMinotaur(game) {
+        let minotaur = this.randomPerson(game, x => x.job !== Minotaur);
+        if (!minotaur) return;
+        game.addChild(new SFX(minotaur, TopBeam).after(() => {
+            if (minotaur.shouldRemove) return;
+            minotaur.sinceTookDamage = 24;
+            game.addChild(new SFX(minotaur, BigSummon));
+            sounds.warriorTrain.play();
+            minotaur.changeJob(Minotaur);
+        }));
+    }
+
+    convertToTree(game) {
+        let person = this.randomPerson(game);
+        if (!person) return;
+        game.addChild(new SFX(person, TopBeam).after(() => {
+            if (person.shouldRemove) return;
+            this.event(Tree.name, 1, person.position);
+            game.addChild(new SFX(person.x, person.y, BigSummon));
+            sounds.done.play();
+            let tree = new Building(
+                person.x, person.y, Tree, person.kingdom, person.island, true);
+            tree.grow = 0.3;
+            person.island.buildings.add(tree);
+            game.addChild(tree);
+            person.shouldRemove = true;
+        }));
+    }
+
+    convertToBigTree(game) {
+        let tree = this.randomBuilding(game, x => x.type === Tree);
+        if (!tree) return;
+        game.addChild(new SFX(tree, TopBeam).after(() => {
+            if (tree.kingdom !== game.player) return;
+            game.addChild(new SFX(tree, BigSummon));
+            let bigTree = new Building(
+                tree.x, tree.y, BigTree, tree.kingdom, tree.island, true);
+            bigTree.grow = 0.1;
+            tree.island.buildings.add(bigTree);
+            game.addChild(bigTree);
+            tree.shouldRemove = true;
+        }));
     }
 
     feeling(goal) {
@@ -180,22 +256,25 @@ class God extends PIXI.Container {
         this.mood = 0;
         this.satisfaction = 0;
 
-        let min = -God.preferenceModifier,
-            max = God.preferenceModifier;
-        let range = max - min;
+        let min = -God.preferenceModifier, max = God.preferenceModifier;
         if (base) {
-            this.likesLife = max;
-            this.likesAttention = max / 4;
-            this.likesManMade = -min;
+            this.updatePersonality(max, -min, max/4);
             this.sincePersonality = God.personalityLength * 4 / 5;
         } else {
-            this.likesLife = min + Math.random() * range;
-            this.likesAttention = min + Math.random() * range;
-            this.likesManMade = min + Math.random() * range;
+            let range = max - min;
+            this.updatePersonality(
+                min + Math.random() * range,
+                min + Math.random() * range,
+                min + Math.random() * range);
         }
+        if (game) game.onGodChangePersonality();
+    }
+    updatePersonality(life, man, attention) {
+        this.likesLife = life;
+        this.likesAttention = attention;
+        this.likesManMade = man;
         this.birdTarget = 5 + 5 * (this.likesLife / God.preferenceModifier);
         this.updateColor();
-        if (game) game.onGodChangePersonality();
     }
     updateColor(
         life = this.likesLife / God.preferenceModifier,
@@ -203,18 +282,13 @@ class God extends PIXI.Container {
         attention = this.likesAttention / God.preferenceModifier
     ) {
         // Get the angle into the range [0, 4[
-        let angle = 2 * Math.atan2(man, life) / Math.PI;
-        if (angle < 0) angle = 4 + angle;
+        let stops = God.hues.length;
+        let angle = Math.atan2(man, life) * 2 / Math.PI + stops;
 
-        let hue = Math.shift(
-            // From 0 to 1; +life+man; from teal-ish blue to purple
-            angle <= 1 ? (8/16 + angle * 4/16) :
-            // From 1 to 2; -life+man; from purple to orange-ish
-            angle <= 2 ? (12/16 + (angle - 1) * 4/16) :
-            // From 2 to 3; -life-man; from orange-ish to green
-            angle <= 3 ? (0/16 + (angle - 2) * 4/16) :
-            // From 3 to 5; -life+man; from green to teal-ish blue
-            (4/16 + (angle - 3) * 4/16), 0, 1);
+        let start = God.hues[Math.floor(angle) % stops];
+        let end = God.hues[Math.ceil(angle) % stops];
+        if (end < start) end += 1;
+        let hue = Math.shift(start + (end - start) * (angle % 1), 0, 1);
         let saturation = Math.max(Math.abs(life), Math.abs(man));
         let lightness = attention / (attention < 0 ? 6 : 4) + 0.5;
         this.tint = PIXI.Color.fromHSL(hue, saturation, lightness);
@@ -264,6 +338,8 @@ class God extends PIXI.Container {
 }
 God.preferenceModifier = 1;
 God.personalityLength = 5000;
+// The quadrants are +life, +man, -life, -man
+God.hues = [9/16, 13/16, 0/16, 4/16];
 PIXI.loader
 .add('background', 'images/Background.png', null, res =>
     God.background = res.texture)

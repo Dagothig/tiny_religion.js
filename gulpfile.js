@@ -10,6 +10,7 @@ gulp.task('client', function(cb) {
     return gulp.src([
         "client/extensions.js",
         "client/pixi-extensions.js",
+        "client/strs.js",
         "client/settings.js",
 
         "client/sound.js",

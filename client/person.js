@@ -1,21 +1,5 @@
 'use strict';
 
-class Job {
-    constructor(name, path, ext) {
-        this.name = name;
-        Person.jobs.add(this);
-        Person.jobs[name] = this;
-        PIXI.loader.add(name, path, null, res => this.init(res.texture));
-        Object.merge(this, ext);
-    }
-    init(texture) {
-        this.texture = new PIXI.TiledTexture(texture, 8, 12);
-    }
-    update() {}
-    findNextTarget() {}
-    outputState() {}
-    resolveIndices() {}
-}
 class Person extends PIXI.AnimatedSprite {
     constructor(x, y, job, kingdom, island, isSummon = false) {
         super(job.texture, 10, true);
@@ -42,10 +26,10 @@ class Person extends PIXI.AnimatedSprite {
     }
 
     get job() { return this._job; }
-    set job(val) {
-        this._job = val;
-        if (val.person) val.person.apply(this, arguments);
-        this.setTiledTexture(val.texture);
+    set job(job) {
+        this._job = job;
+        this.setTiledTexture(job.texture);
+        if (job.person) job.person.apply(this, arguments);
     }
 
     takeDamage(amount, game) {
@@ -219,13 +203,30 @@ Person.fromState = function(s, island, game) {
     return p;
 };
 Person.jobs = [];
+class Job {
+    constructor(name, path, ext) {
+        this.name = name;
+        Person.jobs.add(this);
+        Person.jobs[name] = this;
+        PIXI.loader.add(name, path, null, res => this.init(res.texture));
+        Object.merge(this, ext);
+    }
+    init(texture) {
+        this.texture = new PIXI.TiledTexture(texture, 8, 12);
+    }
+    update() {}
+    findNextTarget() {}
+    outputState() {}
+    resolveIndices() {}
+}
 let Villager = new Job('villager', 'images/Villager.png', {
     person() { this.sinceBaby = 0; },
     update(delta, game) {
         this.sinceBaby++;
         if (this.island.kingdom !== this.kingdom) return;
         this.island.buildings.filter(b =>
-            b.type === FallingTree && !b.finished && b.isInRadius(this))
+            b.type === FallingTree && !b.finished
+            && b.isInRadius(this, 10))
         .forEach(b => b.progressBuild(1, game));
     },
     doBaby(game) {
@@ -249,7 +250,7 @@ Builder = new Job('builder', 'images/Builder.png', {
         if (this.island.kingdom !== this.kingdom) return;
         this.island.buildings.filter(b =>
             b.type !== FallingTree && b.type !== Tree && !b.finished
-            && b.isInRadius(this))
+            && b.isInRadius(this, 10))
         .forEach(b => b.progressBuild(3 + this.kingdom.workshopCount, game));
     },
     findNextTarget(game) {
@@ -325,5 +326,25 @@ Priest = new Job('priest', 'images/Priest.png', {
         }
     },
     outputState() { return { sinceSummon: this.sinceSummon }; }
+}),
+Minotaur = new Job('minotaur', 'images/Minotaur.png', {
+    person() {
+        this.decal.x = 6;
+        this.decal.y = 14;
+    },
+    init(texture) {
+        this.texture = new PIXI.TiledTexture(texture, 12, 16);
+    },
+    update(delta, game) {
+        if (this.health < 200) this.health += 0.025;
+
+        let target = this.findTarget(game, 32 * 32, p => p.sinceTookDamage <= 0);
+        if (!target) return;
+        target.takeDamage(6 + this.kingdom.barracksCount * 2, game);
+        sounds.hit.play();
+        if (this.kingdom.isPlayer) {
+            game.god.event('fight', 2, this.position);
+            if (target.health <= 0) game.god.event('kill', 1, target.position);
+        }
+    }
 });
-Person.jobs.forEach(job => Person[job.name] = job);

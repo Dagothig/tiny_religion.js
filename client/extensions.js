@@ -140,6 +140,10 @@ Math.shift = (v, m, M) => {
     while (v < m) v += range;
     return v % range;
 };
+Math.randRange = (min, max) => Math.random() * (max - min) + min;
+Math.TWO_PI = Math.PI * 2;
+
+Math.angularDistance = (a, b) => Math.min(Math.abs(a - b), Math.abs(b - a));
 Object.merge = function merge(to) {
     Array.from(arguments).slice(1).forEach(src => {
         if (!src) return;
@@ -183,3 +187,22 @@ let Misc = {
     },
     wrap(f1, f2) { return (...args) => f2(f1.apply(this, args)); }
 };
+
+function dom(name, attributes, ...children) {
+    let el = document.createElement(name);
+    Object.entries(attributes)
+        .forEach(x =>
+            dom.eventHandlers[x[0]] ? el.addEventListener(x[0], x[1]) :
+            el[dom.nameMap[x[0]] || x[0]] = x[1]);
+    appendChildren(el, children);
+    return el;
+}
+function appendChildren(el, children) {
+    children.filter(x => x).forEach(x =>
+        x instanceof Array ? appendChildren(el, x) :
+        x instanceof HTMLElement ? el.appendChild(x) :
+        el.appendChild(document.createTextNode(x)));
+}
+dom.eventHandlers = ['click', 'animationend', 'change']
+    .reduce((n, x) => (n[x] = true, n), {});
+dom.nameMap = { 'class': 'className' };

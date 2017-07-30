@@ -1,30 +1,5 @@
 'use strict';
 
-class BuildingType {
-    constructor(
-        name, path,
-        decalX, decalY, decalZ,
-        playerColored, radius, eco, buildTime, ext
-    ) {
-        Building.types.add(this);
-        this.name = name;
-        PIXI.loader.add(name, path, null,
-            res => this.init(res.texture));
-        this.decalX = decalX;
-        this.decalY = decalY;
-        this.decalZ = decalZ;
-        this.playerColored = playerColored;
-        this.radius = radius; this.radius2 = radius * radius
-        this.eco = eco;
-        this.buildTime = buildTime;
-        if (ext) Object.merge(this, ext);
-    }
-    init(texture) {
-        this.texture = new PIXI.TiledTexture(texture,
-            this.playerColored ? texture.width / 2 : texture.width,
-            texture.height / 2);
-    }
-}
 class Building extends PIXI.TiledSprite {
     constructor(x, y, type, kingdom, island, finished = false) {
         super(type.texture);
@@ -89,6 +64,7 @@ class Building extends PIXI.TiledSprite {
     }
     render(delta, game, renderer) {
         this.tint = game.globalColor;
+        if (this.type.render) this.type.render.apply(this, arguments);
     }
     outputState() {
         return {
@@ -110,6 +86,31 @@ Building.fromState = function(s, island, game) {
     return b;
 }
 Building.types = [];
+class BuildingType {
+    constructor(
+        name, path,
+        decalX, decalY, decalZ,
+        playerColored, radius, eco, buildTime, ext
+    ) {
+        Building.types.add(this);
+        this.name = name;
+        PIXI.loader.add(name, path, null,
+            res => this.init(res.texture));
+        this.decalX = decalX;
+        this.decalY = decalY;
+        this.decalZ = decalZ;
+        this.playerColored = playerColored;
+        this.radius = radius; this.radius2 = radius * radius
+        this.eco = eco;
+        this.buildTime = buildTime;
+        Object.merge(this, ext || {});
+    }
+    init(texture) {
+        this.texture = new PIXI.TiledTexture(texture,
+            this.playerColored ? texture.width / 2 : texture.width,
+            texture.height / 2);
+    }
+}
 let Bridge = new BuildingType(
     'bridge', 'images/Bridge.png', -10, -52, -30, false, 200, 0, 10000, {
         building() {
@@ -128,18 +129,44 @@ Temple = new BuildingType(
 GreenHouse = new BuildingType(
     'greenHouse', 'images/GreenHouse.png', 0, 0, 16, true, 30, -1/6, 10000),
 Tree = new BuildingType(
-    'tree', 'images/Tree.png', 0, 4, 0, false, 10, -1/6, 1000, {
+    'tree', 'images/Tree.png', 0, 5, 0, false, 10, -1/6, 1000, {
         building() {
             this.rotation = (Math.random() - 0.5) * Math.PI / 16;
+            this.grow = 1;
         },
         update(delta, game) {
-            if (!this.finished)
-                this.progressBuild(1, game);
+            if (!this.finished) this.progressBuild(1, game);
+            if (this.grow < 1) this.grow = Math.min(this.grow + 0.1, 1);
+        },
+        render() {
+            if (this.scale.x < 1 || this.grow < 1)
+                this.scale.x = this.scale.y = this.grow;
         },
         notifyCompletion() { ui.notify('tree grown') }
     }),
 FallingTree = new BuildingType(
-    'fallingTree', 'images/FallingTree.png', 0, 4, 0, false, 10, 0, 250, {
+    'fallingTree', 'images/FallingTree.png', 0, 5, 0, false, 10, 0, 120, {
         onFinished() { this.shouldRemove = true; },
         notifyCompletion() { ui.notify('stump removed') }
+    }),
+BigTree = new BuildingType(
+    'bigTree', 'images/BigTree.png',  0, 45, 0, false, 10, -1, 0, {
+        building() {
+            this.grow = 1;
+        },
+        update(delta, game) {
+            if (!this.finished) this.progressBuild(1, game);
+            if (this.grow < 1) this.grow = Math.min(this.grow + 0.1, 1);
+            if (Math.random() < 0.05)
+                game.addChild(new SFX(
+                    Math.randRange(this.x - 32, this.x + 32),
+                    Math.randRange(this.y - 20, this.y - 92),
+                    Sparkle, 80));
+        },
+        render() {
+            if (this.scale.x < 1 || this.grow < 1)
+                this.scale.x = this.scale.y = this.grow;
+            if (!this.finished)
+                this.tint = 0xffffff;
+        }
     });

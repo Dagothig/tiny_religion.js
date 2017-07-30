@@ -284,22 +284,22 @@ class Game extends PIXI.Container {
         container.addEventListener('touchstart', this.events.touchstart);
         document.addEventListener('mousemove', this.events.mousemove);
         container.addEventListener('touchmove', this.events.touchmove);
-        container.addEventListener('touchend', this.events.touchend);
-        document.addEventListener('mouseup', this.events.mouseup);
+        window.addEventListener('touchend', this.events.touchend);
+        window.addEventListener('mouseup', this.events.mouseup);
         container.addEventListener('mousewheel', this.events.mousewheel);
         document.addEventListener('keydown', this.events.keydown);
-        document.addEventListener('keyup', this.events.keyup);
+        window.addEventListener('keyup', this.events.keyup);
     }
     detachEvents() {
         this.container.removeEventListener('mousedown', this.events.mousedown);
         this.container.removeEventListener('touchstart', this.events.touchstart);
         document.removeEventListener('mousemove', this.events.mousemove);
         this.container.removeEventListener('touchmove', this.events.touchmove);
-        document.removeEventListener('mouseup', this.events.mouseup);
-        this.container.removeEventListener('touchend', this.events.touchend);
+        window.removeEventListener('mouseup', this.events.mouseup);
+        window.removeEventListener('touchend', this.events.touchend);
         this.container.removeEventListener('mousewheel', this.events.mousewheel);
         document.removeEventListener('keydown', this.events.keydown);
-        document.removeEventListener('keyup', this.events.keyup);
+        window.removeEventListener('keyup', this.events.keyup);
         this.container = null;
     }
 

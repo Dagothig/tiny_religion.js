@@ -1,8 +1,7 @@
 PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
 let scaling = 1;
-let container = document.createElement('div');
-container.id = 'container';
+let container = dom('div', { id: 'container' });
 let ui = new UI(container, () => newGame());
 let game;
 
@@ -38,8 +37,12 @@ let state = JSON.parse(localStorage.getItem('save'));
 function save() {
     if (!game) return;
     localStorage.setItem('save', JSON.stringify(state = game.outputState()));
+    ui.notify('saved');
 }
-function restore() { state && newGame(state); }
+function restore() {
+    state && newGame(state);
+    ui.notify('restored');
+}
 
 function saveTemp() {
     if (!game) return;
@@ -59,8 +62,6 @@ function setupGame() {
     document.body.appendChild(ui.titleTag);
     document.body.appendChild(ui.btnsTag);
     document.body.appendChild(ui.menuContainerTag);
-    container.appendChild(ui.tipTag);
-    container.appendChild(ui.notifyTag);
     ui.showTitle();
 
     // Setup renderer
@@ -85,17 +86,16 @@ function setupGame() {
             h /= 2;
         }
         renderer.resize(w, h);
-    }
+    };
     window.addEventListener('resize', resize);
     resize();
-    settings.bind('tooltips', resize);
 
     Game.onLoad(() => {
         // Setup event loop
         let last = performance.now();
         let upd = () => {
             let time = performance.now();
-            let delta = time - last;
+            let delta = (time - last) || 1;
 
             if (game) {
                 if (!paused) game.update(delta, renderer.width, renderer.height);
@@ -114,13 +114,7 @@ function setupGame() {
 window.addEventListener("DOMContentLoaded", () => {
     let splash = document.querySelector('.splash');
     if (!splash) return setupGame();
-    let handler = () => {
-        if (!splash) return;
-        splash.remove();
-        splash = null;
-        setupGame();
-    }
+    let handler = () => splash && (splash.remove(), splash = null, setupGame());
     splash.onclick = handler;
     setTimeout(handler, 2000);
-    document.body.appendChild(splash);
 });

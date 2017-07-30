@@ -78,7 +78,7 @@ class Kingdom {
     }
 
     build(game, type) {
-        if (this.builded) return 'project limit reached';
+        if (this.builded) return strs.msgs.builded;
         let isls = game.islands.slice(0).sort(() => Math.random() - 0.5);
         for (let i = 0; i < isls.length; i++) {
             let isl = isls[i];
@@ -96,19 +96,21 @@ class Kingdom {
                 game.god.event(type.name, 0.5, building.position);
                 sounds.build.play();
             }
-            return 'building ' + building.type.name;
+            return strs.msgs.building(type);
         }
-        return 'no suitable spot found';
+        return strs.msgs.noSpot;
     }
 
     buildBridge(game) {
-        if (this.builded) return 'project limit reached';
+        if (this.builded) return strs.msgs.builded;
         let index = game.islands.findIndex(i => !i.bridge && i.kingdom === this);
         let island = game.islands[index];
-        if (!island) return 'island not owned';
+        if (!island) return strs.msgs.noIsland;
+
         let bridge = island.generateBridge(false);
         game.addChild(bridge);
         if (index === game.islands.length - 1) game.generateNewIsland();
+
         for (let j = 0; j < 3; j++) {
             let person = this.findOfJob(game, Builder, p => !p.building);
             if (!person) break;
@@ -119,12 +121,11 @@ class Kingdom {
             game.god.event(Bridge.name, 0.5, bridge.position);
             sounds.build.play();
         }
-        return 'project started';
+        return strs.msgs.building(bridge.type);
     }
 
     forestate(game) {
-        if (this.growed)
-            return 'sapling limit reached';
+        if (this.growed) return strs.msgs.growed;
         for (let i = 0; i < game.islands.length * 3; i++) {
             let island = game.islands.rand();
             if (island.kingdom !== this) continue;
@@ -135,20 +136,20 @@ class Kingdom {
                 game.god.event(Tree.name, 0.5, tree.position);
                 sounds.build.play();
             }
-            return 'tree planted';
+            return strs.msgs.planting;
         }
-        return 'suitable spot not found';
+        return strs.msgs.noSpot;
     }
     deforest(game) {
         let islands = game.islands.filter(island => island.kingdom === this);
-        if (!this.treeCount) return 'no tree to cut';
+        if (!this.treeCount) return strs.msgs.noTree;
         let trees = null, island = null, maxTries = 10000;
         while (!trees || !trees.length) {
             island = islands[(Math.random() * islands.length)|0];
             trees = island.buildings.filter(b => b.type === Tree && b.finished);
-            if (!maxTries--) return 'tree not found';
+            if (!maxTries--) return strs.msgs.treeNotFound;
         }
-        if (!trees || !trees.length) return 'tree not found';
+        if (!trees || !trees.length) return strs.msgs.treeNotFound;
         let tree = trees[(Math.random() * trees.length)|0];
         tree.shouldRemove = true;
         let felled = new Building(tree.x, tree.y, FallingTree, this, island);
@@ -158,7 +159,7 @@ class Kingdom {
             game.god.event('fallingTree', 0.5, felled.position);
             sounds.build.play();
         }
-        return 'tree felled';
+        return strs.msgs.treeFelled;
     }
     train(game, job) {
         let person = this.findOfJob(game, Villager);
@@ -169,25 +170,24 @@ class Kingdom {
                 game.god.event(job.name, 1, person.position);
                 sounds[job.name + 'Train'].play();
             }
-            return job.name + ' trained';
+            return strs.msgs.trained(job);
         }
-        return 'no villager found';
+        return strs.msgs.villagerNotFound;
     }
     untrain(game, job) {
         let person = this.findOfJob(game, job);
-        if (person) {
-            game.addChild(new SFX(person.x, person.y, Summon));
-            person.changeJob(Villager);
-            if (this.isPlayer) {
-                game.god.event(job.name, -1, person.position);
-                sounds.untrain.play();
-            }
-            return job.name + ' untrained';
+        if (!person) return strs.msgs.jobNotFound(job);
+
+        game.addChild(new SFX(person.x, person.y, Summon));
+        person.changeJob(Villager);
+        if (this.isPlayer) {
+            game.god.event(job.name, -1, person.position);
+            sounds.untrain.play();
         }
-        return 'no ' + job.name + ' found';
+        return strs.msgs.untrained(job);
     }
     doBaby(game) {
-        if (this.housed) return 'pop limit reached';
+        if (this.housed) return strs.msgs.housed;
         if (game.islands.find(island =>
                 island.people.find(person =>
                     person.kingdom === this && person.job === Villager &&
@@ -195,12 +195,12 @@ class Kingdom {
             this.isPlayer
         ) {
             sounds.baby.play();
-            return 'baby made';
+            return strs.msgs.babyMade;
         }
-        return 'baby attempted';
+        return strs.msgs.babyAttempted;
     }
     attemptSummon(game) {
-        if (this.templed) return 'pop limit reached';
+        if (this.templed) return strs.msgs.templed;
         if (game.islands.find(island =>
             island.people.find(person =>
                 person.kingdom === this && person.job === Priest &&
@@ -208,9 +208,9 @@ class Kingdom {
             this.isPlayer
         ) {
             sounds.summon.play();
-            return 'summon successful';
+            return strs.msgs.summonDone;
         }
-        return 'summon attempted';
+        return strs.msgs.summonAttempted;
     }
     pray(game) {
         let c = 0, p;
@@ -227,50 +227,56 @@ class Kingdom {
             sounds.pray.play(null, prop);
             game.god.event('pray', prop, p.position);
         }
-        return 'praying';
+        return strs.msgs.praying;
     }
     sendAttack(game) {
         let mean = game.islands.filter(isl => isl.kingdom !== this).rand();
-        if (!mean) return 'no enemy';
+        if (!mean) return strs.msgs.noEnemy;
         game.islands.forEach(island =>
             island.kingdom === this &&
             island.people.forEach(person =>
                 person.kingdom === this &&
-                person.job === Warrior &&
+                (person.job === Warrior || person.job === Minotaur) &&
                 person.moveTo(game.islands, mean.index)));
-        return 'warriors sent';
+        return strs.msgs.attacking;
     }
     sendConvert(game) {
         let mean = game.islands.filter(isl => isl.kingdom !== this).rand();
-        if (!mean) return 'no enemy';
+        if (!mean) return strs.msgs.noEnemy;
         game.islands.forEach(island =>
             island.kingdom === this &&
             island.people.forEach(person =>
                 person.kingdom === this &&
                 person.job === Priest &&
                 person.moveTo(game.islands, mean.index)));
-        return 'priests sent';
+        return strs.msgs.converting;
     }
     sendRetreat(game) {
         let ally = game.islands.filter(isl => isl.kingdom === this).rand();
-        if (!ally) return 'no one to retreat';
+        if (!ally) return strs.msgs.noRetreat;
         game.islands.forEach(island =>
             island.kingdom !== this &&
             island.people.forEach(person =>
                 person.kingdom === this &&
                 person.moveTo(game.islands, ally.index)));
-        return 'retreating';
+        return strs.msgs.retreating;
     }
 
     get maxPop() {
-        return Math.floor(this.islandCount * 5
+        return (this.islandCount * 5
             + this.houseCount * 5
-            + this.treeCount / 4);
+            + this.treeCount / 4
+            + this.bigTreeCount * 5)|0;
     }
     get housed() { return this.peopleCount >= this.maxPop; }
-    get maxSummon() { return this.templeCount * 10; }
+    get maxSummon() { return this.templeCount * 5 + 5; }
     get templed() { return this.summonCount >= this.maxSummon; }
     get maxUnfinished() { return Math.floor(this.islandCount / 2 + 1); }
-    get builded() { return this.unfinished >= this.maxUnfinished;  }
-    get growed() { return this.growing >= this.greenHouseCount + 1; }
+    get builded() { return this.unfinished >= this.maxUnfinished; }
+    get maxGrow() {
+        return (this.greenHouseCount * 2
+            + this.bigTreeCount * 2
+            + 2);
+    }
+    get growed() { return this.growing >= this.maxGrow; }
 }

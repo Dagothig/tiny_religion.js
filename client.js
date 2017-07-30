@@ -144,6 +144,14 @@ Math.shift = function (v, m, M) {
         v += range;
     }return v % range;
 };
+Math.randRange = function (min, max) {
+    return Math.random() * (max - min) + min;
+};
+Math.TWO_PI = Math.PI * 2;
+
+Math.angularDistance = function (a, b) {
+    return Math.min(Math.abs(a - b), Math.abs(b - a));
+};
 Object.merge = function merge(to) {
     Array.from(arguments).slice(1).forEach(function (src) {
         if (!src) return;
@@ -198,6 +206,31 @@ var Misc = {
         };
     }
 };
+
+function dom(name, attributes) {
+    var el = document.createElement(name);
+    Object.entries(attributes).forEach(function (x) {
+        return dom.eventHandlers[x[0]] ? el.addEventListener(x[0], x[1]) : el[dom.nameMap[x[0]] || x[0]] = x[1];
+    });
+
+    for (var _len2 = arguments.length, children = Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
+        children[_key2 - 2] = arguments[_key2];
+    }
+
+    appendChildren(el, children);
+    return el;
+}
+function appendChildren(el, children) {
+    children.filter(function (x) {
+        return x;
+    }).forEach(function (x) {
+        return x instanceof Array ? appendChildren(el, x) : x instanceof HTMLElement ? el.appendChild(x) : el.appendChild(document.createTextNode(x));
+    });
+}
+dom.eventHandlers = ['click', 'animationend', 'change'].reduce(function (n, x) {
+    return n[x] = true, n;
+}, {});
+dom.nameMap = { 'class': 'className' };
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -318,7 +351,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
         this.tilesX = texture.width / tw;
         this.tilesY = texture.height / th;
-        if (!!(this.tilesX % 1 || this.tilesY % 1)) throw "The texture size is not a multiple of the tile size:", this.tilesX, this.tilesY;
+        if (this.tilesX % 1 || this.tilesY % 1) throw "The texture size is not a multiple of the tile size:", this.tilesX, this.tilesY;
 
         this.tiles = new Array(this.tilesX).fill().map(function (col, i) {
             return new Array(_this.tilesY).fill().map(function (_, j) {
@@ -502,6 +535,91 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 })();
 'use strict';
 
+var strs = {
+    tips: {
+        jobs: 'villagers make babies and cut trees\n            priests make summons and convert\n            warriors fight, builders build',
+        buildings: 'houses raise the pop limit\n            barracks make warriors stronger\n            temples raise the summon limit\n            and make priests better\n            greenhouses raise the sapling limit\n            bridges discover new islands',
+        color: 'God has changed color!\n            Is God the same?',
+        please: 'God demands pleasing!\n            Find out what pleases God!'
+    },
+    msgs: {
+        noSpot: {
+            message: 'no suitable spot found',
+            extra: 'try again or make room'
+        },
+
+        builded: {
+            message: 'project limit reached',
+            extra: 'wait for current projects to complete or conquer more islands'
+        },
+        noIsland: 'island not owned',
+        building: function building(type) {
+            return 'building ' + type.name;
+        },
+
+        growed: {
+            message: 'sapling limit reached',
+            extra: 'wait or build more greenshouses'
+        },
+        planting: 'tree planted',
+
+        noTree: {
+            message: 'no tree to cut',
+            extra: 'plant more trees'
+        },
+        treeNotFound: {
+            message: 'tree not found',
+            extra: 'try again or plant more trees'
+        },
+        treeFelled: 'tree felled',
+
+        trained: function trained(job) {
+            return job.name + ' trained';
+        },
+        villagerNotFound: 'no villager found',
+
+        untrained: function untrained(job) {
+            return job.name + ' untrained';
+        },
+        jobNotFound: function jobNotFound(job) {
+            return 'no ' + job.name + ' untrained';
+        },
+
+        housed: {
+            message: 'pop limit reached',
+            extra: 'build houses, plant trees, conquer islands or kill people'
+        },
+        babyMade: 'baby made',
+        babyAttempted: {
+            message: 'baby attempted',
+            extra: 'give villagers more time or make more villagers'
+        },
+
+        templed: {
+            message: 'pop limit reached',
+            extra: 'build more temples'
+        },
+        summonDone: 'summon successful',
+        summonAttempted: {
+            message: 'summon attempted',
+            extra: 'give priests more time or train more priests'
+        },
+
+        praying: 'praying',
+
+        noEnemy: 'no enemy',
+        attacking: 'warriors sent',
+        converting: 'priests sent',
+
+        noRetreat: 'no one to retreat',
+        retreating: 'retreating',
+
+        noSacrifice: 'nobody to sacrifice',
+        sacrificing: 'boom!'
+    }
+};
+'use strict';
+
 /* Usage of settings:
 <strat> should implement read(key, conf) and write(key, conf)
 (local-storage-strat is an exemple)
@@ -520,9 +638,10 @@ let settingsEx = settings(strat, {
 */
 var settings = function (strat, confs) {
     return Object.keys(confs).reduce(function (settings, key) {
-        settings.all.push(key);
-
         var conf = confs[key];
+
+        settings.all.push(key);
+        settings[conf[2]].push(key);
 
         var _key = '_' + key;
         var _keyConf = _key + 'Conf';
@@ -547,93 +666,84 @@ var settings = function (strat, confs) {
         return settings;
     }, {
         all: [],
+        usr: [],
+        sys: [],
         bind: function bind(key, cb) {
             this['_' + key + 'CBs'].push(cb);
             cb(this[key]);
         },
         _clear: function _clear(key) {
-            this[key] = this['_' + key + 'Conf'][0];
-        },
-        clear: function clear() {
             var _this = this;
 
-            if (arguments.length) Array.from(arguments).forEach(function (key) {
-                return _this._clear(key);
-            });else this.all.forEach(function (key) {
-                return _this._clear(key);
+            this[key] = this['_' + key + 'Conf'][0];
+            this['_' + key + 'CBs'].forEach(function (cb) {
+                return cb(_this[key]);
             });
         },
-        inputFor: function inputFor(name) {
+        clear: function clear() {
             var _this2 = this;
 
-            var conf = this['_' + name + 'Conf'];
-            var input = void 0;
-            var onchange = function onchange() {
-                return _this2[name] = input.value;
-            };
-            switch (conf[1]) {
-                case 'str':
-                    input = document.createElement('input');
-                    input.type = 'text';
-                    input.value = this[name];
-                    break;
-                case 'num':
-                    input = document.createElement('input');
-                    input.type = 'numeric';
-                    input.value = this[name];
-                    break;
-                case 'bool':
-                    input = document.createElement('input');
-                    input.type = 'checkbox';
-                    input.checked = this[name];
-                    onchange = function onchange() {
-                        return _this2[name] = input.checked;
-                    };
-                    break;
-                case 'choice':
-                    input = document.createElement('select');
-                    input.selectedIndex = Object.entries(conf[3]).map(function (opt) {
-                        var entry = document.createElement('option');
-                        entry.innerHTML = opt[0];
-                        entry.value = opt[1];
-                        input.appendChild(entry);
-                        return entry;
-                    }) // Fuzzy equality
-                    .findIndex(function (e) {
-                        return e.value == _this2[name];
-                    });
-                    break;
+            if (arguments.length) Array.from(arguments).forEach(function (key) {
+                return _this2._clear(key);
+            });else this.all.forEach(function (key) {
+                return _this2._clear(key);
+            });
+        },
+        _index: function _index(name, conf) {
+            // Fuzzy search
+            return Object.values(conf[3]).findIndex(function (e) {
+                return e.value == settings[name];
+            });
+        },
+        _inputFor: {
+            str: function str(name) {
+                return dom('input', { type: 'text', value: settings[name] });
+            },
+            num: function num(name) {
+                return dom('input', { type: 'numeric', value: settings[name] });
+            },
+            bool: function bool(name) {
+                return dom('input', { type: 'checkbox', checked: settings[name] });
+            },
+            choice: function choice(name, conf) {
+                return dom('select', { selectedIndex: settings._index(name, conf) }, Object.entries(conf[3]).map(function (x) {
+                    return dom('option', { value: x[1] }, x[0]);
+                }));
             }
+        },
+        inputFor: function inputFor(name) {
+            var _this3 = this;
+
+            var conf = this['_' + name + 'Conf'];
+            var input = this._inputFor[conf[1]](name, conf);
             input.id = input.name = name;
-            input.onchange = onchange;
+            input.onchange = conf[1] === 'bool' ? function () {
+                return _this3[name] = input.checked;
+            } : function () {
+                return _this3[name] = input.value;
+            };
+            this.bind(name, function (t) {
+                return input.value = input.checked = t;
+            });
             return input;
         }
     });
-}({
-    str: {
-        toStr: function toStr(str) {
+}( /* local storage strat */{
+    str: { toStr: function toStr(str) {
             return str + '';
-        },
-        fromStr: function fromStr(str) {
+        }, fromStr: function fromStr(str) {
             return str;
-        }
-    },
-    num: {
-        toStr: function toStr(num) {
+        } },
+    num: { toStr: function toStr(num) {
             return num + '';
-        },
-        fromStr: function fromStr(str) {
+        }, fromStr: function fromStr(str) {
             return new Number(str).valueOf();
-        }
-    },
-    bool: {
-        toStr: function toStr(val) {
+        } },
+    bool: { toStr: function toStr(val) {
             return val ? 'true' : 'false';
-        },
-        fromStr: function fromStr(str) {
+        }, fromStr: function fromStr(str) {
             return str === 'true';
-        }
-    },
+        } },
     choice: {
         toStr: function toStr(val, conf) {
             return (// Fuzzy equality
@@ -662,13 +772,13 @@ var settings = function (strat, confs) {
     tooltips: [true, 'bool', 'usr'],
     music: [true, 'bool', 'usr'],
     sound: [true, 'bool', 'usr'],
-    goal: [12000, 'choice', 'usr', {
+    goal: [12000, 'choice', 'sys', {
         tiny: 3000,
         short: 6000,
         medium: 12000,
         long: 24000
     }],
-    fps: [false, 'bool', 'user']
+    fps: [false, 'bool', 'usr']
 });
 'use strict';
 
@@ -823,25 +933,11 @@ var gameState = {};
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var SFXType = function SFXType(decalX, decalY, decalZ, frameDuration) {
-    _classCallCheck(this, SFXType);
-
-    this.decalX = decalX;
-    this.decalY = decalY;
-    this.decalZ = decalZ;
-    this.frameDuration = frameDuration;
-};
-
-var Blood = new SFXType(4, 10, 0, 8),
-    Summon = new SFXType(4, 10, 0, 8),
-    Sparkle = new SFXType(4, 10, 0, 8),
-    Lightning = new SFXType(16, 128, 0, 8);
 
 var SFX = function (_PIXI$TiledSprite) {
     _inherits(SFX, _PIXI$TiledSprite);
@@ -849,8 +945,15 @@ var SFX = function (_PIXI$TiledSprite) {
     function SFX(x, y, type, z) {
         _classCallCheck(this, SFX);
 
-        var _this = _possibleConstructorReturn(this, (SFX.__proto__ || Object.getPrototypeOf(SFX)).call(this, type.texture));
+        var _this = _possibleConstructorReturn(this, (SFX.__proto__ || Object.getPrototypeOf(SFX)).call(this, (type || y).texture));
 
+        if (x instanceof Object) {
+            _this.pos = x;
+            z = type;
+            type = y;
+            y = _this.pos.y;
+            x = _this.pos.x;
+        }
         _this.currentFrame = type.frameDuration;
         _this.decal = { x: type.decalX, y: type.decalY };
         _this.x = x;
@@ -859,6 +962,7 @@ var SFX = function (_PIXI$TiledSprite) {
         if (Math.random() < 0.5) _this.scale.x = -1;
         _this.tileY = type.tileY;
         _this.type = type;
+        if (_this.type.SFX) _this.type.SFX.apply(_this, arguments);
         return _this;
     }
 
@@ -870,6 +974,27 @@ var SFX = function (_PIXI$TiledSprite) {
                 this.currentFrame += this.type.frameDuration;
                 if (this.tileX + 1 === this.tilesX) this.shouldRemove = true;else this.tileX++;
             }
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            if (this.pos) {
+                this.x = this.pos.x;
+                this.y = this.pos.y;
+            }
+        }
+    }, {
+        key: 'after',
+        value: function after(cb) {
+            (this._afterCbs = this._afterCbs || []).push(cb);
+            return this;
+        }
+    }, {
+        key: 'onRemove',
+        value: function onRemove() {
+            this._afterCbs && this._afterCbs.forEach(function (x) {
+                return x();
+            });
         }
     }, {
         key: 'z',
@@ -885,19 +1010,40 @@ var SFX = function (_PIXI$TiledSprite) {
 }(PIXI.TiledSprite);
 
 PIXI.loader.add('lightning', 'images/Lightning.png', null, function (res) {
-    SFX.lightning = new PIXI.TiledTexture(res.texture, 32, 128);
-    Lightning.texture = SFX.lightning;
-    Lightning.tileY = 0;
+    return Lightning.texture = new PIXI.TiledTexture(res.texture, 32, 128);
 }).add('miscSFX', 'images/SpecialEffects.png', null, function (res) {
-    SFX.misc = new PIXI.TiledTexture(res.texture, 8, 12);
-    Blood.texture = Summon.texture = Sparkle.texture = SFX.misc;
+    Blood.texture = Summon.texture = Sparkle.texture = new PIXI.TiledTexture(res.texture, 8, 12);
     Blood.tileY = 0;
     Summon.tileY = 1;
     Sparkle.tileY = 2;
+}).add('bigSummon', 'images/BigSummon.png', null, function (res) {
+    return BigSummon.texture = new PIXI.TiledTexture(res.texture, 16, 24);
+}).add('topBeam', 'images/TopBeam.png', null, function (res) {
+    return TopBeam.texture = new PIXI.TiledTexture(res.texture, 6, 128);
 });
-'use strict';
 
-// personalityColors[life][manMade]
+var SFXType = function SFXType(decalX, decalY, decalZ, frameDuration, ext) {
+    _classCallCheck(this, SFXType);
+
+    this.decalX = decalX;
+    this.decalY = decalY;
+    this.decalZ = decalZ;
+    this.frameDuration = frameDuration;
+    this.tileY = 0;
+    Object.merge(this, ext || {});
+};
+
+var Blood = new SFXType(4, 10, 0, 8),
+    Summon = new SFXType(4, 10, 0, 8),
+    Sparkle = new SFXType(4, 10, 0, 8, {
+    SFX: function SFX() {
+        this.rotation = Math.randRange(0, Math.TWO_PI);
+    }
+}),
+    Lightning = new SFXType(16, 128, 0, 8),
+    TopBeam = new SFXType(3, 125, 3, 4),
+    BigSummon = new SFXType(8, 20, 4, 4);
+'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -906,8 +1052,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var personalityColors = [[, 0x00ff00], [, 0xffffff], [, 0xff0088]];
 
 var God = function (_PIXI$Container) {
     _inherits(God, _PIXI$Container);
@@ -1044,7 +1188,20 @@ var God = function (_PIXI$Container) {
                 }
             }
 
-            if (Math.random() < -this.feeling(game.goal) / 400) this.doSacrifice(game);
+            var feeling = this.feeling(game.goal);
+
+            if (feeling < 0) {
+                feeling *= -1;
+                // Check for punish
+                if (Math.random() < feeling * this.deathModifier / 400) this.doSacrifice(game);
+
+                if (Math.random() < feeling * this.natureModifier / 400) this.convertToTree(game);
+            } else {
+                // Check for reward
+                if (Math.random() < feeling * this.deathModifier / 400) this.convertToMinotaur(game);
+
+                if (Math.random() < feeling * this.natureModifier / 600) this.convertToBigTree(game);
+            }
 
             if (this.mood > 0) {
                 this.satisfaction += this.mood;
@@ -1075,25 +1232,99 @@ var God = function (_PIXI$Container) {
             this.rightEye.y = 4 * (this.lookAtY - y) / dstToRightEye;
         }
     }, {
-        key: 'doSacrifice',
-        value: function doSacrifice(game) {
+        key: 'randomPerson',
+        value: function randomPerson(game, filter) {
             var islands = game.islands.filter(function (i) {
                 return i.people.find(function (p) {
                     return p.kingdom === game.player;
                 });
             });
             var island = islands.rand();
-            if (!island) return 'nobody do sacrifice';
-            var dude = void 0;
+            if (!island) return null;
+            var dude = void 0,
+                i = 10;
             do {
                 dude = island.people.rand();
-            } while (!dude.kingdom === game.player);
+            } while (!(dude.kingdom === game.player && (!filter || filter(dude))) && i--);
+            return i + 1 && dude;
+        }
+    }, {
+        key: 'randomBuilding',
+        value: function randomBuilding(game, filter) {
+            var island = game.islands.filter(function (i) {
+                return i.kingdom === game.player;
+            }).rand();
+            return island && island.buildings.filter(filter || function () {
+                return true;
+            }).rand();
+        }
+    }, {
+        key: 'doSacrifice',
+        value: function doSacrifice(game) {
+            var dude = this.randomPerson(game);
+            if (!dude) return strs.msgs.noSacrifice;
             this.event('sacrifice', 1, dude.position);
             game.addChild(new SFX(dude.x, dude.y, Lightning));
             sounds.lightning.play();
             game.overlay.flash(8);
             dude.die(game);
-            return 'boom!';
+            return strs.msgs.sacrificing;
+        }
+    }, {
+        key: 'convertToBird',
+        value: function convertToBird(game) {
+            var dude = this.randomPerson(game);
+        }
+    }, {
+        key: 'convertToMinotaur',
+        value: function convertToMinotaur(game) {
+            var minotaur = this.randomPerson(game, function (x) {
+                return x.job !== Minotaur;
+            });
+            if (!minotaur) return;
+            game.addChild(new SFX(minotaur, TopBeam).after(function () {
+                if (minotaur.shouldRemove) return;
+                minotaur.sinceTookDamage = 24;
+                game.addChild(new SFX(minotaur, BigSummon));
+                sounds.warriorTrain.play();
+                minotaur.changeJob(Minotaur);
+            }));
+        }
+    }, {
+        key: 'convertToTree',
+        value: function convertToTree(game) {
+            var _this2 = this;
+
+            var person = this.randomPerson(game);
+            if (!person) return;
+            game.addChild(new SFX(person, TopBeam).after(function () {
+                if (person.shouldRemove) return;
+                _this2.event(Tree.name, 1, person.position);
+                game.addChild(new SFX(person.x, person.y, BigSummon));
+                sounds.done.play();
+                var tree = new Building(person.x, person.y, Tree, person.kingdom, person.island, true);
+                tree.grow = 0.3;
+                person.island.buildings.add(tree);
+                game.addChild(tree);
+                person.shouldRemove = true;
+            }));
+        }
+    }, {
+        key: 'convertToBigTree',
+        value: function convertToBigTree(game) {
+            var tree = this.randomBuilding(game, function (x) {
+                return x.type === Tree;
+            });
+            if (!tree) return;
+            game.addChild(new SFX(tree, TopBeam).after(function () {
+                if (tree.kingdom !== game.player) return;
+                game.addChild(new SFX(tree, BigSummon));
+                var bigTree = new Building(tree.x, tree.y, BigTree, tree.kingdom, tree.island, true);
+                bigTree.grow = 0.1;
+                tree.island.buildings.add(bigTree);
+                game.addChild(bigTree);
+                tree.shouldRemove = true;
+            }));
         }
     }, {
         key: 'feeling',
@@ -1111,20 +1342,23 @@ var God = function (_PIXI$Container) {
 
             var min = -God.preferenceModifier,
                 max = God.preferenceModifier;
-            var range = max - min;
             if (base) {
-                this.likesLife = max;
-                this.likesAttention = max / 4;
-                this.likesManMade = -min;
+                this.updatePersonality(max, -min, max / 4);
                 this.sincePersonality = God.personalityLength * 4 / 5;
             } else {
-                this.likesLife = min + Math.random() * range;
-                this.likesAttention = min + Math.random() * range;
-                this.likesManMade = min + Math.random() * range;
+                var range = max - min;
+                this.updatePersonality(min + Math.random() * range, min + Math.random() * range, min + Math.random() * range);
             }
+            if (game) game.onGodChangePersonality();
+        }
+    }, {
+        key: 'updatePersonality',
+        value: function updatePersonality(life, man, attention) {
+            this.likesLife = life;
+            this.likesAttention = attention;
+            this.likesManMade = man;
             this.birdTarget = 5 + 5 * (this.likesLife / God.preferenceModifier);
             this.updateColor();
-            if (game) game.onGodChangePersonality();
         }
     }, {
         key: 'updateColor',
@@ -1134,18 +1368,13 @@ var God = function (_PIXI$Container) {
             var attention = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : this.likesAttention / God.preferenceModifier;
 
             // Get the angle into the range [0, 4[
-            var angle = 2 * Math.atan2(man, life) / Math.PI;
-            if (angle < 0) angle = 4 + angle;
+            var stops = God.hues.length;
+            var angle = Math.atan2(man, life) * 2 / Math.PI + stops;
 
-            var hue = Math.shift(
-            // From 0 to 1; +life+man; from teal-ish blue to purple
-            angle <= 1 ? 8 / 16 + angle * 4 / 16 :
-            // From 1 to 2; -life+man; from purple to orange-ish
-            angle <= 2 ? 12 / 16 + (angle - 1) * 4 / 16 :
-            // From 2 to 3; -life-man; from orange-ish to green
-            angle <= 3 ? 0 / 16 + (angle - 2) * 4 / 16 :
-            // From 3 to 5; -life+man; from green to teal-ish blue
-            4 / 16 + (angle - 3) * 4 / 16, 0, 1);
+            var start = God.hues[Math.floor(angle) % stops];
+            var end = God.hues[Math.ceil(angle) % stops];
+            if (end < start) end += 1;
+            var hue = Math.shift(start + (end - start) * (angle % 1), 0, 1);
             var saturation = Math.max(Math.abs(life), Math.abs(man));
             var lightness = attention / (attention < 0 ? 6 : 4) + 0.5;
             this.tint = PIXI.Color.fromHSL(hue, saturation, lightness);
@@ -1217,6 +1446,36 @@ var God = function (_PIXI$Container) {
         set: function set(val) {
             this.mouth.tileY = this.leftBrow.tileY = this.rightBrow.tileY = val;
         }
+    }, {
+        key: 'lifeModifier',
+        get: function get() {
+            return Math.max(this.likesLife, 0);
+        }
+    }, {
+        key: 'deathModifier',
+        get: function get() {
+            return -Math.min(this.likesLife, 0);
+        }
+    }, {
+        key: 'manMadeModifier',
+        get: function get() {
+            return Math.max(this.likesManMade, 0);
+        }
+    }, {
+        key: 'natureModifier',
+        get: function get() {
+            return -Math.min(this.likesManMade, 0);
+        }
+    }, {
+        key: 'attentionModifier',
+        get: function get() {
+            return Math.max(this.likesAttention, 0);
+        }
+    }, {
+        key: 'hermitModifier',
+        get: function get() {
+            return -Math.min(this.likesAttention, 0);
+        }
     }]);
 
     return God;
@@ -1224,6 +1483,8 @@ var God = function (_PIXI$Container) {
 
 God.preferenceModifier = 1;
 God.personalityLength = 5000;
+// The quadrants are +life, +man, -life, -man
+God.hues = [9 / 16, 13 / 16, 0 / 16, 4 / 16];
 PIXI.loader.add('background', 'images/Background.png', null, function (res) {
     return God.background = res.texture;
 }).add('head', 'images/God.png', null, function (res) {
@@ -1332,7 +1593,7 @@ var Kingdom = function () {
     }, {
         key: 'build',
         value: function build(game, type) {
-            if (this.builded) return 'project limit reached';
+            if (this.builded) return strs.msgs.builded;
             var isls = game.islands.slice(0).sort(function () {
                 return Math.random() - 0.5;
             });
@@ -1354,24 +1615,26 @@ var Kingdom = function () {
                     game.god.event(type.name, 0.5, building.position);
                     sounds.build.play();
                 }
-                return 'building ' + building.type.name;
+                return strs.msgs.building(type);
             }
-            return 'no suitable spot found';
+            return strs.msgs.noSpot;
         }
     }, {
         key: 'buildBridge',
         value: function buildBridge(game) {
             var _this3 = this;
 
-            if (this.builded) return 'project limit reached';
+            if (this.builded) return strs.msgs.builded;
             var index = game.islands.findIndex(function (i) {
                 return !i.bridge && i.kingdom === _this3;
             });
             var island = game.islands[index];
-            if (!island) return 'island not owned';
+            if (!island) return strs.msgs.noIsland;
+
             var bridge = island.generateBridge(false);
             game.addChild(bridge);
             if (index === game.islands.length - 1) game.generateNewIsland();
+
             for (var j = 0; j < 3; j++) {
                 var person = this.findOfJob(game, Builder, function (p) {
                     return !p.building;
@@ -1384,12 +1647,12 @@ var Kingdom = function () {
                 game.god.event(Bridge.name, 0.5, bridge.position);
                 sounds.build.play();
             }
-            return 'project started';
+            return strs.msgs.building(bridge.type);
         }
     }, {
         key: 'forestate',
         value: function forestate(game) {
-            if (this.growed) return 'sapling limit reached';
+            if (this.growed) return strs.msgs.growed;
             for (var i = 0; i < game.islands.length * 3; i++) {
                 var island = game.islands.rand();
                 if (island.kingdom !== this) continue;
@@ -1400,9 +1663,9 @@ var Kingdom = function () {
                     game.god.event(Tree.name, 0.5, tree.position);
                     sounds.build.play();
                 }
-                return 'tree planted';
+                return strs.msgs.planting;
             }
-            return 'suitable spot not found';
+            return strs.msgs.noSpot;
         }
     }, {
         key: 'deforest',
@@ -1412,7 +1675,7 @@ var Kingdom = function () {
             var islands = game.islands.filter(function (island) {
                 return island.kingdom === _this4;
             });
-            if (!this.treeCount) return 'no tree to cut';
+            if (!this.treeCount) return strs.msgs.noTree;
             var trees = null,
                 island = null,
                 maxTries = 10000;
@@ -1421,9 +1684,9 @@ var Kingdom = function () {
                 trees = island.buildings.filter(function (b) {
                     return b.type === Tree && b.finished;
                 });
-                if (!maxTries--) return 'tree not found';
+                if (!maxTries--) return strs.msgs.treeNotFound;
             }
-            if (!trees || !trees.length) return 'tree not found';
+            if (!trees || !trees.length) return strs.msgs.treeNotFound;
             var tree = trees[Math.random() * trees.length | 0];
             tree.shouldRemove = true;
             var felled = new Building(tree.x, tree.y, FallingTree, this, island);
@@ -1433,7 +1696,7 @@ var Kingdom = function () {
                 game.god.event('fallingTree', 0.5, felled.position);
                 sounds.build.play();
             }
-            return 'tree felled';
+            return strs.msgs.treeFelled;
         }
     }, {
         key: 'train',
@@ -1446,56 +1709,55 @@ var Kingdom = function () {
                     game.god.event(job.name, 1, person.position);
                     sounds[job.name + 'Train'].play();
                 }
-                return job.name + ' trained';
+                return strs.msgs.trained(job);
             }
-            return 'no villager found';
+            return strs.msgs.villagerNotFound;
         }
     }, {
         key: 'untrain',
         value: function untrain(game, job) {
             var person = this.findOfJob(game, job);
-            if (person) {
-                game.addChild(new SFX(person.x, person.y, Summon));
-                person.changeJob(Villager);
-                if (this.isPlayer) {
-                    game.god.event(job.name, -1, person.position);
-                    sounds.untrain.play();
-                }
-                return job.name + ' untrained';
+            if (!person) return strs.msgs.jobNotFound(job);
+
+            game.addChild(new SFX(person.x, person.y, Summon));
+            person.changeJob(Villager);
+            if (this.isPlayer) {
+                game.god.event(job.name, -1, person.position);
+                sounds.untrain.play();
             }
-            return 'no ' + job.name + ' found';
+            return strs.msgs.untrained(job);
         }
     }, {
         key: 'doBaby',
         value: function doBaby(game) {
             var _this5 = this;
 
-            if (this.housed) return 'pop limit reached';
+            if (this.housed) return strs.msgs.housed;
             if (game.islands.find(function (island) {
                 return island.people.find(function (person) {
                     return person.kingdom === _this5 && person.job === Villager && Villager.doBaby.call(person, game);
                 });
             }) && this.isPlayer) {
                 sounds.baby.play();
-                return 'baby made';
+                return strs.msgs.babyMade;
             }
-            return 'baby attempted';
+            return strs.msgs.babyAttempted;
         }
     }, {
         key: 'attemptSummon',
         value: function attemptSummon(game) {
             var _this6 = this;
 
-            if (this.templed) return 'pop limit reached';
+            if (this.templed) return strs.msgs.templed;
             if (game.islands.find(function (island) {
                 return island.people.find(function (person) {
                     return person.kingdom === _this6 && person.job === Priest && Priest.doSummon.call(person, game);
                 });
             }) && this.isPlayer) {
                 sounds.summon.play();
-                return 'summon successful';
+                return strs.msgs.summonDone;
             }
-            return 'summon attempted';
+            return strs.msgs.summonAttempted;
         }
     }, {
         key: 'pray',
@@ -1518,7 +1780,7 @@ var Kingdom = function () {
                 sounds.pray.play(null, prop);
                 game.god.event('pray', prop, p.position);
             }
-            return 'praying';
+            return strs.msgs.praying;
         }
     }, {
         key: 'sendAttack',
@@ -1528,13 +1790,13 @@ var Kingdom = function () {
             var mean = game.islands.filter(function (isl) {
                 return isl.kingdom !== _this8;
             }).rand();
-            if (!mean) return 'no enemy';
+            if (!mean) return strs.msgs.noEnemy;
             game.islands.forEach(function (island) {
                 return island.kingdom === _this8 && island.people.forEach(function (person) {
-                    return person.kingdom === _this8 && person.job === Warrior && person.moveTo(game.islands, mean.index);
+                    return person.kingdom === _this8 && (person.job === Warrior || person.job === Minotaur) && person.moveTo(game.islands, mean.index);
                 });
             });
-            return 'warriors sent';
+            return strs.msgs.attacking;
         }
     }, {
         key: 'sendConvert',
@@ -1544,13 +1806,13 @@ var Kingdom = function () {
             var mean = game.islands.filter(function (isl) {
                 return isl.kingdom !== _this9;
             }).rand();
-            if (!mean) return 'no enemy';
+            if (!mean) return strs.msgs.noEnemy;
             game.islands.forEach(function (island) {
                 return island.kingdom === _this9 && island.people.forEach(function (person) {
                     return person.kingdom === _this9 && person.job === Priest && person.moveTo(game.islands, mean.index);
                 });
             });
-            return 'priests sent';
+            return strs.msgs.converting;
         }
     }, {
         key: 'sendRetreat',
@@ -1560,18 +1822,18 @@ var Kingdom = function () {
             var ally = game.islands.filter(function (isl) {
                 return isl.kingdom === _this10;
             }).rand();
-            if (!ally) return 'no one to retreat';
+            if (!ally) return strs.msgs.noRetreat;
             game.islands.forEach(function (island) {
                 return island.kingdom !== _this10 && island.people.forEach(function (person) {
                     return person.kingdom === _this10 && person.moveTo(game.islands, ally.index);
                 });
             });
-            return 'retreating';
+            return strs.msgs.retreating;
         }
     }, {
         key: 'maxPop',
         get: function get() {
-            return Math.floor(this.islandCount * 5 + this.houseCount * 5 + this.treeCount / 4);
+            return this.islandCount * 5 + this.houseCount * 5 + this.treeCount / 4 + this.bigTreeCount * 5 | 0;
         }
     }, {
         key: 'housed',
@@ -1581,7 +1843,7 @@ var Kingdom = function () {
     }, {
         key: 'maxSummon',
         get: function get() {
-            return this.templeCount * 10;
+            return this.templeCount * 5 + 5;
         }
     }, {
         key: 'templed',
@@ -1599,9 +1861,14 @@ var Kingdom = function () {
             return this.unfinished >= this.maxUnfinished;
         }
     }, {
+        key: 'maxGrow',
+        get: function get() {
+            return this.greenHouseCount * 2 + this.bigTreeCount * 2 + 2;
+        }
+    }, {
         key: 'growed',
         get: function get() {
-            return this.growing >= this.greenHouseCount + 1;
+            return this.growing >= this.maxGrow;
         }
     }]);
 
@@ -1874,42 +2141,11 @@ PIXI.loader.add('island', 'images/Island.png', null, function (res) {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var BuildingType = function () {
-    function BuildingType(name, path, decalX, decalY, decalZ, playerColored, radius, eco, buildTime, ext) {
-        var _this = this;
-
-        _classCallCheck(this, BuildingType);
-
-        Building.types.add(this);
-        this.name = name;
-        PIXI.loader.add(name, path, null, function (res) {
-            return _this.init(res.texture);
-        });
-        this.decalX = decalX;
-        this.decalY = decalY;
-        this.decalZ = decalZ;
-        this.playerColored = playerColored;
-        this.radius = radius;this.radius2 = radius * radius;
-        this.eco = eco;
-        this.buildTime = buildTime;
-        if (ext) Object.merge(this, ext);
-    }
-
-    _createClass(BuildingType, [{
-        key: 'init',
-        value: function init(texture) {
-            this.texture = new PIXI.TiledTexture(texture, this.playerColored ? texture.width / 2 : texture.width, texture.height / 2);
-        }
-    }]);
-
-    return BuildingType;
-}();
 
 var Building = function (_PIXI$TiledSprite) {
     _inherits(Building, _PIXI$TiledSprite);
@@ -1919,21 +2155,21 @@ var Building = function (_PIXI$TiledSprite) {
 
         _classCallCheck(this, Building);
 
-        var _this2 = _possibleConstructorReturn(this, (Building.__proto__ || Object.getPrototypeOf(Building)).call(this, type.texture));
+        var _this = _possibleConstructorReturn(this, (Building.__proto__ || Object.getPrototypeOf(Building)).call(this, type.texture));
 
-        _this2.x = x;
-        _this2.y = y;
-        if (Math.random() < 0.5) _this2.scale.x = -1;
-        _this2.decal.x = _this2.texture.width / 2 + type.decalX;
-        _this2.decal.y = _this2.texture.height / 2 + type.decalY;
-        _this2.type = type;
-        _this2.buildTime = finished ? 0 : type.buildTime;
-        _this2.kingdom = kingdom;
-        _this2.island = island;
-        _this2.finished = finished;
-        if (_this2.type.building) _this2.type.building.apply(_this2, arguments);
-        _this2.updateTextureState();
-        return _this2;
+        _this.x = x;
+        _this.y = y;
+        if (Math.random() < 0.5) _this.scale.x = -1;
+        _this.decal.x = _this.texture.width / 2 + type.decalX;
+        _this.decal.y = _this.texture.height / 2 + type.decalY;
+        _this.type = type;
+        _this.buildTime = finished ? 0 : type.buildTime;
+        _this.kingdom = kingdom;
+        _this.island = island;
+        _this.finished = finished;
+        if (_this.type.building) _this.type.building.apply(_this, arguments);
+        _this.updateTextureState();
+        return _this;
     }
 
     _createClass(Building, [{
@@ -1998,6 +2234,7 @@ var Building = function (_PIXI$TiledSprite) {
         key: 'render',
         value: function render(delta, game, renderer) {
             this.tint = game.globalColor;
+            if (this.type.render) this.type.render.apply(this, arguments);
         }
     }, {
         key: 'outputState',
@@ -2049,6 +2286,38 @@ Building.fromState = function (s, island, game) {
     return b;
 };
 Building.types = [];
+
+var BuildingType = function () {
+    function BuildingType(name, path, decalX, decalY, decalZ, playerColored, radius, eco, buildTime, ext) {
+        var _this2 = this;
+
+        _classCallCheck(this, BuildingType);
+
+        Building.types.add(this);
+        this.name = name;
+        PIXI.loader.add(name, path, null, function (res) {
+            return _this2.init(res.texture);
+        });
+        this.decalX = decalX;
+        this.decalY = decalY;
+        this.decalZ = decalZ;
+        this.playerColored = playerColored;
+        this.radius = radius;this.radius2 = radius * radius;
+        this.eco = eco;
+        this.buildTime = buildTime;
+        Object.merge(this, ext || {});
+    }
+
+    _createClass(BuildingType, [{
+        key: 'init',
+        value: function init(texture) {
+            this.texture = new PIXI.TiledTexture(texture, this.playerColored ? texture.width / 2 : texture.width, texture.height / 2);
+        }
+    }]);
+
+    return BuildingType;
+}();
+
 var Bridge = new BuildingType('bridge', 'images/Bridge.png', -10, -52, -30, false, 200, 0, 10000, {
     building: function building() {
         this.island.bridge = this;
@@ -2060,73 +2329,55 @@ var Bridge = new BuildingType('bridge', 'images/Bridge.png', -10, -52, -30, fals
     Workshop = new BuildingType('workshop', 'images/Workshop.png', 0, 0, 16, true, 30, 1, 10000),
     Temple = new BuildingType('temple', 'images/Temple.png', 0, 0, 16, true, 30, 1 / 2, 10000),
     GreenHouse = new BuildingType('greenHouse', 'images/GreenHouse.png', 0, 0, 16, true, 30, -1 / 6, 10000),
-    Tree = new BuildingType('tree', 'images/Tree.png', 0, 4, 0, false, 10, -1 / 6, 1000, {
+    Tree = new BuildingType('tree', 'images/Tree.png', 0, 5, 0, false, 10, -1 / 6, 1000, {
     building: function building() {
         this.rotation = (Math.random() - 0.5) * Math.PI / 16;
+        this.grow = 1;
     },
     update: function update(delta, game) {
         if (!this.finished) this.progressBuild(1, game);
+        if (this.grow < 1) this.grow = Math.min(this.grow + 0.1, 1);
+    },
+    render: function render() {
+        if (this.scale.x < 1 || this.grow < 1) this.scale.x = this.scale.y = this.grow;
     },
     notifyCompletion: function notifyCompletion() {
         ui.notify('tree grown');
     }
 }),
-    FallingTree = new BuildingType('fallingTree', 'images/FallingTree.png', 0, 4, 0, false, 10, 0, 250, {
+    FallingTree = new BuildingType('fallingTree', 'images/FallingTree.png', 0, 5, 0, false, 10, 0, 120, {
     onFinished: function onFinished() {
         this.shouldRemove = true;
     },
     notifyCompletion: function notifyCompletion() {
         ui.notify('stump removed');
     }
+}),
+    BigTree = new BuildingType('bigTree', 'images/BigTree.png', 0, 45, 0, false, 10, -1, 0, {
+    building: function building() {
+        this.grow = 1;
+    },
+    update: function update(delta, game) {
+        if (!this.finished) this.progressBuild(1, game);
+        if (this.grow < 1) this.grow = Math.min(this.grow + 0.1, 1);
+        if (Math.random() < 0.05) game.addChild(new SFX(Math.randRange(this.x - 32, this.x + 32), Math.randRange(this.y - 20, this.y - 92), Sparkle, 80));
+    },
+    render: function render() {
+        if (this.scale.x < 1 || this.grow < 1) this.scale.x = this.scale.y = this.grow;
+        if (!this.finished) this.tint = 0xffffff;
+    }
 });
 'use strict';
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var Job = function () {
-    function Job(name, path, ext) {
-        var _this = this;
-
-        _classCallCheck(this, Job);
-
-        this.name = name;
-        Person.jobs.add(this);
-        Person.jobs[name] = this;
-        PIXI.loader.add(name, path, null, function (res) {
-            return _this.init(res.texture);
-        });
-        Object.merge(this, ext);
-    }
-
-    _createClass(Job, [{
-        key: 'init',
-        value: function init(texture) {
-            this.texture = new PIXI.TiledTexture(texture, 8, 12);
-        }
-    }, {
-        key: 'update',
-        value: function update() {}
-    }, {
-        key: 'findNextTarget',
-        value: function findNextTarget() {}
-    }, {
-        key: 'outputState',
-        value: function outputState() {}
-    }, {
-        key: 'resolveIndices',
-        value: function resolveIndices() {}
-    }]);
-
-    return Job;
-}();
 
 var Person = function (_PIXI$AnimatedSprite) {
     _inherits(Person, _PIXI$AnimatedSprite);
@@ -2136,24 +2387,24 @@ var Person = function (_PIXI$AnimatedSprite) {
 
         _classCallCheck(this, Person);
 
-        var _this2 = _possibleConstructorReturn(this, (Person.__proto__ || Object.getPrototypeOf(Person)).call(this, job.texture, 10, true));
+        var _this = _possibleConstructorReturn(this, (Person.__proto__ || Object.getPrototypeOf(Person)).call(this, job.texture, 10, true));
 
-        _this2.decal = { x: 4, y: 10 };
-        _this2.x = x;
-        _this2.y = y;
-        _this2.job = job;
+        _this.decal = { x: 4, y: 10 };
+        _this.x = x;
+        _this.y = y;
+        _this.job = job;
 
-        _this2.health = 100;
-        _this2.sinceTookDamage = 0;
-        _this2.praying = 0;
-        _this2.speed = 0.25;
-        _this2.target = null;
-        _this2.movements = [];
+        _this.health = 100;
+        _this.sinceTookDamage = 0;
+        _this.praying = 0;
+        _this.speed = 0.25;
+        _this.target = null;
+        _this.movements = [];
 
-        _this2.island = island;
-        _this2.kingdom = kingdom;
-        _this2.isSummon = isSummon;
-        return _this2;
+        _this.island = island;
+        _this.kingdom = kingdom;
+        _this.isSummon = isSummon;
+        return _this;
     }
 
     _createClass(Person, [{
@@ -2344,10 +2595,10 @@ var Person = function (_PIXI$AnimatedSprite) {
         get: function get() {
             return this._job;
         },
-        set: function set(val) {
-            this._job = val;
-            if (val.person) val.person.apply(this, arguments);
-            this.setTiledTexture(val.texture);
+        set: function set(job) {
+            this._job = job;
+            this.setTiledTexture(job.texture);
+            if (job.person) job.person.apply(this, arguments);
         }
     }]);
 
@@ -2375,6 +2626,44 @@ Person.fromState = function (s, island, game) {
     return p;
 };
 Person.jobs = [];
+
+var Job = function () {
+    function Job(name, path, ext) {
+        var _this2 = this;
+
+        _classCallCheck(this, Job);
+
+        this.name = name;
+        Person.jobs.add(this);
+        Person.jobs[name] = this;
+        PIXI.loader.add(name, path, null, function (res) {
+            return _this2.init(res.texture);
+        });
+        Object.merge(this, ext);
+    }
+
+    _createClass(Job, [{
+        key: 'init',
+        value: function init(texture) {
+            this.texture = new PIXI.TiledTexture(texture, 8, 12);
+        }
+    }, {
+        key: 'update',
+        value: function update() {}
+    }, {
+        key: 'findNextTarget',
+        value: function findNextTarget() {}
+    }, {
+        key: 'outputState',
+        value: function outputState() {}
+    }, {
+        key: 'resolveIndices',
+        value: function resolveIndices() {}
+    }]);
+
+    return Job;
+}();
+
 var Villager = new Job('villager', 'images/Villager.png', {
     person: function person() {
         this.sinceBaby = 0;
@@ -2385,7 +2674,7 @@ var Villager = new Job('villager', 'images/Villager.png', {
         this.sinceBaby++;
         if (this.island.kingdom !== this.kingdom) return;
         this.island.buildings.filter(function (b) {
-            return b.type === FallingTree && !b.finished && b.isInRadius(_this3);
+            return b.type === FallingTree && !b.finished && b.isInRadius(_this3, 10);
         }).forEach(function (b) {
             return b.progressBuild(1, game);
         });
@@ -2415,7 +2704,7 @@ var Villager = new Job('villager', 'images/Villager.png', {
         if (this.building && this.building.finished) this.building = null;
         if (this.island.kingdom !== this.kingdom) return;
         this.island.buildings.filter(function (b) {
-            return b.type !== FallingTree && b.type !== Tree && !b.finished && b.isInRadius(_this4);
+            return b.type !== FallingTree && b.type !== Tree && !b.finished && b.isInRadius(_this4, 10);
         }).forEach(function (b) {
             return b.progressBuild(3 + _this4.kingdom.workshopCount, game);
         });
@@ -2497,9 +2786,29 @@ var Villager = new Job('villager', 'images/Villager.png', {
     outputState: function outputState() {
         return { sinceSummon: this.sinceSummon };
     }
-});
-Person.jobs.forEach(function (job) {
-    return Person[job.name] = job;
+}),
+    Minotaur = new Job('minotaur', 'images/Minotaur.png', {
+    person: function person() {
+        this.decal.x = 6;
+        this.decal.y = 14;
+    },
+    init: function init(texture) {
+        this.texture = new PIXI.TiledTexture(texture, 12, 16);
+    },
+    update: function update(delta, game) {
+        if (this.health < 200) this.health += 0.025;
+
+        var target = this.findTarget(game, 32 * 32, function (p) {
+            return p.sinceTookDamage <= 0;
+        });
+        if (!target) return;
+        target.takeDamage(6 + this.kingdom.barracksCount * 2, game);
+        sounds.hit.play();
+        if (this.kingdom.isPlayer) {
+            game.god.event('fight', 2, this.position);
+            if (target.health <= 0) game.god.event('kill', 1, target.position);
+        }
+    }
 });
 'use strict';
 
@@ -2925,11 +3234,11 @@ var Game = function (_PIXI$Container) {
             container.addEventListener('touchstart', this.events.touchstart);
             document.addEventListener('mousemove', this.events.mousemove);
             container.addEventListener('touchmove', this.events.touchmove);
-            container.addEventListener('touchend', this.events.touchend);
-            document.addEventListener('mouseup', this.events.mouseup);
+            window.addEventListener('touchend', this.events.touchend);
+            window.addEventListener('mouseup', this.events.mouseup);
             container.addEventListener('mousewheel', this.events.mousewheel);
             document.addEventListener('keydown', this.events.keydown);
-            document.addEventListener('keyup', this.events.keyup);
+            window.addEventListener('keyup', this.events.keyup);
         }
     }, {
         key: 'detachEvents',
@@ -2938,11 +3247,11 @@ var Game = function (_PIXI$Container) {
             this.container.removeEventListener('touchstart', this.events.touchstart);
             document.removeEventListener('mousemove', this.events.mousemove);
             this.container.removeEventListener('touchmove', this.events.touchmove);
-            document.removeEventListener('mouseup', this.events.mouseup);
-            this.container.removeEventListener('touchend', this.events.touchend);
+            window.removeEventListener('mouseup', this.events.mouseup);
+            window.removeEventListener('touchend', this.events.touchend);
             this.container.removeEventListener('mousewheel', this.events.mousewheel);
             document.removeEventListener('keydown', this.events.keydown);
-            document.removeEventListener('keyup', this.events.keyup);
+            window.removeEventListener('keyup', this.events.keyup);
             this.container = null;
         }
     }, {
@@ -3063,14 +3372,11 @@ var FPSCounter = function () {
 
         _classCallCheck(this, FPSCounter);
 
-        this.tag = document.createElement('div');
-        this.tag.classList.add('fps-counter');
+        this.tag = dom('div', { class: 'fps-counter' });
+        this.fps = this.lastDelta = 0;
         settings.bind('fps', function (t) {
             return _this.tag.classList[t ? 'remove' : 'add']('hidden');
         });
-
-        this.fps = 60;
-        this.lastDelta = 0;
     }
 
     _createClass(FPSCounter, [{
@@ -3079,7 +3385,7 @@ var FPSCounter = function () {
             var fpsFromDelta = 1000 / delta;
             this.fps = this.fps * 0.9 + fpsFromDelta * 0.1;
             this.lastDelta = delta;
-            this.tag.innerHTML = this.fps | 0;
+            this.tag.textContent = this.fps | 0;
         }
     }]);
 
@@ -3103,35 +3409,29 @@ var UI = function () {
             _this.titleTag.removeEventListener('click', _this.onTitle);
             onTitle();
         };
-        this.titleTag = document.createElement('div');
-        this.titleTag.classList.add('hidden', 'title');
-        this.titleTag.addEventListener('click', this.onTitle);
 
-        this.btnsTag = document.createElement('div');
-        this.btnsTag.classList.add('hidden', 'btns');
+        this.titleTag = dom('div', { class: 'hidden title', click: this.onTitle });
+
+        this.btnsTag = dom('div', { class: 'hidden btns' }, this.groupSelectTag = dom('div', { class: 'group-select' }), this.groupsTag = dom('div', { class: 'groups' }));
+
         settings.bind('tooltips', function (t) {
             return _this.btnsTag.classList[t ? 'add' : 'remove']('tooltips');
         });
 
-        this.groupSelectTag = document.createElement('div');
-        this.groupSelectTag.classList.add('group-select');
-        this.btnsTag.appendChild(this.groupSelectTag);
-
-        this.groupsTag = document.createElement('div');
-        this.groupsTag.classList.add('groups');
-        this.btnsTag.appendChild(this.groupsTag);
-
         this.trainGroup = this.createGroup('train');
         this.untrainGroup = this.createGroup('untrain');
         this.trainGroup.radio.onclick = this.untrainGroup.radio.onclick = function () {
-            return _this.tip('jobs', 'villagers make babies and cut trees' + '\npriests make summons and convert' + '\nwarriors fight, builders build');
+            return _this.tip('jobs');
         };
+
         this.buildGroup = this.createGroup('build');
         this.buildGroup.radio.onclick = function () {
-            return _this.tip('buildings', 'houses raise the pop limit' + '\nbarracks make warriors stronger' + '\ntemples raise the summon limit' + '\nand make priests better' + '\ngreenhouses raise the sapling limit' + '\nbridges discover new islands');
+            return _this.tip('buildings');
         };
+
         this.doGroup = this.createGroup('do');
         this.moveGroup = this.createGroup('move');
+
         this.show(this.doGroup);
 
         this.btns = ['train', 'untrain'].reduce(function (btns, act) {
@@ -3163,7 +3463,7 @@ var UI = function () {
         }, null, 'bridge', 'build', 'bridge'), this.createBtn(this.doGroup.children, function () {
             return _this.game.player.forestate(_this.game);
         }, function () {
-            return _this.game.player.treeCount;
+            return _this.game.player.treeCount + _this.game.player.bigTreeCount;
         }, 'forestate', 'forestate'), this.createBtn(this.doGroup.children, function () {
             return _this.game.player.deforest(_this.game);
         }, null, 'deforest', 'deforest'), this.createBtn(this.doGroup.children, function () {
@@ -3186,42 +3486,23 @@ var UI = function () {
             return _this.game.player.sendRetreat(_this.game);
         }, null, 'retreat', 'retreat')]);
 
-        this.menuContainerTag = document.createElement('div');
-        this.menuContainerTag.classList.add('menu-container');
-
-        this.createMenuBtn('pause-btn').btn.onchange = function (ev) {
+        this.menuContainerTag = dom('div', { class: 'menu-container' }, this.menuBtn('pause-btn', function (ev) {
             return ev.target.checked ? pause() : resume();
-        };
-        this.createMenuBtn('menu-btn');
-
-        this.menuTag = document.createElement('div');
-        this.menuTag.classList.add('menu');
-
-        settings.all.map(function (n) {
-            return _this.createSettings(n);
-        });
-        this.createLink('New', 'javascript:newGame()');
-        this.createLink('Save', 'javascript:save()');
-        this.createLink('Restore', 'javascript:restore()');
-        this.createLink('Source', 'https://github.com/Dagothig/tiny_religion.js/').link.target = 'blank';
-
-        this.menuContainerTag.appendChild(this.menuTag);
+        }), this.menuBtn('menu-btn'), this.menuTag = dom('div', { class: 'menu' }, settings.usr.map(function (n) {
+            return dom('div', {}, dom('label', { textContent: n, htmlFor: n }), settings.inputFor(n));
+        }), dom('div', {}, dom('a', { href: 'javascript:newGame()' }, 'new'), settings.inputFor('goal')), dom('div', {}, dom('a', { href: 'javascript:save()' }, 'save')), dom('div', {}, dom('a', { href: 'javascript:restore()' }, 'restore')), dom('div', {}, dom('a', {
+            href: 'https://github.com/Dagothig/tiny_religion.js/',
+            target: 'blank'
+        }, 'source'))));
 
         this.tips = {};
         this.tipsQueue = [];
-        this.tipTag = document.createElement('div');
-        this.tipTag.classList.add('tip', 'initial');
-
-        this.tipTextTag = document.createElement('div');
-        this.tipTextTag.classList.add('text');
-        this.tipTag.appendChild(this.tipTextTag);
-
-        this.tipOkTag = document.createElement('button');
-        this.tipOkTag.innerHTML = 'gotcha';
-        this.tipOkTag.onclick = function () {
-            return _this.dequeueTip();
-        };
-        this.tipTag.appendChild(this.tipOkTag);
+        this.tipTag = dom('div', { class: 'tip initial' }, this.tipTextTag = dom('div', { class: 'text' }), this.tipOkTag = dom('button', {
+            click: function click() {
+                return _this.dequeueTip();
+            }
+        }, 'gotcha'));
+        this.gameContainer.appendChild(this.tipTag);
 
         settings.bind('tips', function (t) {
             if (t) return;
@@ -3230,8 +3511,8 @@ var UI = function () {
             _this.tipTag.classList.add('hidden');
         });
 
-        this.notifyTag = document.createElement('div');
-        this.notifyTag.classList.add('notify');
+        this.notifyTag = dom('div', { class: 'notify' });
+        this.gameContainer.appendChild(this.notifyTag);
 
         this.fpsCounter = new FPSCounter();
         this.gameContainer.appendChild(this.fpsCounter.tag);
@@ -3243,37 +3524,19 @@ var UI = function () {
             var _this2 = this;
 
             var group = {};
+            group.radio = dom('input', {
+                id: name, name: 'group', type: 'radio', class: 'checked', value: name,
+                change: function change() {
+                    return _this2.show(group);
+                }
+            });
+            group.nameTag = dom('label', { class: 'check', htmlFor: name }, group.nameContent = dom('span', {}, name));
+            group.children = dom('div', { class: 'group' });
 
-            var radio = document.createElement('input');
-            radio.id = name;
-            radio.type = 'radio';
-            radio.name = 'group';
-            radio.classList.add('checked');
-            radio.value = name;
-            radio.onchange = function (ev) {
-                return _this2.show(group);
-            };
+            this.groupSelectTag.appendChild(group.radio);
+            this.groupSelectTag.appendChild(group.nameTag);
+            this.groupsTag.appendChild(group.children);
 
-            this.groupSelectTag.appendChild(radio);
-
-            var nameTag = document.createElement('label');
-            nameTag.classList.add('check');
-            nameTag.htmlFor = name;
-
-            var nameContent = document.createElement('span');
-            nameContent.innerHTML = name;
-            nameTag.appendChild(nameContent);
-
-            this.groupSelectTag.appendChild(nameTag);
-
-            var children = document.createElement('div');
-            children.classList.add('group');
-            this.groupsTag.appendChild(children);
-
-            group.radio = radio;
-            group.nameTag = nameTag;
-            group.nameContent = nameContent;
-            group.children = children;
             return group;
         }
     }, {
@@ -3281,82 +3544,34 @@ var UI = function () {
         value: function createBtn(parent, onclick, onupdate, name) {
             var _this3 = this;
 
-            var tag = document.createElement('div');
-
-            var btn = document.createElement('button');
-            btn.classList.add('btn');
+            var obj = { update: onupdate, textTags: [] };
 
             for (var _len = arguments.length, classes = Array(_len > 4 ? _len - 4 : 0), _key = 4; _key < _len; _key++) {
                 classes[_key - 4] = arguments[_key];
             }
 
-            btn.classList.add.apply(btn.classList, classes);
-            btn.onclick = function () {
-                return _this3.notify(onclick());
-            };
-            tag.appendChild(btn);
-
-            var tooltip = document.createElement('div');
-            tooltip.innerHTML = name;
-            tooltip.classList.add('tooltip');
-            tag.appendChild(tooltip);
-
-            parent.appendChild(tag);
-
-            return {
-                tag: tag,
-                btn: btn,
-                textTags: [],
-                tooltip: tooltip,
-                update: onupdate
-            };
+            obj.tag = dom('div', {}, obj.btn = dom('button', {
+                class: 'btn ' + classes.join(' '),
+                click: function click() {
+                    return _this3.notify(onclick());
+                }
+            }), obj.tooltip = dom('div', { class: 'tooltip' }, name));
+            parent.appendChild(obj.tag);
+            return obj;
         }
     }, {
-        key: 'createLink',
-        value: function createLink(name, href) {
-            var linkContainer = document.createElement('div');
-            var link = document.createElement('a');
-            link.href = href;
-            link.innerHTML = name;
-            linkContainer.appendChild(link);
-            this.menuTag.appendChild(linkContainer);
-            return {
-                container: linkContainer,
-                link: link
-            };
-        }
-    }, {
-        key: 'createSettings',
-        value: function createSettings(name) {
-            var container = document.createElement('div');
-
-            var lbl = document.createElement('label');
-            lbl.innerHTML = name;
-            lbl.htmlFor = name;
-
-            var input = settings.inputFor(name);
-
-            container.appendChild(lbl);
-            container.appendChild(input);
-            this.menuTag.appendChild(container);
-
-            return container;
-        }
-    }, {
-        key: 'createMenuBtn',
-        value: function createMenuBtn(name) {
-            var btn = document.createElement('input');
-            btn.name = btn.id = name;
-            btn.type = 'checkbox';
-            btn.classList.add('checked', name);
-            this.menuContainerTag.appendChild(btn);
-
-            var check = document.createElement('label');
-            check.classList.add('check');
-            check.htmlFor = name;
-            this.menuContainerTag.appendChild(check);
-
-            return { btn: btn, check: check };
+        key: 'menuBtn',
+        value: function menuBtn(name, change) {
+            return [dom('input', {
+                id: name,
+                name: name,
+                type: 'checkbox',
+                class: 'checked ' + name,
+                change: change
+            }), dom('label', {
+                class: 'check',
+                htmlFor: name
+            })];
         }
     }, {
         key: 'updateText',
@@ -3367,7 +3582,7 @@ var UI = function () {
                 btn.btn.appendChild(span);
             }
             if (span._text === text) return;
-            span.innerHTML = span._text = text;
+            span.textContent = span._text = text;
         }
     }, {
         key: 'update',
@@ -3397,8 +3612,6 @@ var UI = function () {
     }, {
         key: 'showTitle',
         value: function showTitle() {
-            var _this5 = this;
-
             var win = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 
             this.titleTag.classList.remove('hidden', 'win', 'lost');
@@ -3414,9 +3627,7 @@ var UI = function () {
                 }
             } else sounds.titleScreen.play();
             if (window.android) android.updateStatusTint(0x193bcb);
-            setTimeout(function () {
-                return _this5.titleTag.addEventListener('click', _this5.onTitle);
-            }, 1000);
+            this.titleTag.addEventListener('click', this.onTitle);
             this.tipTag.classList.add('hidden');
         }
     }, {
@@ -3442,9 +3653,10 @@ var UI = function () {
         }
     }, {
         key: 'tip',
-        value: function tip(id, text) {
-            if (!settings.tips) return;
-            if (this.tips[id]) return;
+        value: function tip(id) {
+            var text = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : strs.tips[id];
+
+            if (!settings.tips || this.tips[id]) return;
             this.tips[id] = true;
             this.tipsQueue.push({ id: id, text: text });
             if (this.tipTag.classList.contains('hidden')) this.dequeueTip();
@@ -3455,20 +3667,20 @@ var UI = function () {
             var tip = this.tipsQueue.shift();
             if (tip) {
                 this.tipTag.classList.remove('hidden', 'initial');
-                this.tipTextTag.innerHTML = tip.text;
+                this.tipTextTag.textContent = tip.text;
             } else {
                 this.tipTag.classList.add('hidden');
             }
         }
     }, {
         key: 'notify',
-        value: function notify(str) {
-            var notif = document.createElement('div');
-            notif.innerHTML = str;
-            notif.addEventListener('animationend', function () {
-                return notif.remove();
-            });
-            notif.style.animation = 'notification 2s linear';
+        value: function notify(msg) {
+            var notif = dom('div', {
+                animationend: function animationend() {
+                    return notif.remove();
+                },
+                style: 'animation-duration: ' + (msg.extra && settings.tips ? 4 : 2) + 's;'
+            }, msg.message || msg, settings.tips && msg.extra && dom('div', { class: 'extra' }, msg.extra));
             this.notifyTag.appendChild(notif);
 
             var height = notif.clientHeight;
@@ -3496,18 +3708,18 @@ var UI = function () {
         key: 'onGodChangePersonality',
         value: function onGodChangePersonality(game) {
             this.updateToGodColor(game);
-            this.tip('color', "God has changed color!\nIs God the same?");
+            this.tip('color');
         }
     }, {
         key: 'onNewGame',
         value: function onNewGame(game) {
-            var _this6 = this;
+            var _this5 = this;
 
             this.updateToGodColor(game);
             game.addEventListener('godChangePersonality', function () {
-                return _this6.onGodChangePersonality(game);
+                return _this5.onGodChangePersonality(game);
             });
-            this.tip('please', "God demands pleasing!\nFind out what pleases God!");
+            this.tip('please');
         }
     }]);
 
@@ -3518,8 +3730,7 @@ var UI = function () {
 PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
 var scaling = 1;
-var container = document.createElement('div');
-container.id = 'container';
+var container = dom('div', { id: 'container' });
 var ui = new UI(container, function () {
     return newGame();
 });
@@ -3559,9 +3770,11 @@ var state = JSON.parse(localStorage.getItem('save'));
 function save() {
     if (!game) return;
     localStorage.setItem('save', JSON.stringify(state = game.outputState()));
+    ui.notify('saved');
 }
 function restore() {
     state && newGame(state);
+    ui.notify('restored');
 }
 
 function saveTemp() {
@@ -3582,8 +3795,6 @@ function setupGame() {
     document.body.appendChild(ui.titleTag);
     document.body.appendChild(ui.btnsTag);
     document.body.appendChild(ui.menuContainerTag);
-    container.appendChild(ui.tipTag);
-    container.appendChild(ui.notifyTag);
     ui.showTitle();
 
     // Setup renderer
@@ -3612,14 +3823,13 @@ function setupGame() {
     };
     window.addEventListener('resize', resize);
     resize();
-    settings.bind('tooltips', resize);
 
     Game.onLoad(function () {
         // Setup event loop
         var last = performance.now();
         var upd = function upd() {
             var time = performance.now();
-            var delta = time - last;
+            var delta = time - last || 1;
 
             if (game) {
                 if (!paused) game.update(delta, renderer.width, renderer.height);
@@ -3639,12 +3849,8 @@ window.addEventListener("DOMContentLoaded", function () {
     var splash = document.querySelector('.splash');
     if (!splash) return setupGame();
     var handler = function handler() {
-        if (!splash) return;
-        splash.remove();
-        splash = null;
-        setupGame();
+        return splash && (splash.remove(), splash = null, setupGame());
     };
     splash.onclick = handler;
     setTimeout(handler, 2000);
-    document.body.appendChild(splash);
 });

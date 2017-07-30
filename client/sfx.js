@@ -1,21 +1,15 @@
 'use strict';
 
-class SFXType {
-    constructor(decalX, decalY, decalZ, frameDuration) {
-        this.decalX = decalX;
-        this.decalY = decalY;
-        this.decalZ = decalZ;
-        this.frameDuration = frameDuration;
-    }
-}
-let Blood = new SFXType(4, 10, 0, 8),
-    Summon = new SFXType(4, 10, 0, 8),
-    Sparkle = new SFXType(4, 10, 0, 8),
-    Lightning = new SFXType(16, 128, 0, 8);
-
 class SFX extends PIXI.TiledSprite {
     constructor(x, y, type, z) {
-        super(type.texture);
+        super((type || y).texture);
+        if (x instanceof Object) {
+            this.pos = x;
+            z = type;
+            type = y;
+            y = this.pos.y;
+            x = this.pos.x;
+        }
         this.currentFrame = type.frameDuration;
         this.decal = { x: type.decalX, y: type.decalY };
         this.x = x;
@@ -24,6 +18,7 @@ class SFX extends PIXI.TiledSprite {
         if (Math.random() < 0.5) this.scale.x = -1;
         this.tileY = type.tileY;
         this.type = type;
+        if (this.type.SFX) this.type.SFX.apply(this, arguments);
     }
     get z() {
         return Number.isFinite(this._z) ? this._z : this.y + this.type.decalZ;
@@ -40,17 +35,50 @@ class SFX extends PIXI.TiledSprite {
             else this.tileX++;
         }
     }
+    render() {
+        if (this.pos) {
+            this.x = this.pos.x;
+            this.y = this.pos.y;
+        }
+    }
+    after(cb) {
+        (this._afterCbs = this._afterCbs || []).push(cb);
+        return this;
+    }
+    onRemove() {
+        this._afterCbs && this._afterCbs.forEach(x => x());
+    }
 }
 PIXI.loader
-.add('lightning', 'images/Lightning.png', null, res => {
-    SFX.lightning = new PIXI.TiledTexture(res.texture, 32, 128);
-    Lightning.texture = SFX.lightning;
-    Lightning.tileY = 0;
-})
+.add('lightning', 'images/Lightning.png', null,
+    res => Lightning.texture = new PIXI.TiledTexture(res.texture, 32, 128))
 .add('miscSFX', 'images/SpecialEffects.png', null, res => {
-    SFX.misc = new PIXI.TiledTexture(res.texture, 8, 12)
-    Blood.texture = Summon.texture = Sparkle.texture = SFX.misc;
+    Blood.texture = Summon.texture = Sparkle.texture =
+        new PIXI.TiledTexture(res.texture, 8, 12);
     Blood.tileY = 0;
     Summon.tileY = 1;
     Sparkle.tileY = 2;
 })
+.add('bigSummon', 'images/BigSummon.png', null,
+    res => BigSummon.texture = new PIXI.TiledTexture(res.texture, 16, 24))
+.add('topBeam', 'images/TopBeam.png', null,
+    res => TopBeam.texture = new PIXI.TiledTexture(res.texture, 6, 128));
+
+class SFXType {
+    constructor(decalX, decalY, decalZ, frameDuration, ext) {
+        this.decalX = decalX;
+        this.decalY = decalY;
+        this.decalZ = decalZ;
+        this.frameDuration = frameDuration;
+        this.tileY = 0;
+        Object.merge(this, ext || {});
+    }
+}
+let Blood = new SFXType(4, 10, 0, 8),
+    Summon = new SFXType(4, 10, 0, 8),
+    Sparkle = new SFXType(4, 10, 0, 8, {
+        SFX() { this.rotation = Math.randRange(0, Math.TWO_PI); }
+    }),
+    Lightning = new SFXType(16, 128, 0, 8),
+    TopBeam = new SFXType(3, 125, 3, 4),
+    BigSummon = new SFXType(8, 20, 4, 4);

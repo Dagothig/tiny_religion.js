@@ -15,9 +15,10 @@ let settingsEx = settings(strat, {
 });
 */
 let settings = ((strat, confs) => Object.keys(confs).reduce((settings, key) => {
-    settings.all.push(key);
-
     var conf = confs[key];
+
+    settings.all.push(key);
+    settings[conf[2]].push(key);
 
     var _key = '_' + key;
     var _keyConf = _key + 'Conf';
@@ -28,10 +29,8 @@ let settings = ((strat, confs) => Object.keys(confs).reduce((settings, key) => {
     settings[_keyCBs] = [];
 
     Object.defineProperty(settings, key, {
-        get: function() {
-            return this[_key];
-        },
-        set: function(val) {
+        get() { return this[_key]; },
+        set(val) {
             this[_key] = strat.write(key, conf, val);
             this[_keyCBs].forEach(cb => cb(val));
         }
@@ -40,67 +39,46 @@ let settings = ((strat, confs) => Object.keys(confs).reduce((settings, key) => {
     return settings;
 }, {
     all: [],
+    usr: [],
+    sys: [],
     bind: function(key, cb) {
         this['_' + key + 'CBs'].push(cb);
         cb(this[key]);
     },
-    _clear: function(key) { this[key] = this['_' + key + 'Conf'][0]; },
+    _clear: function(key) {
+        this[key] = this['_' + key + 'Conf'][0];
+        this[`_${key}CBs`].forEach(cb => cb(this[key]));
+    },
     clear: function() {
         if (arguments.length)
             Array.from(arguments).forEach(key => this._clear(key));
         else this.all.forEach(key => this._clear(key))
     },
+    _index: function(name, conf) { // Fuzzy search
+        return Object.values(conf[3]).findIndex(e => e.value == settings[name]);
+    },
+    _inputFor: {
+        str: name => dom('input', { type: 'text', value: settings[name] }),
+        num: name => dom('input', { type: 'numeric', value: settings[name] }),
+        bool: name => dom('input', { type: 'checkbox', checked: settings[name] }),
+        choice: (name, conf) => dom('select',
+            { selectedIndex: settings._index(name, conf) },
+            Object.entries(conf[3]).map(x => dom('option', { value: x[1] }, x[0])))
+    },
     inputFor: function(name) {
         let conf = this['_' + name + 'Conf'];
-        let input;
-        let onchange = () => this[name] = input.value;
-        switch(conf[1]) {
-            case 'str':
-                input = document.createElement('input');
-                input.type = 'text';
-                input.value = this[name];
-                break;
-            case 'num':
-                input = document.createElement('input');
-                input.type = 'numeric';
-                input.value = this[name];
-                break;
-            case 'bool':
-                input = document.createElement('input');
-                input.type = 'checkbox';
-                input.checked = this[name];
-                onchange = () => this[name] = input.checked;
-                break;
-            case 'choice':
-                input = document.createElement('select');
-                input.selectedIndex =
-                Object.entries(conf[3]).map(opt => {
-                    let entry = document.createElement('option');
-                    entry.innerHTML = opt[0];
-                    entry.value = opt[1];
-                    input.appendChild(entry);
-                    return entry;
-                }) // Fuzzy equality
-                .findIndex(e => e.value == this[name]);
-                break;
-        }
+        let input = this._inputFor[conf[1]](name, conf);
         input.id = input.name = name;
-        input.onchange = onchange;
+        input.onchange = conf[1] === 'bool' ?
+            () => this[name] = input.checked :
+            () => this[name] = input.value;
+        this.bind(name, t => input.value = input.checked = t);
         return input;
     }
-}))({
-    str: {
-        toStr: str => (str + ''),
-        fromStr: str => str
-    },
-    num: {
-        toStr: num => (num + ''),
-        fromStr: str => new Number(str).valueOf()
-    },
-    bool: {
-        toStr: val => val ? 'true' : 'false',
-        fromStr: str => str === 'true',
-    },
+}))(/* local storage strat */{
+    str: { toStr: str => (str + ''), fromStr: str => str },
+    num: { toStr: num => (num + ''), fromStr: str => new Number(str).valueOf() },
+    bool: { toStr: val => val ? 'true' : 'false', fromStr: str => str === 'true' },
     choice: {
         toStr: (val, conf) => // Fuzzy equality
             Object.entries(conf[3]).find(entry => entry[1] == val)[0],
@@ -123,11 +101,11 @@ let settings = ((strat, confs) => Object.keys(confs).reduce((settings, key) => {
     tooltips: [true, 'bool', 'usr'],
     music: [true, 'bool', 'usr'],
     sound: [true, 'bool', 'usr'],
-    goal: [12000, 'choice', 'usr', {
+    goal: [12000, 'choice', 'sys', {
         tiny: 3000,
         short: 6000,
         medium: 12000,
         long: 24000
     }],
-    fps: [false, 'bool', 'user']
+    fps: [false, 'bool', 'usr']
 });

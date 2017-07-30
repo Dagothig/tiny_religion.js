@@ -96,7 +96,7 @@
     function TiledTexture(texture, tw, th) {
         this.tilesX = texture.width / tw;
         this.tilesY = texture.height / th;
-        if (!!((this.tilesX % 1) || (this.tilesY % 1)))
+        if ((this.tilesX % 1) || (this.tilesY % 1))
             throw ("The texture size is not a multiple of the tile size:",
                 this.tilesX, this.tilesY);
 
