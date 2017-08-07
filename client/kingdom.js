@@ -77,8 +77,8 @@ class Kingdom {
         }
     }
 
-    build(game, type) {
-        if (this.builded) return strs.msgs.builded;
+    build(game, type, skipChecks = false) {
+        if (!skipChecks && this.builded) return strs.msgs.builded;
         let isls = game.islands.slice(0).sort(() => Math.random() - 0.5);
         for (let i = 0; i < isls.length; i++) {
             let isl = isls[i];
@@ -101,8 +101,8 @@ class Kingdom {
         return strs.msgs.noSpot;
     }
 
-    buildBridge(game) {
-        if (this.builded) return strs.msgs.builded;
+    buildBridge(game, skipChecks = false) {
+        if (!skipChecks && this.builded) return strs.msgs.builded;
         let index = game.islands.findIndex(i => !i.bridge && i.kingdom === this);
         let island = game.islands[index];
         if (!island) return strs.msgs.noIsland;
@@ -124,8 +124,8 @@ class Kingdom {
         return strs.msgs.building(bridge.type);
     }
 
-    forestate(game) {
-        if (this.growed) return strs.msgs.growed;
+    forestate(game, skipChecks = false) {
+        if (!skipChecks && this.growed) return strs.msgs.growed;
         for (let i = 0; i < game.islands.length * 3; i++) {
             let island = game.islands.rand();
             if (island.kingdom !== this) continue;
@@ -186,8 +186,8 @@ class Kingdom {
         }
         return strs.msgs.untrained(job);
     }
-    doBaby(game) {
-        if (this.housed) return strs.msgs.housed;
+    doBaby(game, skipChecks = false) {
+        if (!skipChecks && this.housed) return strs.msgs.housed;
         if (game.islands.find(island =>
                 island.people.find(person =>
                     person.kingdom === this && person.job === Villager &&
@@ -199,8 +199,8 @@ class Kingdom {
         }
         return strs.msgs.babyAttempted;
     }
-    attemptSummon(game) {
-        if (this.templed) return strs.msgs.templed;
+    attemptSummon(game, skipChecks = false) {
+        if (!skipChecks && this.templed) return strs.msgs.templed;
         if (game.islands.find(island =>
             island.people.find(person =>
                 person.kingdom === this && person.job === Priest &&
@@ -225,7 +225,7 @@ class Kingdom {
         if (this.isPlayer && p) {
             let prop = c/(this.peopleCount + this.summonCount);
             sounds.pray.play(null, prop);
-            game.god.event('pray', prop, p.position);
+            game.god.event('pray', prop * (1 + this.statueCount), p.position);
         }
         return strs.msgs.praying;
     }

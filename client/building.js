@@ -5,6 +5,7 @@ class Building extends PIXI.TiledSprite {
         super(type.texture);
         this.x = x;
         this.y = y;
+        this._z = 0;
         if (Math.random() < 0.5) this.scale.x = -1;
         this.decal.x = this.texture.width / 2 + type.decalX;
         this.decal.y = this.texture.height / 2 + type.decalY;
@@ -19,7 +20,8 @@ class Building extends PIXI.TiledSprite {
     get radius() { return this.type.radius; }
     get radius2() { return this.type.radius2; }
     get eco() { return this.type.eco; }
-    get z() { return this.y + this.type.decalZ; }
+    get z() { return this._z + this.y + this.type.decalZ; }
+    set z(val) { this._z = val - this.y - this.type.decalZ; }
 
     isInRadius(o, radius) {
         radius = radius || o.radius;
@@ -59,8 +61,29 @@ class Building extends PIXI.TiledSprite {
         if (this.type.notifyCompletion) this.type.notifyCompletion.call(this);
         else ui.notify(this.type.name + ' built');
     }
+    explode(game) {
+        var explosion = new SFX(this.x, this.y, Explosion);
+        explosion.scale.x = explosion.scale.y = Math.bounded(
+            (this.width / explosion.width + this.height / explosion.height) / 2,
+            0.5, 1);
+        game.addChild(explosion);
+        this.exploded = true;
+        this.explodeSpeedX = Math.randRange(-4, 4);
+        this.explodeSpeedY = Math.randRange(6, 10);
+        this.explodeDirection = Math.random() < 0.5 ? 0.4 : -0.4;
+        if (this.kingdom.isPlayer)
+            game.god.event(this.type.name, -0.5, this.position);
+    }
     update(delta, game) {
         if (this.type.update) this.type.update.apply(this, arguments);
+        if (this.exploded) {
+            this.x += this.explodeSpeedX;
+            this.y -= this.explodeSpeedY;
+            this.z += this.explodeSpeedY;
+            this.rotation += this.explodeDirection;
+            this.alpha -= 0.02;
+            if (this.alpha <= 0) this.shouldRemove = true;
+        }
     }
     render(delta, game, renderer) {
         this.tint = game.globalColor;
@@ -150,7 +173,7 @@ FallingTree = new BuildingType(
         notifyCompletion() { ui.notify('stump removed') }
     }),
 BigTree = new BuildingType(
-    'bigTree', 'images/BigTree.png',  0, 45, 0, false, 10, -1, 0, {
+    'bigTree', 'images/BigTree.png', 0, 45, 0, false, 10, -1, 0, {
         building() {
             this.grow = 1;
         },
@@ -169,4 +192,6 @@ BigTree = new BuildingType(
             if (!this.finished)
                 this.tint = 0xffffff;
         }
-    });
+    }),
+Statue = new BuildingType(
+    'statue', 'images/Statue.png', 0, 18, 3, false, 8, 1/4, 1000);

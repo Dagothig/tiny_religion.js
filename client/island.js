@@ -33,6 +33,7 @@ class Island extends PIXI.Container {
         for (let i = 0; i < attempts; i++) {
             let pos = this.getRandomPoint(radius);
             if (this.buildings.find(b =>
+                b.type !== Bridge &&
                 b.isInRadius(pos, radius))) continue;
             let b = new Building(pos.x, pos.y, type, this.kingdom, this, finished);
             this.buildings.add(b);

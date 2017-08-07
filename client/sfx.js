@@ -62,7 +62,9 @@ PIXI.loader
 .add('bigSummon', 'images/BigSummon.png', null,
     res => BigSummon.texture = new PIXI.TiledTexture(res.texture, 16, 24))
 .add('topBeam', 'images/TopBeam.png', null,
-    res => TopBeam.texture = new PIXI.TiledTexture(res.texture, 6, 128));
+    res => TopBeam.texture = new PIXI.TiledTexture(res.texture, 6, 128))
+.add('explison', 'images/Explosion.png', null,
+    res => Explosion.texture = new PIXI.TiledTexture(res.texture, 96, 96));
 
 class SFXType {
     constructor(decalX, decalY, decalZ, frameDuration, ext) {
@@ -81,4 +83,5 @@ let Blood = new SFXType(4, 10, 0, 8),
     }),
     Lightning = new SFXType(16, 128, 0, 8),
     TopBeam = new SFXType(3, 125, 3, 4),
-    BigSummon = new SFXType(8, 20, 4, 4);
+    BigSummon = new SFXType(8, 20, 4, 4),
+    Explosion = new SFXType(48, 48, 48, 8);

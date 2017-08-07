@@ -1020,6 +1020,8 @@ PIXI.loader.add('lightning', 'images/Lightning.png', null, function (res) {
     return BigSummon.texture = new PIXI.TiledTexture(res.texture, 16, 24);
 }).add('topBeam', 'images/TopBeam.png', null, function (res) {
     return TopBeam.texture = new PIXI.TiledTexture(res.texture, 6, 128);
+}).add('explison', 'images/Explosion.png', null, function (res) {
+    return Explosion.texture = new PIXI.TiledTexture(res.texture, 96, 96);
 });
 
 var SFXType = function SFXType(decalX, decalY, decalZ, frameDuration, ext) {
@@ -1042,7 +1044,8 @@ var Blood = new SFXType(4, 10, 0, 8),
 }),
     Lightning = new SFXType(16, 128, 0, 8),
     TopBeam = new SFXType(3, 125, 3, 4),
-    BigSummon = new SFXType(8, 20, 4, 4);
+    BigSummon = new SFXType(8, 20, 4, 4),
+    Explosion = new SFXType(48, 48, 48, 8);
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -1156,6 +1159,9 @@ var God = function (_PIXI$Container) {
             },
             summon: function summon() {
                 return _this.likesAttention / 2 - _this.likesLife / 2;
+            },
+            statue: function statue() {
+                return _this.likesAttention * 2 + _this.likesManMade * 2;
             }
         };
 
@@ -1172,13 +1178,13 @@ var God = function (_PIXI$Container) {
             if (Math.abs(this.mood) < 0.01) this.mood = 0;
 
             // Birds
-            if (this.birds.length !== this.birdTarget && Math.random() < 0.01) if (this.birds.length < this.birdTarget) {
-                var bird = new Bird(game, this.x, this.y);
-                bird.tint = this.tint;
+            if (Math.random() < 0.01) if (this.birds.length < this.birdTarget) {
+                var bounds = game.getLocalBounds();
+                var bird = new Bird(Math.randRange(bounds.left, bounds.right), Math.randRange(bounds.top, bounds.bottom), this.tint);
                 this.birds.add(bird);
                 game.addChild(bird);
                 game.addChild(new SFX(bird.x, bird.y, Summon, bird.z));
-            } else {
+            } else if (this.birds.length > this.birdTarget) {
                 var _bird = this.birds.rand();
                 if (_bird) {
                     game.addChild(new SFX(_bird.x, _bird.y, Lightning, _bird.z));
@@ -1193,14 +1199,18 @@ var God = function (_PIXI$Container) {
             if (feeling < 0) {
                 feeling *= -1;
                 // Check for punish
-                if (Math.random() < feeling * this.deathModifier / 400) this.doSacrifice(game);
+                if (Math.random() < feeling * this.deathModifier / 200) this.doSacrifice(game);
 
-                if (Math.random() < feeling * this.natureModifier / 400) this.convertToTree(game);
+                if (Math.random() < feeling * this.natureModifier / 200) this.convertToTree(game);
+
+                if (Math.random() < feeling * this.lifeModifier / 200) this.convertToBird(game);
             } else {
                 // Check for reward
                 if (Math.random() < feeling * this.deathModifier / 400) this.convertToMinotaur(game);
 
                 if (Math.random() < feeling * this.natureModifier / 600) this.convertToBigTree(game);
+
+                if (Math.random() < feeling * this.attentionModifier / 600) game.player.build(game, Statue, true);
             }
 
             if (this.mood > 0) {
@@ -1271,11 +1281,6 @@ var God = function (_PIXI$Container) {
             return strs.msgs.sacrificing;
         }
     }, {
-        key: 'convertToBird',
-        value: function convertToBird(game) {
-            var dude = this.randomPerson(game);
-        }
-    }, {
         key: 'convertToMinotaur',
         value: function convertToMinotaur(game) {
             var minotaur = this.randomPerson(game, function (x) {
@@ -1303,6 +1308,11 @@ var God = function (_PIXI$Container) {
                 game.addChild(new SFX(person.x, person.y, BigSummon));
                 sounds.done.play();
                 var tree = new Building(person.x, person.y, Tree, person.kingdom, person.island, true);
+                person.island.buildings.filter(function (b) {
+                    return b.type !== BigTree && b.type !== Bridge && b.isInRadius(tree, 0.1);
+                }).forEach(function (b) {
+                    return b.explode(game);
+                });
                 tree.grow = 0.3;
                 person.island.buildings.add(tree);
                 game.addChild(tree);
@@ -1324,6 +1334,26 @@ var God = function (_PIXI$Container) {
                 tree.island.buildings.add(bigTree);
                 game.addChild(bigTree);
                 tree.shouldRemove = true;
+            }));
+        }
+    }, {
+        key: 'convertToBird',
+        value: function convertToBird(game) {
+            var _this3 = this;
+
+            var person = this.randomPerson(game);
+            if (!person) return;
+
+            game.addChild(new SFX(person, TopBeam).after(function () {
+                if (person.shouldRemove) return;
+                game.addChild(new SFX(person.x, person.y, Blood));
+                person.shouldRemove = true;
+                _this3.event('baby', 1, person.position);
+                for (var i = 3; i--;) {
+                    var bird = new Bird(person.x, person.y - 4, _this3.tint);
+                    _this3.birds.add(bird);
+                    game.addChild(bird);
+                }
             }));
         }
     }, {
@@ -1593,7 +1623,9 @@ var Kingdom = function () {
     }, {
         key: 'build',
         value: function build(game, type) {
-            if (this.builded) return strs.msgs.builded;
+            var skipChecks = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+
+            if (!skipChecks && this.builded) return strs.msgs.builded;
             var isls = game.islands.slice(0).sort(function () {
                 return Math.random() - 0.5;
             });
@@ -1624,7 +1656,9 @@ var Kingdom = function () {
         value: function buildBridge(game) {
             var _this3 = this;
 
-            if (this.builded) return strs.msgs.builded;
+            var skipChecks = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+            if (!skipChecks && this.builded) return strs.msgs.builded;
             var index = game.islands.findIndex(function (i) {
                 return !i.bridge && i.kingdom === _this3;
             });
@@ -1652,7 +1686,9 @@ var Kingdom = function () {
     }, {
         key: 'forestate',
         value: function forestate(game) {
-            if (this.growed) return strs.msgs.growed;
+            var skipChecks = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+            if (!skipChecks && this.growed) return strs.msgs.growed;
             for (var i = 0; i < game.islands.length * 3; i++) {
                 var island = game.islands.rand();
                 if (island.kingdom !== this) continue;
@@ -1732,7 +1768,9 @@ var Kingdom = function () {
         value: function doBaby(game) {
             var _this5 = this;
 
-            if (this.housed) return strs.msgs.housed;
+            var skipChecks = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+            if (!skipChecks && this.housed) return strs.msgs.housed;
             if (game.islands.find(function (island) {
                 return island.people.find(function (person) {
                     return person.kingdom === _this5 && person.job === Villager && Villager.doBaby.call(person, game);
@@ -1748,7 +1786,9 @@ var Kingdom = function () {
         value: function attemptSummon(game) {
             var _this6 = this;
 
-            if (this.templed) return strs.msgs.templed;
+            var skipChecks = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+            if (!skipChecks && this.templed) return strs.msgs.templed;
             if (game.islands.find(function (island) {
                 return island.people.find(function (person) {
                     return person.kingdom === _this6 && person.job === Priest && Priest.doSummon.call(person, game);
@@ -1778,7 +1818,7 @@ var Kingdom = function () {
             if (this.isPlayer && p) {
                 var prop = c / (this.peopleCount + this.summonCount);
                 sounds.pray.play(null, prop);
-                game.god.event('pray', prop, p.position);
+                game.god.event('pray', prop * (1 + this.statueCount), p.position);
             }
             return strs.msgs.praying;
         }
@@ -1924,7 +1964,7 @@ var Island = function (_PIXI$Container) {
             var _loop = function _loop(i) {
                 var pos = _this2.getRandomPoint(radius);
                 if (_this2.buildings.find(function (b) {
-                    return b.isInRadius(pos, radius);
+                    return b.type !== Bridge && b.isInRadius(pos, radius);
                 })) return 'continue';
                 var b = new Building(pos.x, pos.y, type, _this2.kingdom, _this2, finished);
                 _this2.buildings.add(b);
@@ -2159,6 +2199,7 @@ var Building = function (_PIXI$TiledSprite) {
 
         _this.x = x;
         _this.y = y;
+        _this._z = 0;
         if (Math.random() < 0.5) _this.scale.x = -1;
         _this.decal.x = _this.texture.width / 2 + type.decalX;
         _this.decal.y = _this.texture.height / 2 + type.decalY;
@@ -2226,9 +2267,29 @@ var Building = function (_PIXI$TiledSprite) {
             if (this.type.notifyCompletion) this.type.notifyCompletion.call(this);else ui.notify(this.type.name + ' built');
         }
     }, {
+        key: 'explode',
+        value: function explode(game) {
+            var explosion = new SFX(this.x, this.y, Explosion);
+            explosion.scale.x = explosion.scale.y = Math.bounded((this.width / explosion.width + this.height / explosion.height) / 2, 0.5, 1);
+            game.addChild(explosion);
+            this.exploded = true;
+            this.explodeSpeedX = Math.randRange(-4, 4);
+            this.explodeSpeedY = Math.randRange(6, 10);
+            this.explodeDirection = Math.random() < 0.5 ? 0.4 : -0.4;
+            if (this.kingdom.isPlayer) game.god.event(this.type.name, -0.5, this.position);
+        }
+    }, {
         key: 'update',
         value: function update(delta, game) {
             if (this.type.update) this.type.update.apply(this, arguments);
+            if (this.exploded) {
+                this.x += this.explodeSpeedX;
+                this.y -= this.explodeSpeedY;
+                this.z += this.explodeSpeedY;
+                this.rotation += this.explodeDirection;
+                this.alpha -= 0.02;
+                if (this.alpha <= 0) this.shouldRemove = true;
+            }
         }
     }, {
         key: 'render',
@@ -2269,7 +2330,10 @@ var Building = function (_PIXI$TiledSprite) {
     }, {
         key: 'z',
         get: function get() {
-            return this.y + this.type.decalZ;
+            return this._z + this.y + this.type.decalZ;
+        },
+        set: function set(val) {
+            this._z = val - this.y - this.type.decalZ;
         }
     }]);
 
@@ -2366,7 +2430,8 @@ var Bridge = new BuildingType('bridge', 'images/Bridge.png', -10, -52, -30, fals
         if (this.scale.x < 1 || this.grow < 1) this.scale.x = this.scale.y = this.grow;
         if (!this.finished) this.tint = 0xffffff;
     }
-});
+}),
+    Statue = new BuildingType('statue', 'images/Statue.png', 0, 18, 3, false, 8, 1 / 4, 1000);
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -2825,14 +2890,14 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var Bird = function (_PIXI$AnimatedSprite) {
     _inherits(Bird, _PIXI$AnimatedSprite);
 
-    function Bird(game, x, y) {
+    function Bird(x, y, tint) {
         _classCallCheck(this, Bird);
 
         var _this = _possibleConstructorReturn(this, (Bird.__proto__ || Object.getPrototypeOf(Bird)).call(this, Bird.texture, 4, true));
 
-        var bounds = game.getLocalBounds();
-        _this.x = _this.targetX = bounds.left + bounds.width * Math.random();
-        _this.y = _this.targetY = bounds.top + bounds.height * Math.random();
+        _this.x = _this.targetX = x;
+        _this.y = _this.targetY = y;
+        _this.tint = tint;
         _this.movX = _this.movY = 0;
         _this.anchor.x = _this.anchor.y = 0.5;
         _this.z = 300;
@@ -2846,13 +2911,11 @@ var Bird = function (_PIXI$AnimatedSprite) {
 
             if (Math.dst2(this.x, this.y, this.targetX, this.targetY) < 64) {
                 var bounds = game.getLocalBounds();
-                this.targetX = 1.25 * (bounds.left + bounds.width * Math.random());
-                this.targetY = 1.25 * (bounds.top + bounds.height * Math.random());
+                this.targetX = 1.25 * Math.randRange(bounds.left, bounds.right);
+                this.targetY = 1.25 * Math.randRange(bounds.top, bounds.bottom);
             }
-            var sX = Math.sign(this.targetX - this.x),
-                sY = Math.sign(this.targetY - this.y);
-            this.movX += 0.01 * sX;
-            this.movY += sY < 0 ? -0.005 : 0.02;
+            this.movX += Math.sign(this.targetX - this.x) * 0.01;
+            this.movY += Math.sign(this.targetY - this.y) < 0 ? -0.005 : 0.02;
             this.x += this.movX *= 0.99;
             this.y += this.movY *= 0.99;
             this.scale.x = this.movX < 0 ? -1 : 1;
@@ -2869,7 +2932,7 @@ var Bird = function (_PIXI$AnimatedSprite) {
 }(PIXI.AnimatedSprite);
 
 PIXI.loader.add('bird', 'images/Bird.png', null, function (res) {
-    Bird.texture = new PIXI.TiledTexture(res.texture, 8, 8);
+    return Bird.texture = new PIXI.TiledTexture(res.texture, 8, 8);
 });
 "use strict";
 

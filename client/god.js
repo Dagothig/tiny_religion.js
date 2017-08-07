@@ -63,7 +63,8 @@ class God extends PIXI.Container {
             converting: () => this.likesAttention / 150,
             convert: () => this.likesAttention + this.likesLife,
             pray: () => this.likesAttention,
-            summon: () => this.likesAttention / 2 - this.likesLife / 2
+            summon: () => this.likesAttention / 2 - this.likesLife / 2,
+            statue: () => this.likesAttention * 2 + this.likesManMade * 2
         };
 
         this.changePersonality(true);
@@ -103,14 +104,17 @@ class God extends PIXI.Container {
         if (Math.abs(this.mood) < 0.01) this.mood = 0;
 
         // Birds
-        if (this.birds.length !== this.birdTarget && Math.random() < 0.01)
+        if (Math.random() < 0.01)
             if (this.birds.length < this.birdTarget) {
-                let bird = new Bird(game, this.x, this.y);
-                bird.tint = this.tint;
+                let bounds = game.getLocalBounds();
+                let bird = new Bird(
+                    Math.randRange(bounds.left, bounds.right),
+                    Math.randRange(bounds.top, bounds.bottom),
+                    this.tint);
                 this.birds.add(bird);
                 game.addChild(bird);
                 game.addChild(new SFX(bird.x, bird.y, Summon, bird.z));
-            } else {
+            } else if (this.birds.length > this.birdTarget) {
                 let bird = this.birds.rand();
                 if (bird) {
                     game.addChild(new SFX(bird.x, bird.y, Lightning, bird.z));
@@ -125,11 +129,14 @@ class God extends PIXI.Container {
         if (feeling < 0) {
             feeling *= -1;
             // Check for punish
-            if (Math.random() < feeling * this.deathModifier / 400)
+            if (Math.random() < feeling * this.deathModifier / 200)
                 this.doSacrifice(game);
 
-            if (Math.random() < feeling * this.natureModifier / 400)
+            if (Math.random() < feeling * this.natureModifier / 200)
                 this.convertToTree(game);
+
+            if (Math.random() < feeling * this.lifeModifier / 200)
+                this.convertToBird(game);
         } else {
             // Check for reward
             if (Math.random() < feeling * this.deathModifier / 400)
@@ -137,6 +144,9 @@ class God extends PIXI.Container {
 
             if (Math.random() < feeling * this.natureModifier / 600)
                 this.convertToBigTree(game);
+
+            if (Math.random() < feeling * this.attentionModifier / 600)
+                game.player.build(game, Statue, true);
         }
 
         if (this.mood > 0) {
@@ -196,10 +206,6 @@ class God extends PIXI.Container {
         return strs.msgs.sacrificing;
     }
 
-    convertToBird(game) {
-        let dude = this.randomPerson(game);
-    }
-
     convertToMinotaur(game) {
         let minotaur = this.randomPerson(game, x => x.job !== Minotaur);
         if (!minotaur) return;
@@ -222,6 +228,10 @@ class God extends PIXI.Container {
             sounds.done.play();
             let tree = new Building(
                 person.x, person.y, Tree, person.kingdom, person.island, true);
+            person.island.buildings
+                .filter(b => b.type !== BigTree && b.type !== Bridge
+                    && b.isInRadius(tree, 0.1))
+                .forEach(b => b.explode(game));
             tree.grow = 0.3;
             person.island.buildings.add(tree);
             game.addChild(tree);
@@ -241,6 +251,23 @@ class God extends PIXI.Container {
             tree.island.buildings.add(bigTree);
             game.addChild(bigTree);
             tree.shouldRemove = true;
+        }));
+    }
+
+    convertToBird(game) {
+        let person = this.randomPerson(game);
+        if (!person) return;
+
+        game.addChild(new SFX(person, TopBeam).after(() => {
+            if (person.shouldRemove) return;
+            game.addChild(new SFX(person.x, person.y, Blood));
+            person.shouldRemove = true;
+            this.event('baby', 1, person.position);
+            for (let i = 3; i--;) {
+                let bird = new Bird(person.x, person.y - 4, this.tint);
+                this.birds.add(bird);
+                game.addChild(bird);
+            }
         }));
     }
 
