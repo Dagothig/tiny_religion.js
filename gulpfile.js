@@ -37,7 +37,9 @@ gulp.task('client', function(cb) {
         }
     }))
     .pipe(cached('babel'))
-    .pipe(babel({ presets: ['es2015'] }))
+    .pipe(babel({
+        presets: ['env']
+    }))
     .pipe(remember('babel'))
     .pipe(concat('client.js'))
     .pipe(gulp.dest('./'));

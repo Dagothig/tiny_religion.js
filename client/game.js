@@ -169,6 +169,7 @@ class Game extends PIXI.Container {
                 (c.nonCullable || c.x >= min && c.x <= max) &&
                 (!c.render || c.render(delta, this, renderer) || true))
             .sort(Game.zSort);
+
         renderer.render(this);
         this.children = children;
     }

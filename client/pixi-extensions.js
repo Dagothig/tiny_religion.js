@@ -205,6 +205,83 @@
         set y(val) { this.displayY = val; }
     }
 
+    let thresholdMatrix = [
+         1.0/17.0,  9.0/17.0,  3.0/17.0, 11.0/17.0,
+        13.0/17.0,  5.0/17.0, 15.0/17.0,  7.0/17.0,
+         4.0/17.0, 12.0/17.0,  2.0/17.0, 10.0/17.0,
+        16.0/17.0,  8.0/17.0, 14.0/17.0,  6.0/17.0
+    ];
+
+    let sideSize = Math.sqrt(thresholdMatrix.length);
+
+    let vertShader =
+        `attribute vec2 aVertexPosition;
+        attribute vec2 aTextureCoord;
+
+        uniform mat3 projectionMatrix;
+
+        varying vec2 vTextureCoord;
+
+        void main(void)
+        {
+            gl_Position = vec4(
+                (projectionMatrix * vec3(aVertexPosition, 1.0)).xy,
+                0.0,
+                1.0);
+            vTextureCoord = aTextureCoord;
+        }`;
+
+    let thresholdChecks =
+        new Array(sideSize).fill().reduce((n, x, i) =>
+            `${n ? n + 'else' : ''} if (x == ${i}) {
+                ${new Array(sideSize).fill().reduce((m, y, j) =>
+                    `${m ? m + 'else' : ''} if (y == ${j} && thresholdMatrix[${i}][${j}] > alpha) gl_FragColor = vec4(0);`,
+                    '')}}`,
+            '');
+    let fragShader =
+        `precision mediump float;
+
+        varying vec2 vTextureCoord;
+
+        uniform sampler2D uSampler;
+        uniform mat${sideSize} thresholdMatrix;
+        uniform float alpha;
+        uniform vec2 dimensions;
+
+        float modo(float x, float y) {
+            return x - y * floor(x/y);
+        }
+
+        void main(void) {
+            vec2 uvs = vTextureCoord.xy;
+            vec4 fg = texture2D(uSampler, uvs);
+            gl_FragColor = fg;
+
+            int x = int(mod(vTextureCoord.x * dimensions.x / 2.0, ${sideSize}.0));
+            int y = int(mod(vTextureCoord.y * dimensions.y / 2.0, ${sideSize}.0));
+
+            ${thresholdChecks}
+        }`;
+
+    PIXI.filters.DitherFilter =
+    class DitherFilter extends PIXI.Filter {
+        constructor() {
+            super(vertShader, fragShader);
+            thresholdMatrix.forEach((n, i) => this.uniforms.thresholdMatrix[i] = n);
+        }
+
+        apply(filterManager, input, output) {
+            this.uniforms.dimensions[0] = input.texture.width
+            this.uniforms.dimensions[1] = input.texture.height
+
+            filterManager.applyFilter(this, input, output);
+        }
+
+        render(alpha) {
+            this.uniforms.alpha = alpha;
+        }
+    };
+
     window.addEventListener('DOMContentLoaded', () => {
         let whitePixel = new PIXI.Graphics();
         whitePixel.beginFill(0xffffff, 1);

@@ -129,6 +129,27 @@ Array.prototype.fill = Array.prototype.fill || function fill(value) {
     return O;
 };
 
+// Randomize array element order in-place using Durstenfeld shuffle algorithm.
+Array.prototype.shuffle =
+Int8Array.prototype.shuffle =
+Uint8Array.prototype.shuffle =
+Uint8ClampedArray.prototype.shuffle =
+Int16Array.prototype.shuffle =
+Uint16Array.prototype.shuffle =
+Int32Array.prototype.shuffle =
+Uint32Array.prototype.shuffle =
+Float32Array.prototype.shuffle =
+Float64Array.prototype.shuffle =
+function shuffle() {
+    for (var i = this.length; i--;) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = this[i];
+        this[i] = this[j];
+        this[j] = temp;
+    }
+    return this;
+}
+
 Math.dst2 = function(a1, a2, b1, b2) {
     let delta1 = b1 - a1, delta2 = b2 - a2;
     return delta1 * delta1 + delta2 * delta2;
@@ -142,8 +163,8 @@ Math.shift = (v, m, M) => {
 };
 Math.randRange = (min, max) => Math.random() * (max - min) + min;
 Math.TWO_PI = Math.PI * 2;
-
 Math.angularDistance = (a, b) => Math.min(Math.abs(a - b), Math.abs(b - a));
+
 Object.merge = function merge(to) {
     Array.from(arguments).slice(1).forEach(src => {
         if (!src) return;
@@ -154,6 +175,10 @@ Object.merge = function merge(to) {
     });
     return to;
 }
+Object.only = (obj, ...keys) => keys.reduce((o, k) => (o[k] = obj[k], o), {});
+Object.except = (obj, ...keys) =>
+    Object.only.call(null, obj, Object.keys(obj).filter(x => keys.indexOf(x) === -1));
+
 Object.merge(Array.prototype, {
     add: Array.prototype.push,
     remove() {
@@ -168,6 +193,9 @@ Object.merge(Array.prototype, {
     },
     rand() {
         return this[this.rand_i()];
+    },
+    get first() {
+        return this[0];
     },
     get last() {
         return this[this.length - 1];

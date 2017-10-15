@@ -124,7 +124,7 @@ class Island extends PIXI.Container {
 
         let eco = 0;
         this.buildings = this.buildings.filter(b =>
-            (eco += b.finished ? b.eco : 0, !b.shouldRemove));
+            (eco += b.finished ? b.eco : 0, !b.shouldRemove && !b.exploded));
         this.ground.tileX = Math.bounded(eco, 0, 3)|0;
 
         this.cloudBack.update(delta);

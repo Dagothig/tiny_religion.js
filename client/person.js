@@ -68,13 +68,32 @@ class Person extends PIXI.AnimatedSprite {
 
         // Movement
         let dstToTarget = 0;
-        if (!this.target || (this.x===this.target.x && this.y===this.target.y)) {
-            if (this.target) {
+        if (!this.target ||
+            (this.x === this.target.x && this.y === this.target.y)
+        ) {
+            // Switch island
+            if (this.target && this.island !== this.target.island) {
                 this.island.people.remove(this);
                 this.island = this.target.island;
                 this.island.people.add(this);
             }
+
+            // Ensure that the next target (if there is one) is accessible
+            let newIsland = this.movements.length && this.movements[0].island;
+            if (newIsland && newIsland !== this.island) {
+                // Ensure that there is a bridge
+                let bridge =
+                    (this.island.index < newIsland.index ?
+                        this.island : newIsland)
+                    .bridge;
+                if (!bridge || !bridge.finished)
+                    this.movements = [];
+            }
+
+            // Ensure that there is a next target
             if (!this.movements.length) this.findNextTarget(game);
+
+            // Setup movement
             this.speed = (Math.random() + 1) / 4;
             this.target = this.movements.shift();
             dstToTarget = Math.dst(this.x, this.y, this.target.x, this.target.y);
@@ -107,28 +126,29 @@ class Person extends PIXI.AnimatedSprite {
             this.moveTo(game.islands, (Math.random() * game.islands.length)|0);
     }
     moveTo(islands, index) {
-        let dir = Math.sign(index - this.island.index);
-        for (let i = this.island.index; i !== index; i += dir) {
+        let start = (this.movements.last || this).island;
+        let dir = Math.sign(index - start.index);
+        for (let i = start.index; i !== index; i += dir) {
             let prev = islands[i], next = islands[i+dir];
-            let bridge = dir > 0 ? prev.bridge : next.bridge;
+            let bridge = (dir > 0 ? prev : next).bridge;
             if (!bridge || !bridge.finished) return;
             this.movements.push({
                 x: bridge.x - dir * 90,
-                y: bridge.y + Math.random() * 20 - 15,
+                y: bridge.y + Math.randRange(-15, 5),
                 island: prev
             }, {
                 x: bridge.x,
-                y: bridge.y + Math.random() * 20 - 15,
+                y: bridge.y + Math.randRange(-15, 5),
                 island: next
             }, {
                 x: bridge.x + dir * 90,
-                y: bridge.y + Math.random() * 20 - 15,
+                y: bridge.y + Math.randRange(-15, 5),
                 island: next
             });
         }
     }
 
-    _trgtIsl(dst2, filter, island) {
+    targetForIsland(dst2, filter, island) {
         for (let i = island.people.length; i--;) {
             let p = island.people[i];
             if (p.kingdom !== this.kingdom
@@ -139,15 +159,15 @@ class Person extends PIXI.AnimatedSprite {
         return null;
     }
     findTarget(game, dst2, filter) {
-        let target = this._trgtIsl(dst2, filter, this.island);
+        let target = this.targetForIsland(dst2, filter, this.island);
         if (target) return target;
 
         let toIsland = this.x - this.island.x;
         if (toIsland > 150 && this.island.index + 1 < game.islands.length)
-            return this._trgtIsl(
+            return this.targetForIsland(
                 dst2, filter, game.islands[this.island.index + 1]);
         else if (toIsland < -150 && this.island.index - 1 >= 0)
-            return this._trgtIsl(
+            return this.targetForIsland(
                 dst2, filter, game.islands[this.island.index - 1]);
     }
 
@@ -168,11 +188,13 @@ class Person extends PIXI.AnimatedSprite {
             movX: this.movX,
             movY: this.movY,
             target: this.target && {
-                x: this.target.x, y: this.target.y,
+                x: this.target.x,
+                y: this.target.y,
                 island: this.target.island.index
             },
             movements: this.movements.map(m => ({
-                x: m.x, y: m.y,
+                x: m.x,
+                y: m.y,
                 island: m.island.index
             })),
             kingdom: this.kingdom.name
