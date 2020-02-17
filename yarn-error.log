@@ -1,0 +1,55 @@
+Arguments: 
+  /usr/bin/node /usr/bin/yarn init
+
+PATH: 
+  /home/dagothig/.cargo/bin:/home/dagothig/bin:/home/dagothig/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
+
+Yarn version: 
+  1.6.0
+
+Node version: 
+  9.11.2
+
+Platform: 
+  linux x64
+
+Trace: 
+  Error: canceled
+      at Interface.<anonymous> (/usr/lib/node_modules/yarn/lib/cli.js:129516:13)
+      at Interface.emit (events.js:180:13)
+      at Interface._ttyWrite (readline.js:783:16)
+      at ReadStream.onkeypress (readline.js:163:10)
+      at ReadStream.emit (events.js:180:13)
+      at emitKeys (internal/readline.js:422:14)
+      at emitKeys.next (<anonymous>)
+      at ReadStream.onData (readline.js:1019:36)
+      at ReadStream.emit (events.js:180:13)
+      at addChunk (_stream_readable.js:274:12)
+
+npm manifest: 
+  {
+    "name": "TinyReligion",
+    "preferGlobal": true,
+    "version": "0.0.0",
+    "author": "Dagothig <guillaumenoelmartel@gmail.com>",
+    "description": "Tiny Religion JS port",
+    "main": "server/server.js",
+    "dependencies": {
+      "babel-core": "^6.26.0",
+      "babel-loader": "^7.1.2",
+      "babel-preset-env": "^1.6.1",
+      "webpack": "^3.10.0",
+      "webpack-dev-server": "^2.10.0",
+      "pixi.js": "^4.6.2"
+    },
+    "scripts": {
+      "dev": "webpack-dev-server",
+      "build": "webpack"
+    }
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile

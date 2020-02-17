@@ -4,12 +4,20 @@ class UI {
     constructor(gameContainer, onTitle) {
         this.gameContainer = gameContainer;
         this.gameContainer.classList.add('hidden');
+
+        this.keybindings = [];
+        document.addEventListener('keydown', e =>
+            this.keybindings
+            .filter(keybinding => keybinding.key === e.key)
+            .forEach(keybinding => keybinding.act()));
+
         this.onTitle = () => {
             this.titleTag.removeEventListener('click', this.onTitle);
             onTitle();
         };
 
         this.titleTag = dom('div', { class: 'hidden title', click: this.onTitle });
+        this.keybindings.push({ key: 'Escape', act: () => this.titleTag.click() });
 
         this.btnsTag = dom('div', { class: 'hidden btns' },
             this.groupSelectTag = dom('div', { class: 'group-select' }),
@@ -18,16 +26,19 @@ class UI {
         settings.bind('tooltips', t =>
             this.btnsTag.classList[t ? 'add' : 'remove']('tooltips'));
 
-        this.trainGroup = this.createGroup('train');
-        this.untrainGroup = this.createGroup('untrain');
+        this.groups = [
+            this.trainGroup = this.createGroup('train', 't'),
+            this.untrainGroup = this.createGroup('untrain', 'u'),
+            this.buildGroup = this.createGroup('build', 'b'),
+            this.doGroup = this.createGroup('do', 'd'),
+            this.moveGroup = this.createGroup('move', 'm')
+        ];
+        let groupKeybinds = this.groups.map(group => group.keybind);
+
         this.trainGroup.radio.onclick = this.untrainGroup.radio.onclick =
             () => this.tip('jobs');
-
-        this.buildGroup = this.createGroup('build');
-        this.buildGroup.radio.onclick = () => this.tip('buildings');
-
-        this.doGroup = this.createGroup('do');
-        this.moveGroup = this.createGroup('move');
+        this.buildGroup.radio.onclick =
+            () => this.tip('buildings');
 
         this.show(this.doGroup);
 
@@ -41,7 +52,10 @@ class UI {
                     act === 'train' ?
                         () => [v(), j()] :
                         () => [j(), v()],
-                    job.name, act, job.name));
+                    job.name,
+                    Array.from(job.name).find(c => groupKeybinds.indexOf(c) === -1),
+                    act,
+                    job.name));
                 return btns;
             }, btns), [])
         .concat([House, Barracks, Workshop, Temple, GreenHouse]
@@ -49,52 +63,55 @@ class UI {
                 btns.add(this.createBtn(this.buildGroup.children,
                     () => this.game.player.build(this.game, type),
                     () => this.game.player[type.name + 'Count'],
-                    type.name, 'build', type.name));
+                    type.name,
+                    Array.from(type.name).find(c => groupKeybinds.indexOf(c) === -1),
+                    'build',
+                    type.name));
                 return btns;
             }, []))
         .concat([
             this.createBtn(this.buildGroup.children,
                 () => this.game.player.buildBridge(this.game),
                 null,
-                'bridge', 'build', 'bridge'),
+                'bridge', 'r', 'build', 'bridge'),
             this.createBtn(this.doGroup.children,
                 () => this.game.player.forestate(this.game),
                 () => this.game.player.treeCount + this.game.player.bigTreeCount,
-                'forestate', 'forestate'),
+                'forestate', 'f', 'forestate'),
             this.createBtn(this.doGroup.children,
                 () => this.game.player.deforest(this.game),
                 null,
-                'deforest', 'deforest'),
+                'deforest', 'e', 'deforest'),
             this.createBtn(this.doGroup.children,
                 () => this.game.god.doSacrifice(this.game),
                 null,
-                'sacrifice', 'sacrifice'),
+                'sacrifice', 's', 'sacrifice'),
             this.createBtn(this.doGroup.children,
                 () => this.game.player.doBaby(this.game),
                 () => this.game.player.peopleCount + '/'
                     + this.game.player.maxPop,
-                'baby', 'baby'),
+                'baby', 'a', 'baby'),
             this.createBtn(this.doGroup.children,
                 () => this.game.player.attemptSummon(this.game),
                 () => this.game.player.summonCount + '/'
                     + this.game.player.maxSummon,
-                'summon', 'summon'),
+                'summon', 'u', 'summon'),
             this.createBtn(this.doGroup.children,
                 () => this.game.player.pray(this.game),
                 null,
-                'pray', 'pray'),
+                'pray', 'p', 'pray'),
             this.createBtn(this.moveGroup.children,
                 () => this.game.player.sendAttack(this.game),
                 null,
-                'attack', 'attack'),
+                'attack', 'a', 'attack'),
             this.createBtn(this.moveGroup.children,
                 () => this.game.player.sendConvert(this.game),
                 null,
-                'convert', 'convert'),
+                'convert', 'c', 'convert'),
             this.createBtn(this.moveGroup.children,
                 () => this.game.player.sendRetreat(this.game),
                 null,
-                'retreat', 'retreat')
+                'retreat', 'r', 'retreat')
         ]);
 
         this.menuContainerTag = dom('div', { class: 'menu-container' },
@@ -124,7 +141,11 @@ class UI {
             this.tipTextTag = dom('div', { class: 'text' }),
             this.tipOkTag = dom('button', {
                 click: () => this.dequeueTip()
-            }, 'gotcha'));
+            }, 'g', dom('span', { class: 'keybind' }, 'o'), 'tcha'));
+        this.keybindings.push({
+            key: 'o',
+            act: () => this.tipOkTag.offsetWidth && this.tipOkTag.click()
+        });
         this.gameContainer.appendChild(this.tipTag);
 
         settings.bind('tips', t => {
@@ -140,31 +161,57 @@ class UI {
         this.fpsCounter = new FPSCounter();
         this.gameContainer.appendChild(this.fpsCounter.tag);
     }
-    createGroup(name) {
-        let group = {};
+    createGroup(name, keybind) {
+        let group = { keybind: keybind };
+        let i = name.indexOf(keybind);
+        let formattedName = i >= 0 ? [
+            name.substring(0, i),
+            dom('span', { class: 'keybind' }, keybind),
+            name.substring(i + 1)
+        ] : [
+            name + ' ',
+            dom('span', { class: 'keybind' }, keybind)
+        ];
         group.radio = dom('input', {
             id: name, name: 'group', type: 'radio', class: 'checked', value: name,
             change: () => this.show(group)
         });
         group.nameTag = dom('label', { class: 'check', htmlFor: name },
-            group.nameContent = dom('span', {}, name));
+            group.nameContent = dom('span', { class: 'name' }, formattedName));
         group.children = dom('div', { class: 'group' })
 
         this.groupSelectTag.appendChild(group.radio);
         this.groupSelectTag.appendChild(group.nameTag);
         this.groupsTag.appendChild(group.children);
 
+        this.keybindings.push({
+            key: keybind,
+            act: () => group.radio.offsetWidth && group.radio.click()
+        });
         return group;
     }
-    createBtn(parent, onclick, onupdate, name, ...classes) {
-        var obj = { update: onupdate, textTags: [] };
+    createBtn(parent, onclick, onupdate, name, keybind, ...classes) {
+        let obj = { update: onupdate, textTags: [], keybind: keybind };
+        let i = name.indexOf(keybind);
+        let formattedName = i >= 0 ? [
+            name.substring(0, i),
+            dom('span', { class: 'keybind' }, keybind),
+            name.substring(i + 1)
+        ] : [
+            name + ' ',
+            dom('span', { class: 'keybind' }, keybind)
+        ];
         obj.tag = dom('div', {},
             obj.btn = dom('button', {
                 class: 'btn ' + classes.join(' '),
                 click: () => this.notify(onclick())
             }),
-            obj.tooltip = dom('div', { class: 'tooltip' }, name));
+            obj.tooltip = dom('div', { class: 'tooltip', tabIndex: -1 }, formattedName));
         parent.appendChild(obj.tag);
+        this.keybindings.push({
+            key: keybind,
+            act: () => obj.tag.offsetWidth && obj.btn.click()
+        });
         return obj;
     }
     menuBtn(name, change) {

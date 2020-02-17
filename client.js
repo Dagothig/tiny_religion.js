@@ -3817,12 +3817,25 @@ var UI = function () {
 
         this.gameContainer = gameContainer;
         this.gameContainer.classList.add('hidden');
+
+        this.keybindings = [];
+        document.addEventListener('keydown', function (e) {
+            return _this.keybindings.filter(function (keybinding) {
+                return keybinding.key === e.key;
+            }).forEach(function (keybinding) {
+                return keybinding.act();
+            });
+        });
+
         this.onTitle = function () {
             _this.titleTag.removeEventListener('click', _this.onTitle);
             onTitle();
         };
 
         this.titleTag = dom('div', { class: 'hidden title', click: this.onTitle });
+        this.keybindings.push({ key: 'Escape', act: function act() {
+                return _this.titleTag.click();
+            } });
 
         this.btnsTag = dom('div', { class: 'hidden btns' }, this.groupSelectTag = dom('div', { class: 'group-select' }), this.groupsTag = dom('div', { class: 'groups' }));
 
@@ -3830,19 +3843,17 @@ var UI = function () {
             return _this.btnsTag.classList[t ? 'add' : 'remove']('tooltips');
         });
 
-        this.trainGroup = this.createGroup('train');
-        this.untrainGroup = this.createGroup('untrain');
+        this.groups = [this.trainGroup = this.createGroup('train', 't'), this.untrainGroup = this.createGroup('untrain', 'u'), this.buildGroup = this.createGroup('build', 'b'), this.doGroup = this.createGroup('do', 'd'), this.moveGroup = this.createGroup('move', 'm')];
+        var groupKeybinds = this.groups.map(function (group) {
+            return group.keybind;
+        });
+
         this.trainGroup.radio.onclick = this.untrainGroup.radio.onclick = function () {
             return _this.tip('jobs');
         };
-
-        this.buildGroup = this.createGroup('build');
         this.buildGroup.radio.onclick = function () {
             return _this.tip('buildings');
         };
-
-        this.doGroup = this.createGroup('do');
-        this.moveGroup = this.createGroup('move');
 
         this.show(this.doGroup);
 
@@ -3860,7 +3871,9 @@ var UI = function () {
                     return [v(), j()];
                 } : function () {
                     return [j(), v()];
-                }, job.name, act, job.name));
+                }, job.name, Array.from(job.name).find(function (c) {
+                    return groupKeybinds.indexOf(c) === -1;
+                }), act, job.name));
                 return btns;
             }, btns);
         }, []).concat([House, Barracks, Workshop, Temple, GreenHouse].reduce(function (btns, type) {
@@ -3868,35 +3881,37 @@ var UI = function () {
                 return _this.game.player.build(_this.game, type);
             }, function () {
                 return _this.game.player[type.name + 'Count'];
-            }, type.name, 'build', type.name));
+            }, type.name, Array.from(type.name).find(function (c) {
+                return groupKeybinds.indexOf(c) === -1;
+            }), 'build', type.name));
             return btns;
         }, [])).concat([this.createBtn(this.buildGroup.children, function () {
             return _this.game.player.buildBridge(_this.game);
-        }, null, 'bridge', 'build', 'bridge'), this.createBtn(this.doGroup.children, function () {
+        }, null, 'bridge', 'r', 'build', 'bridge'), this.createBtn(this.doGroup.children, function () {
             return _this.game.player.forestate(_this.game);
         }, function () {
             return _this.game.player.treeCount + _this.game.player.bigTreeCount;
-        }, 'forestate', 'forestate'), this.createBtn(this.doGroup.children, function () {
+        }, 'forestate', 'f', 'forestate'), this.createBtn(this.doGroup.children, function () {
             return _this.game.player.deforest(_this.game);
-        }, null, 'deforest', 'deforest'), this.createBtn(this.doGroup.children, function () {
+        }, null, 'deforest', 'e', 'deforest'), this.createBtn(this.doGroup.children, function () {
             return _this.game.god.doSacrifice(_this.game);
-        }, null, 'sacrifice', 'sacrifice'), this.createBtn(this.doGroup.children, function () {
+        }, null, 'sacrifice', 's', 'sacrifice'), this.createBtn(this.doGroup.children, function () {
             return _this.game.player.doBaby(_this.game);
         }, function () {
             return _this.game.player.peopleCount + '/' + _this.game.player.maxPop;
-        }, 'baby', 'baby'), this.createBtn(this.doGroup.children, function () {
+        }, 'baby', 'a', 'baby'), this.createBtn(this.doGroup.children, function () {
             return _this.game.player.attemptSummon(_this.game);
         }, function () {
             return _this.game.player.summonCount + '/' + _this.game.player.maxSummon;
-        }, 'summon', 'summon'), this.createBtn(this.doGroup.children, function () {
+        }, 'summon', 'u', 'summon'), this.createBtn(this.doGroup.children, function () {
             return _this.game.player.pray(_this.game);
-        }, null, 'pray', 'pray'), this.createBtn(this.moveGroup.children, function () {
+        }, null, 'pray', 'p', 'pray'), this.createBtn(this.moveGroup.children, function () {
             return _this.game.player.sendAttack(_this.game);
-        }, null, 'attack', 'attack'), this.createBtn(this.moveGroup.children, function () {
+        }, null, 'attack', 'a', 'attack'), this.createBtn(this.moveGroup.children, function () {
             return _this.game.player.sendConvert(_this.game);
-        }, null, 'convert', 'convert'), this.createBtn(this.moveGroup.children, function () {
+        }, null, 'convert', 'c', 'convert'), this.createBtn(this.moveGroup.children, function () {
             return _this.game.player.sendRetreat(_this.game);
-        }, null, 'retreat', 'retreat')]);
+        }, null, 'retreat', 'r', 'retreat')]);
 
         this.menuContainerTag = dom('div', { class: 'menu-container' }, this.menuBtn('pause-btn', function (ev) {
             return ev.target.checked ? pause() : resume();
@@ -3913,7 +3928,13 @@ var UI = function () {
             click: function click() {
                 return _this.dequeueTip();
             }
-        }, 'gotcha'));
+        }, 'g', dom('span', { class: 'keybind' }, 'o'), 'tcha'));
+        this.keybindings.push({
+            key: 'o',
+            act: function act() {
+                return _this.tipOkTag.offsetWidth && _this.tipOkTag.click();
+            }
+        });
         this.gameContainer.appendChild(this.tipTag);
 
         settings.bind('tips', function (t) {
@@ -3932,34 +3953,44 @@ var UI = function () {
 
     _createClass(UI, [{
         key: 'createGroup',
-        value: function createGroup(name) {
+        value: function createGroup(name, keybind) {
             var _this2 = this;
 
-            var group = {};
+            var group = { keybind: keybind };
+            var i = name.indexOf(keybind);
+            var formattedName = i >= 0 ? [name.substring(0, i), dom('span', { class: 'keybind' }, keybind), name.substring(i + 1)] : [name + ' ', dom('span', { class: 'keybind' }, keybind)];
             group.radio = dom('input', {
                 id: name, name: 'group', type: 'radio', class: 'checked', value: name,
                 change: function change() {
                     return _this2.show(group);
                 }
             });
-            group.nameTag = dom('label', { class: 'check', htmlFor: name }, group.nameContent = dom('span', {}, name));
+            group.nameTag = dom('label', { class: 'check', htmlFor: name }, group.nameContent = dom('span', { class: 'name' }, formattedName));
             group.children = dom('div', { class: 'group' });
 
             this.groupSelectTag.appendChild(group.radio);
             this.groupSelectTag.appendChild(group.nameTag);
             this.groupsTag.appendChild(group.children);
 
+            this.keybindings.push({
+                key: keybind,
+                act: function act() {
+                    return group.radio.offsetWidth && group.radio.click();
+                }
+            });
             return group;
         }
     }, {
         key: 'createBtn',
-        value: function createBtn(parent, onclick, onupdate, name) {
+        value: function createBtn(parent, onclick, onupdate, name, keybind) {
             var _this3 = this;
 
-            var obj = { update: onupdate, textTags: [] };
+            var obj = { update: onupdate, textTags: [], keybind: keybind };
+            var i = name.indexOf(keybind);
+            var formattedName = i >= 0 ? [name.substring(0, i), dom('span', { class: 'keybind' }, keybind), name.substring(i + 1)] : [name + ' ', dom('span', { class: 'keybind' }, keybind)];
 
-            for (var _len = arguments.length, classes = Array(_len > 4 ? _len - 4 : 0), _key = 4; _key < _len; _key++) {
-                classes[_key - 4] = arguments[_key];
+            for (var _len = arguments.length, classes = Array(_len > 5 ? _len - 5 : 0), _key = 5; _key < _len; _key++) {
+                classes[_key - 5] = arguments[_key];
             }
 
             obj.tag = dom('div', {}, obj.btn = dom('button', {
@@ -3967,8 +3998,14 @@ var UI = function () {
                 click: function click() {
                     return _this3.notify(onclick());
                 }
-            }), obj.tooltip = dom('div', { class: 'tooltip' }, name));
+            }), obj.tooltip = dom('div', { class: 'tooltip', tabIndex: -1 }, formattedName));
             parent.appendChild(obj.tag);
+            this.keybindings.push({
+                key: keybind,
+                act: function act() {
+                    return obj.tag.offsetWidth && obj.btn.click();
+                }
+            });
             return obj;
         }
     }, {
