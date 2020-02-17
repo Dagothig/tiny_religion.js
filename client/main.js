@@ -116,5 +116,4 @@ window.addEventListener("DOMContentLoaded", () => {
     if (!splash) return setupGame();
     let handler = () => splash && (splash.remove(), splash = null, setupGame());
     splash.onclick = handler;
-    setTimeout(handler, 2000);
 });

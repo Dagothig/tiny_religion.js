@@ -2,6 +2,8 @@
 
 (function() {
 
+    PIXI.settings.SPRITE_MAX_TEXTURES = Math.min(PIXI.settings.SPRITE_MAX_TEXTURES, 16);
+
     let rMask = 0xff0000, rShift = 16,
         gMask = 0x00ff00, gShift = 8,
         bMask = 0x0000ff, bShift = 0;
@@ -125,7 +127,7 @@
         constructor: TiledSprite,
 
         _updateCurrentTexture() {
-            this.setTexture(this._tiledTexture.getTile(this.tileX, this.tileY));
+            this.texture = this._tiledTexture.getTile(this.tileX, this.tileY);
         },
         setTiledTexture(texture) {
             this._tiledTexture = texture;
@@ -287,7 +289,7 @@
         whitePixel.beginFill(0xffffff, 1);
         whitePixel.drawRect(0, 0, 1, 1);
         whitePixel.closePath();
-        PIXI.whitePixel = whitePixel.generateTexture();
+        PIXI.whitePixel = whitePixel.generateCanvasTexture();
 
         let gradient = new PIXI.Graphics();
         let n = 256;
@@ -296,7 +298,7 @@
             gradient.drawRect(0, i, 1, 1);
             gradient.closePath();
         }
-        PIXI.gradient = gradient.generateTexture();
+        PIXI.gradient = gradient.generateCanvasTexture();
     });
 
     PIXI.Color = {

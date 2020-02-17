@@ -278,6 +278,8 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 (function () {
 
+    PIXI.settings.SPRITE_MAX_TEXTURES = Math.min(PIXI.settings.SPRITE_MAX_TEXTURES, 16);
+
     var rMask = 0xff0000,
         rShift = 16,
         gMask = 0x00ff00,
@@ -422,7 +424,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
         constructor: TiledSprite,
 
         _updateCurrentTexture: function _updateCurrentTexture() {
-            this.setTexture(this._tiledTexture.getTile(this.tileX, this.tileY));
+            this.texture = this._tiledTexture.getTile(this.tileX, this.tileY);
         },
         setTiledTexture: function setTiledTexture(texture) {
             this._tiledTexture = texture;
@@ -587,7 +589,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
         whitePixel.beginFill(0xffffff, 1);
         whitePixel.drawRect(0, 0, 1, 1);
         whitePixel.closePath();
-        PIXI.whitePixel = whitePixel.generateTexture();
+        PIXI.whitePixel = whitePixel.generateCanvasTexture();
 
         var gradient = new PIXI.Graphics();
         var n = 256;
@@ -596,7 +598,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
             gradient.drawRect(0, i, 1, 1);
             gradient.closePath();
         }
-        PIXI.gradient = gradient.generateTexture();
+        PIXI.gradient = gradient.generateCanvasTexture();
     });
 
     PIXI.Color = {
@@ -4265,5 +4267,4 @@ window.addEventListener("DOMContentLoaded", function () {
         return splash && (splash.remove(), splash = null, setupGame());
     };
     splash.onclick = handler;
-    setTimeout(handler, 2000);
 });

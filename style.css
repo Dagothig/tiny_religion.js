@@ -57,6 +57,7 @@ canvas {
     bottom: 0;
     display: block;
     margin: auto;
+    image-rendering: crisp-edges;
     image-rendering: pixelated;
 }
 
@@ -86,6 +87,7 @@ canvas {
     background-repeat: no-repeat;
     background-size: contain;
     background-position: center;
+    image-rendering: crisp-edges;
     image-rendering: pixelated;
 }
 .splash:after {
@@ -134,6 +136,7 @@ canvas {
     height: 8rem;
     opacity: 0.5;
     background-size: cover;
+    image-rendering: crisp-edges;
     image-rendering: pixelated;
 }
 .menu-container .checked:focus+.check { opacity: 1; }
@@ -282,6 +285,7 @@ canvas {
     position: absolute;
     left: 50%;
     top: 50%;
+    image-rendering: crisp-edges;
     image-rendering: pixelated;
     z-index: -1;
 }
