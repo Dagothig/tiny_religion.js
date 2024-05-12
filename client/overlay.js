@@ -22,7 +22,7 @@ class Overlay extends PIXI.Sprite {
     flash(duration) {
         this.flashes.push({time: duration, duration: duration});
     }
-    get z() { return 1000; }
+    get z() { return -250; }
     outputState() {
         return {
             alpha: this.alpha,

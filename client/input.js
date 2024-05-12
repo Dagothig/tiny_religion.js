@@ -125,11 +125,13 @@ addEventListener("keydown", ev => {
     ui.updateToBindings(keybindings);
 });
 
-function onButtonDown(button, knownInfo) {
-    const action = buttonbindings[button];
-    action && handlePress(Array.isArray(action) ? action : [action]);
+function onButtonDown(button, framesPressed, knownInfo) {
+    if (!framesPressed || (framesPressed >= 40 && !(framesPressed % 10))) {
+        const action = buttonbindings[button];
+        action && handlePress(Array.isArray(action) ? action : [action]);
 
-    ui.updateToBindings(buttonbindings, knownInfo);
+        ui.updateToBindings(buttonbindings, knownInfo);
+    }
 }
 
 const gamepadEntries = {};
@@ -142,14 +144,15 @@ const gamepadEntries = {};
         const entry = gamepadEntries[gamepad.id] || (gamepadEntries[gamepad.id] = {
             knownInfo: (knownGamepads.find(g => gamepad.id.match(g.regexp)) || knownGamepads[0])
         });
-        const lastState = entry.lastState || {};
-        entry.lastState = {};
+        const lastState = entry.lastState || ( entry.lastState = {});
         for (const buttonId in gamepad.buttons) {
             const button = gamepad.buttons[buttonId];
-            if (button.pressed && !lastState[buttonId]) {
-                onButtonDown(buttonId, entry.knownInfo);
+            if (button.pressed) {
+                onButtonDown(buttonId, lastState[buttonId], entry.knownInfo);
+                lastState[buttonId] = (lastState[buttonId] || 0) + 1;
+            } else {
+                delete lastState[buttonId];
             }
-            entry.lastState[buttonId] = button.pressed;
         }
     }
 
