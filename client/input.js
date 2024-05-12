@@ -36,7 +36,7 @@ const buttonbindings = {
 const knownGamepads = [
     {
         class: "input--gamepad",
-        regexp: /x?box/i,
+        regexp: /x?box|microsoft/i,
         buttonFaces: {
             0: { text: "a", color: "green" },
             1: { text: "b", color: "red" },
@@ -125,34 +125,31 @@ addEventListener("keydown", ev => {
     ui.updateToBindings(keybindings);
 });
 
-function onButtonDown(button, gamepad) {
+function onButtonDown(button, knownInfo) {
     const action = buttonbindings[button];
     action && handlePress(Array.isArray(action) ? action : [action]);
 
-    ui.updateToBindings(buttonbindings, gamepad.knownInfo);
+    ui.updateToBindings(buttonbindings, knownInfo);
 }
 
-const gamepads = [];
-
-addEventListener("gamepadconnected", ev => {
-    const gamepad = ev.gamepad;
-    gamepad.lastState = {};
-    gamepad.knownInfo = (knownGamepads.find(g => gamepad.id.match(g.regexp)) || knownGamepads[0]);
-    gamepads.add(gamepad);
-});
-
-addEventListener("gamepaddisconnected", ev => {
-    gamepads.remove(ev.gamepad);
-});
+const gamepadEntries = {};
 
 (function pollGamepads() {
-    for (const gamepad of gamepads) {
+    for (const gamepad of navigator.getGamepads()) {
+        if (!gamepad) {
+            continue;
+        }
+        const entry = gamepadEntries[gamepad.id] || (gamepadEntries[gamepad.id] = {
+            knownInfo: (knownGamepads.find(g => gamepad.id.match(g.regexp)) || knownGamepads[0])
+        });
+        const lastState = entry.lastState || {};
+        entry.lastState = {};
         for (const buttonId in gamepad.buttons) {
             const button = gamepad.buttons[buttonId];
-            if (button.pressed && !gamepad.lastState[buttonId]) {
-                onButtonDown(buttonId, gamepad);
+            if (button.pressed && !lastState[buttonId]) {
+                onButtonDown(buttonId, entry.knownInfo);
             }
-            gamepad.lastState[buttonId] = button.pressed;
+            entry.lastState[buttonId] = button.pressed;
         }
     }
 

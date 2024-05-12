@@ -99,7 +99,8 @@ let strs = {
         new: "new",
         save: "save",
         restore: "restore",
-        source: "source"
+        source: "source",
+        exit: "exit"
     },
     choices: {
         goal: {

@@ -29,6 +29,9 @@ button:not(:disabled) {
 a {
     color: white;
 }
+*:focus {
+    outline: none;
+}
 .hidden { visibility: hidden !important; }
 .checked {
     position: absolute;
@@ -206,7 +209,8 @@ canvas {
     right: 3rem;
 }
 .menu select {
-    padding: 2rem 0;
+    padding: 0;
+    height: 100%;
     cursor: pointer;
     color: white;
     text-shadow: 0 1px black;
@@ -219,9 +223,7 @@ canvas {
 .menu a {
     cursor: pointer;
     display: block;
-}
-.menu *:focus {
-    outline: none;
+    text-decoration: none;
 }
 .menu .resume-btn {
     text-align: center;
@@ -750,9 +752,9 @@ canvas {
     .group>div { width: 14rem; }
     .btn { min-height: initial; }
     .group-select>.check .group-name {
-        writing-mode: sideways-lr;
+        writing-mode: vertical-lr;
         text-shadow: 0 -1px black;
-        transform: translateX(-50%);
+        transform: translateX(-50%) rotate(180deg);
         left: 50%;
         right: initial;
         top: 0;
@@ -760,6 +762,7 @@ canvas {
     }
     .group-select>.check .group-name .binding {
         writing-mode: initial;
+        transform: rotate(180deg);
     }
 }
 
