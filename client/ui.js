@@ -4,10 +4,7 @@ class UI {
     constructor(gameContainer, onTitle) {
         this.gameContainer = gameContainer;
         this.gameContainer.classList.add('hidden');
-        this.onTitle = () => {
-            this.titleTag.removeEventListener('click', this.onTitle);
-            onTitle();
-        };
+        this.onTitle = onTitle;
 
         this.titleTag = dom('div', { class: 'hidden title', click: this.onTitle });
 
@@ -16,11 +13,14 @@ class UI {
             this.groupsTag = dom('div', { class: 'groups' }));
 
         settings.bind('tooltips', t =>
-            this.btnsTag.classList[t ? 'add' : 'remove']('tooltips'));
+            this.btnsTag.classList[t ? 'add' : 'remove']('show-tooltips'));
+
+        this.groups = [];
+        this.menus = [];
 
         this.trainGroup = this.createGroup('train');
-        this.untrainGroup = this.createGroup('untrain');
-        this.trainGroup.radio.onclick = this.untrainGroup.radio.onclick =
+        //this.untrainGroup = this.createGroup('untrain');
+        this.trainGroup.radio.onclick = //this.untrainGroup.radio.onclick =
             () => this.tip('jobs');
 
         this.buildGroup = this.createGroup('build');
@@ -32,99 +32,110 @@ class UI {
         this.show(this.doGroup);
 
         this.btns =
-        ['train', 'untrain'].reduce((btns, act) =>
-            [Builder, Warrior, Priest].reduce((btns, job) => {
-                let v = () => this.game.player.villagerCount;
-                let j = () => this.game.player[job.name + 'Count'];
-                btns.add(this.createBtn(this[act + 'Group'].children,
-                    () => this.game.player[act](this.game, job),
-                    act === 'train' ?
-                        () => [v(), j()] :
-                        () => [j(), v()],
-                    job.name, act, job.name));
-                return btns;
-            }, btns), [])
-        .concat([House, Barracks, Workshop, Temple, GreenHouse]
-            .reduce((btns, type) => {
-                btns.add(this.createBtn(this.buildGroup.children,
-                    () => this.game.player.build(this.game, type),
-                    () => this.game.player[type.name + 'Count'],
-                    type.name, 'build', type.name));
-                return btns;
-            }, []))
+        ['train'/*, 'untrain'*/]
+        .flatMap(act => [Builder, Warrior, Priest].map(job =>
+            this.createBtn(this[act + 'Group'],
+                () => this.game.player[act](this.game, job),
+                () => act === 'train' ?
+                    [this.game.player.villagerCount, this.game.player[job.name + 'Count']] :
+                    [this.game.player[job.name + 'Count'], this.game.player.villagerCount],
+                strs.jobs[job.name],
+                act, job.name)))
+        .concat([House, Barracks, Workshop, Temple, GreenHouse].map(type =>
+            this.createBtn(this.buildGroup,
+                () => this.game.player.build(this.game, type),
+                () => this.game.player[type.name + 'Count'],
+                strs.buildings[type.name],
+                'build', type.name)))
         .concat([
-            this.createBtn(this.buildGroup.children,
+            this.createBtn(this.buildGroup,
                 () => this.game.player.buildBridge(this.game),
                 null,
-                'bridge', 'build', 'bridge'),
-            this.createBtn(this.doGroup.children,
+                strs.buildings.bridge,
+                'build', 'bridge'),
+            this.createBtn(this.doGroup,
                 () => this.game.player.forestate(this.game),
                 () => this.game.player.treeCount + this.game.player.bigTreeCount,
-                'forestate', 'forestate'),
-            this.createBtn(this.doGroup.children,
+                strs.do.forestate,
+                'forestate'),
+            this.createBtn(this.doGroup,
                 () => this.game.player.deforest(this.game),
                 null,
-                'deforest', 'deforest'),
-            this.createBtn(this.doGroup.children,
+                strs.do.deforest,
+                'deforest'),
+            this.createBtn(this.doGroup,
                 () => this.game.god.doSacrifice(this.game),
                 null,
-                'sacrifice', 'sacrifice'),
-            this.createBtn(this.doGroup.children,
+                strs.do.sacrifice,
+                'sacrifice'),
+            this.createBtn(this.doGroup,
                 () => this.game.player.doBaby(this.game),
                 () => this.game.player.peopleCount + '/'
                     + this.game.player.maxPop,
-                'baby', 'baby'),
-            this.createBtn(this.doGroup.children,
+                strs.do.baby,
+                'baby'),
+            this.createBtn(this.doGroup,
                 () => this.game.player.attemptSummon(this.game),
                 () => this.game.player.summonCount + '/'
                     + this.game.player.maxSummon,
-                'summon', 'summon'),
-            this.createBtn(this.doGroup.children,
+                strs.do.summon,
+                'summon'),
+            this.createBtn(this.doGroup,
                 () => this.game.player.pray(this.game),
                 null,
-                'pray', 'pray'),
-            this.createBtn(this.moveGroup.children,
+                strs.do.pray,
+                'pray'),
+            this.createBtn(this.moveGroup,
                 () => this.game.player.sendAttack(this.game),
                 null,
-                'attack', 'attack'),
-            this.createBtn(this.moveGroup.children,
+                strs.send.attack,
+                'attack'),
+            this.createBtn(this.moveGroup,
                 () => this.game.player.sendConvert(this.game),
                 null,
-                'convert', 'convert'),
-            this.createBtn(this.moveGroup.children,
+                strs.send.convert,
+                'convert'),
+            this.createBtn(this.moveGroup,
                 () => this.game.player.sendRetreat(this.game),
                 null,
-                'retreat', 'retreat')
+                strs.send.retreat,
+                'retreat')
         ]);
 
         this.menuContainerTag = dom('div', { class: 'menu-container' },
-            this.menuBtn('pause-btn', ev => ev.target.checked ? pause() : resume()),
-            this.menuBtn('menu-btn'),
-            this.menuTag = dom('div', { class: 'menu' },
+            this.menu = this.menuBtn('menu', ev => ev.target.checked ?
+                (pause("menu"), this.menuTag.querySelector(selectableSelector).focus()) :
+                (resume("menu"), document.body.focus())),
+            this.menuTag = dom('div', { class: 'menu', tabIndex: 0 },
+                dom('div', { class: "resume-btn" },
+                    dom('a', { href: 'javascript:ui.closeMenu()' }, strs.menu.resume)),
                 settings.usr.map(n =>
                     dom('div', {},
-                        dom('label', { textContent: n, htmlFor: n }),
+                        dom('label', { textContent: strs.menu[n], htmlFor: n }),
                         settings.inputFor(n))),
                 dom('div', {},
-                    dom('a', { href: 'javascript:newGame()'}, 'new'),
+                    dom('a', { href: 'javascript:newGame()'}, strs.menu.new),
                     settings.inputFor('goal')),
                 dom('div', {},
-                    dom('a', { href: 'javascript:save()' }, 'save')),
+                    dom('a', { href: 'javascript:save()' }, strs.menu.save)),
                 dom('div', {},
-                    dom('a', { href: 'javascript:restore()' }, 'restore')),
+                    dom('a', { href: 'javascript:restore()' }, strs.menu.restore)),
                 dom('div', {},
                     dom('a', {
                         href: 'https://github.com/Dagothig/tiny_religion.js/',
                         target: 'blank'
-                    }, 'source'))));
+                    }, strs.menu.source)),
+                window.electron && dom('div', {},
+                    dom('a', { href: 'javascript:electron.exit()' }, strs.menu.exit))));
 
         this.tips = {};
         this.tipsQueue = [];
         this.tipTag = dom('div', { class: 'tip initial' },
             this.tipTextTag = dom('div', { class: 'text' }),
-            this.tipOkTag = dom('button', {
-                click: () => this.dequeueTip()
-            }, 'gotcha'));
+            this.tipOkTag = dom('button',
+                { click: () => this.dequeueTip() },
+                'gotcha',
+                this.tipOkBindingTag = dom('span', { class: 'binding' })));
         this.gameContainer.appendChild(this.tipTag);
 
         settings.bind('tips', t => {
@@ -147,33 +158,52 @@ class UI {
             change: () => this.show(group)
         });
         group.nameTag = dom('label', { class: 'check', htmlFor: name },
-            group.nameContent = dom('span', {}, name));
-        group.children = dom('div', { class: 'group' })
+            group.nameContent = dom('span', { class: 'group-name' }, strs.groups[name],
+                group.binding = dom('span', { class: 'binding' })));
+        group.children = dom('div', { class: 'group' });
+        group.btns = [];
+        group.action = "group:" + name;
+        group.trigger = () => group.radio.click();
 
         this.groupSelectTag.appendChild(group.radio);
         this.groupSelectTag.appendChild(group.nameTag);
         this.groupsTag.appendChild(group.children);
+        this.groups.add(group);
 
         return group;
     }
-    createBtn(parent, onclick, onupdate, name, ...classes) {
-        var obj = { update: onupdate, textTags: [] };
+    createBtn(group, onclick, onupdate, name, ...classes) {
+        var obj = { update: onupdate, textTags: [] };
         obj.tag = dom('div', {},
             obj.btn = dom('button', {
                 class: 'btn ' + classes.join(' '),
-                click: () => this.notify(onclick())
+                click: () => this.notify(onclick()),
             }),
-            obj.tooltip = dom('div', { class: 'tooltip' }, name));
-        parent.appendChild(obj.tag);
+            obj.tooltip = dom('div', { class: 'tooltip' }, name,
+                obj.binding = dom('span', { class: 'binding' })));
+        group.children.appendChild(obj.tag);
+        group.btns.add(obj);
+
+        obj.action = "action:" + group.btns.length;
+
+        obj.trigger = () => {
+            obj.btn.click();
+            obj.btn.animate([
+                { filter: "brightness(1) grayscale(0)" },
+                { filter: "brightness(1) grayscale(0)" },
+                { }
+            ], { duration: 200 });
+        };
+
         return obj;
     }
     menuBtn(name, change) {
-        return [
+        const nodes = [
             dom('input', {
                 id: name,
                 name: name,
                 type: 'checkbox',
-                class: `checked ${name}`,
+                class: `checked ${name}-btn`,
                 change: change
             }),
             dom('label', {
@@ -181,6 +211,16 @@ class UI {
                 htmlFor: name
             })
         ];
+
+        nodes.input = nodes[0];
+        nodes.label = nodes[1];
+        nodes.action = name;
+        nodes.trigger = () => nodes.input.click();
+        this.menus.add(nodes);
+
+        addEventListener(name, () => nodes.input.click());
+
+        return nodes;
     }
 
     updateText(btn, i, text) {
@@ -225,7 +265,6 @@ class UI {
             }
         } else sounds.titleScreen.play();
         if (window.android) android.updateStatusTint(0x193bcb);
-        this.titleTag.addEventListener('click', this.onTitle);
         this.tipTag.classList.add('hidden');
     }
     hideTitle() {
@@ -248,6 +287,23 @@ class UI {
             this.tipTextTag.textContent = tip.text;
         } else {
             this.tipTag.classList.add('hidden');
+        }
+    }
+    menuOffset(offset) {
+        const selectable = this.menuTag.querySelectorAll(selectableSelector);
+        const activeSelectable = document.activeElement.closest(selectableSelector);
+        const activeIdx = Array.prototype.indexOf.call(selectable, activeSelectable);
+        const newIdx = (activeIdx !== -1 ? (activeIdx + offset + selectable.length) : 0) % selectable.length;
+        selectable[newIdx].focus();
+    }
+    menuOK() {
+        const activeSelectable = document.activeElement.closest(selectableSelector);
+        if (activeSelectable) {
+            if (activeSelectable.nodeName.toLowerCase() ==="select") {
+                activeSelectable.value = activeSelectable.options[(activeSelectable.selectedIndex + 1) % activeSelectable.options.length].value;
+            } else {
+                activeSelectable.click();
+            }
         }
     }
     notify(msg) {
@@ -275,14 +331,53 @@ class UI {
             '#' + game.god.offTint.toString('16').padStart(6, '0');
         if (window.android) android.updateStatusTint(game.god.offTint);
     }
+    contentForAction(bindings, faces, action) {
+        const result = [];
+        for (const key in bindings)
+            for (const bindingAction of bindings[key])
+                if (bindingAction === action) {
+                    const face = faces && faces[key] || { text: key };
+                    result.push(dom("span",
+                        { class: "binding__key binding__key--face-" + (face.color || "default") },
+                        face.text))
+                }
+        return result;
+    }
+    updateToBindings(bindings, knownInfo) {
+        if (this._shownBindings === bindings && this._shownKnownInfo === knownInfo) {
+            return;
+        }
+        if (this._shownKnownInfo) {
+            document.body.classList.remove(this._shownKnownInfo.class);
+        }
+        this._shownBindings = bindings;
+        this._shownKnownInfo = knownInfo;
+
+        document.body.classList.add(knownInfo && knownInfo.class || "input--keyboard");
+        const faces = knownInfo && knownInfo.buttonFaces;
+
+        this.tipOkBindingTag.replaceChildren(...this.contentForAction(bindings, faces, "ok"));
+
+        for (const group of this.groups) {
+            group.binding.replaceChildren(...this.contentForAction(bindings, faces, group.action));
+            for (let i = 0; i < group.btns.length; i++) {
+                const btn = group.btns[i];
+                btn.binding.replaceChildren(...this.contentForAction(bindings, faces, btn.action));
+            }
+        }
+    }
     onGodChangePersonality(game) {
         this.updateToGodColor(game);
         this.tip('color');
+    }
+    closeMenu() {
+        this.menu[0].checked && this.menu[0].click();
     }
     onNewGame(game) {
         this.updateToGodColor(game);
         game.addEventListener('godChangePersonality', () =>
             this.onGodChangePersonality(game));
         this.tip('please');
+        this.closeMenu();
     }
 }

@@ -9,7 +9,7 @@ let strs = {
             barracks make warriors stronger
             temples raise the summon limit
             and make priests better
-            greenhouses raise the sapling limit
+            gardens raise the sapling limit
             bridges discover new islands`,
         color:
             `God has changed color!
@@ -33,7 +33,7 @@ let strs = {
 
         growed: {
             message: 'sapling limit reached',
-            extra: 'wait or build more greenshouses'
+            extra: 'wait or build more gardens'
         },
         planting: 'tree planted',
 
@@ -84,5 +84,61 @@ let strs = {
 
         noSacrifice: 'nobody to sacrifice',
         sacrificing: 'boom!'
+    },
+    splash: {
+        prompt: "Press any key to start"
+    },
+    menu: {
+        resume: "resume",
+        tips: "tips",
+        tooltips: "tooltips",
+        pauseOnFocusLoss: "pause on focus loss",
+        music: "music",
+        sound: "sound",
+        fps: "fps",
+        new: "new",
+        save: "save",
+        restore: "restore",
+        source: "source"
+    },
+    choices: {
+        goal: {
+            tiny: "tiny",
+            short: "short",
+            medium: "medium",
+            long: "long"
+        }
+    },
+    groups: {
+        train: "train",
+        build: "build",
+        do: "do",
+        move: "move"
+    },
+    jobs: {
+        builder: "builder",
+        warrior: "warrior",
+        priest: "priest"
+    },
+    buildings: {
+        house: "house",
+        barracks: "barracks",
+        workshop: "workshop",
+        temple: "temple",
+        greenHouse: "garden",
+        bridge: "bridge"
+    },
+    do: {
+        forestate: "forestate",
+        deforest: "deforest",
+        sacrifice: "sacrifice",
+        baby: "baby",
+        summon: "summon",
+        pray: "pray"
+    },
+    send: {
+        attack: "attack",
+        convert: "convert",
+        retreat: "retreat"
     }
 };

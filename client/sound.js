@@ -83,7 +83,7 @@ let Music = {
     },
     toggle(play) {
         this.play = play;
-        if (this.music) {
+        if (this.music) {
             if (this.play) this.music.play();
             else this.music.pause();
         }

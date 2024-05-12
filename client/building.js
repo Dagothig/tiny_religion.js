@@ -22,7 +22,7 @@ class Building extends PIXI.TiledSprite {
     get radius() { return this.type.radius; }
     get radius2() { return this.type.radius2; }
     get eco() { return this.type.eco; }
-    get z() { return this._z + this.y + this.type.decal.z; }
+    get z() { return this._z + this.y + this.type.decal.z; }
     set z(val) { this._z = val - this.y - this.type.decal.z; }
 
     isInRadius(o, radius) {

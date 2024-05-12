@@ -4,17 +4,14 @@
   "version": "0.0.0",
   "author": "Dagothig <guillaumenoelmartel@gmail.com>",
   "description": "Tiny Religion JS port",
-  "main": "server/server.js",
+  "main": "app/main.js",
+  "scripts": {
+    "app": "electron ."
+  },
   "dependencies": {
-    "express": "^4.17"
+    "steamworks.js": "^0.3.1"
   },
   "devDependencies": {
-    "babel-preset-env": "^1",
-    "gulp": "^4.0",
-    "gulp-babel": "^6",
-    "gulp-cached": "^1.1",
-    "gulp-concat": "^2.6",
-    "gulp-plumber": "^1.2",
-    "gulp-remember": "^1.0"
+    "electron": "^30.0.2"
   }
 }

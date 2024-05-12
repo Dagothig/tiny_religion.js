@@ -77,11 +77,12 @@ canvas {
 }
 .splash {
     background-color: #484848;
+    color: white;
 }
 .title {
     background-color: #193bcb;
 }
-.splash:after, .title:before, .title:after {
+.splash:before, .title:before, .title:after {
     content: "";
     display: block;
     background-repeat: no-repeat;
@@ -90,13 +91,13 @@ canvas {
     image-rendering: crisp-edges;
     image-rendering: pixelated;
 }
-.splash:after {
+.splash:before {
     width: 256px;
     height: 256px;
     background-image: url('images/CoffeeBland.png');
 }
 @media (min-width: 512px) and (min-height: 512px) {
-    .splash:after { width: 512px; height: 512px; }
+    .splash:before { width: 512px; height: 512px; }
 }
 .title:before, .title:after {
     max-width: 100%;
@@ -140,8 +141,6 @@ canvas {
     image-rendering: pixelated;
 }
 .menu-container .checked:focus+.check { opacity: 1; }
-.pause-btn+.check { background-image: url('images/Pause.png'); }
-.pause-btn:checked+.check { background-image: url('images/Play.png'); }
 .menu-btn+.check { background-image: url('images/Settings.png'); }
 .menu-btn:checked+.check { background-image: url('images/Close.png'); }
 
@@ -152,19 +151,48 @@ canvas {
     text-transform: uppercase;
     text-align: left;
     font-size: 3.5rem;
-    max-height: calc(100% - 8rem);
     overflow: auto;
     background: rgba(0, 0, 0, 0.3);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 2rem 3rem;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
-.menu-btn:checked+.check+.menu { display: block; }
+.menu-btn:checked+.check+.menu { display: flex; }
 
 .menu div {
+    width: 100%;
+    max-width: 300px;
     display: flex;
     flex-flow: row;
     align-items: center;
     position: relative;
+    overflow: hidden;
 }
-.menu div:hover { background-color: rgba(0, 0, 0, 0.1); }
+.menu > *:first-child {
+    border-top-left-radius: 3rem;
+    border-top-right-radius: 3rem;
+}
+.menu > *:last-child {
+    border-bottom-left-radius: 3rem;
+    border-bottom-right-radius: 3rem;
+}
+.menu div:hover label,
+.menu a:hover,
+.menu select:hover,
+.menu div:focus-within label,
+.menu div a:focus,
+.menu div select:focus {
+    background: #193bcb;
+}
+.menu label, .menu a, .menu select {
+    background: #0b1e70;
+}
 .menu label, .menu a {
     padding: 2rem 3rem;
     flex-grow: 1;
@@ -182,19 +210,21 @@ canvas {
     cursor: pointer;
     color: white;
     text-shadow: 0 1px black;
-    text-align: right;
     font-size: 3.5rem;
     text-transform: uppercase;
-    background: none;
     border: none;
-}
-.menu select option {
-    color: black;
-    text-align: right;
+    border-left: 3rem solid transparent;
+    border-right: 3rem solid transparent;
 }
 .menu a {
     cursor: pointer;
     display: block;
+}
+.menu *:focus {
+    outline: none;
+}
+.menu .resume-btn {
+    text-align: center;
 }
 
 .btns {
@@ -226,13 +256,18 @@ canvas {
     height: 12rem;
     position: relative;
 }
-.group-select>.check span {
+.group-select>.check .group-name {
     position: absolute;
     text-align: center;
     left: 0;
     right: 0;
     top: 50%;
-    line-height: 0;
+    line-height: 3rem;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
 }
 .group-select>.check:hover {
     background-color: rgba(255, 255, 255, 0.1);
@@ -493,19 +528,61 @@ canvas {
 }
 
 .tooltip {
-    display: none;
+    display: flex;
     position: absolute;
     pointer-events: none;
+    flex-wrap: wrap;
     left: 0;
     right: 0;
     top: 10%;
     padding: 0 1rem;
     font-size: 2.5rem;
     line-height: 2.5rem;
-    text-overflow: ellipsis;
-    overflow: hidden;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
 }
-.tooltips .tooltip { display: block; }
+
+.btns:not(.show-tooltips) .tooltip,
+.btns:not(.show-tooltips) .binding {
+    display: none;
+}
+
+.binding {
+    display: flex;
+    align-items: center;
+}
+
+.binding__key {
+    display: inline-block;
+    padding: 0.2em 0.6em;
+    line-height: 1.5em;
+    box-sizing: border-box;
+    font-size: 1.75rem;
+    color: white;
+    text-shadow: none;
+    text-align: center;
+    user-select: none;
+    text-transform: uppercase;
+    background: var(--binding_background, rgba(0, 0, 0, 0.3));
+    border-radius: 1.5em;
+}
+
+.binding__key--face-red {
+    --binding_background: rgb(212, 57, 9);
+}
+
+.binding__key--face-green {
+    --binding_background: rgb(110, 189, 20);
+}
+
+.binding__key--face-yellow {
+    --binding_background: rgb(231, 179, 6);
+}
+
+.binding__key--face-blue {
+    --binding_background: rgb(35, 88, 233);
+}
 
 .tip {
     position: absolute;
@@ -542,7 +619,7 @@ canvas {
     /* Gotta set the padding bottom in case we are exactly 4/3 */
     .tip .text { padding-bottom: 4rem; padding-right: 0; }
 }
-.tip * {
+.tip > * {
     text-transform: uppercase;
     text-shadow: 0 1px black;
     color: white;
@@ -558,6 +635,10 @@ canvas {
 .tip button {
     cursor: pointer;
     font-size: 4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
 }
 .tip button:hover, .tip button:focus {
     background-color: rgba(0, 0, 0, 0.1);
@@ -618,6 +699,22 @@ canvas {
     text-shadow: 0 1px white;
 }
 
+@keyframes fadein {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.fadein {
+    animation: fadein 0.5s forwards;
+}
+
+@keyframes fadeout {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+.fadeout {
+    animation: fadeout 0.5s forwards;
+}
+
 /* RESPONSIVE! */
 @media (max-width:640px) and (max-aspect-ratio: 640/600) {
     .title:before, .title:after { height: 0; }
@@ -652,20 +749,29 @@ canvas {
     .group-select>.check { width: 12rem; }
     .group>div { width: 14rem; }
     .btn { min-height: initial; }
-    .group-select>.check span {
-        writing-mode: vertical-lr;
-        transform: rotate(180deg);
+    .group-select>.check .group-name {
+        writing-mode: sideways-lr;
         text-shadow: 0 -1px black;
+        transform: translateX(-50%);
         left: 50%;
         right: initial;
         top: 0;
         bottom: 0;
+    }
+    .group-select>.check .group-name .binding {
+        writing-mode: initial;
     }
 }
 
 @media (max-width: 380px), (max-height: 380px) {
     .tip button { font-size: 3.5rem; }
     .tip .text { font-size: 2.5rem; }
+    .tooltip {
+        flex-direction: column;
+    }
+}
+@media (min-width: 600px) and (min-height: 600px) {
+    html { font-size: 5px; }
 }
 @media (min-width: 840px) and (min-height: 840px) {
     html { font-size: 6px; }
@@ -683,35 +789,35 @@ canvas {
     .group-select>.check { font-size: 2.5rem; }
 }
 @media (min-aspect-ratio: 4/3) and (min-width: 500px) {
-    .group-select>.check { width: 13.5rem; }
+    .group-select>.check { width: 12rem; }
     .group>div { width: 16rem; }
 }
 @media (min-aspect-ratio: 4/3) and (min-width: 600px) {
-    .group-select>.check { width: 15rem; }
+    .group-select>.check { width: 13rem; }
     .group>div { width: 18rem; }
 }
 @media (min-aspect-ratio: 4/3) and (min-width: 700px) {
-    .group-select>.check { width: 16.5rem; }
+    .group-select>.check { width: 14rem; }
     .group>div { width: 20rem; }
 }
 @media (min-aspect-ratio: 4/3) and (min-width: 800px) {
-    .group-select>.check { width: 18rem; }
+    .group-select>.check { width: 14rem; }
     .group>div { width: 22rem; }
 }
 
 @media (max-aspect-ratio: 4/3) and (min-height: 500px) {
-    .group-select>.check { height: 13.5rem; }
+    .group-select>.check { height: 12rem; }
     .btn { min-height: 16rem; }
 }
 @media (max-aspect-ratio: 4/3) and (min-height: 600px) {
-    .group-select>.check { height: 15rem; }
+    .group-select>.check { height: 13rem; }
     .btn { min-height: 18rem; }
 }
 @media (max-aspect-ratio: 4/3) and (min-height: 700px) {
-    .group-select>.check { height: 16.5rem; }
+    .group-select>.check { height: 14rem; }
     .btn { min-height: 20rem; }
 }
 @media (max-aspect-ratio: 4/3) and (min-height: 800px) {
-    .group-select>.check { height: 18rem; }
+    .group-select>.check { height: 14rem; }
     .btn { min-height: 22rem; }
 }

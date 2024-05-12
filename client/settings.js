@@ -63,7 +63,7 @@ let settings = ((strat, confs) => Object.keys(confs).reduce((settings, key) => {
         bool: name => dom('input', { type: 'checkbox', checked: settings[name] }),
         choice: (name, conf) => dom('select',
             { selectedIndex: settings._index(name, conf) },
-            Object.entries(conf[3]).map(x => dom('option', { value: x[1] }, x[0])))
+            Object.entries(conf[3]).map(x => dom('option', { value: x[1] }, strs.choices[name][x[0]])))
     },
     inputFor: function(name) {
         let conf = this['_' + name + 'Conf'];
@@ -99,6 +99,7 @@ let settings = ((strat, confs) => Object.keys(confs).reduce((settings, key) => {
 }, {
     tips: [true, 'bool', 'usr'],
     tooltips: [true, 'bool', 'usr'],
+    pauseOnFocusLoss: [true, 'bool', 'usr'],
     music: [true, 'bool', 'usr'],
     sound: [true, 'bool', 'usr'],
     goal: [12000, 'choice', 'sys', {

@@ -5,19 +5,32 @@ let container = dom('div', { id: 'container' });
 let ui = new UI(container, () => newGame());
 let renderer, game;
 
-let paused = false;
-function resume() {
-    paused = false;
-    container.classList.remove('paused');
-    Music.resume();
-    ui.resume();
+let paused = 0;
+let pausedCounters = new Map();
+function resume(key) {
+    pausedCounters.delete(key);
+    checkPause();
 }
-function pause() {
-    paused = true;
-    container.classList.add('paused');
-    Music.pause();
-    ui.pause();
+function pause(key) {
+    pausedCounters.set(key, true);
+    checkPause();
 }
+function checkPause() {
+    paused = !pausedCounters.entries().next().done;
+    if (paused) {
+        container.classList.add('paused');
+        Music.pause();
+        ui.pause();
+    } else {
+        container.classList.remove('paused');
+        Music.resume();
+        ui.resume();
+    }
+}
+
+addEventListener("blur", () => settings.pauseOnFocusLoss && pause("focus"));
+addEventListener("focus", () => settings.pauseOnFocusLoss && resume("focus"));
+setInterval(() => document.hasFocus() ? resume("focus") : pause("focus"), 100);
 
 function newGame(state = undefined) {
     Game.onLoad(() => {
@@ -59,8 +72,8 @@ function setupGame() {
     document.body.appendChild(container);
 
     // Setup ui
-    document.body.appendChild(ui.titleTag);
     document.body.appendChild(ui.btnsTag);
+    document.body.appendChild(ui.titleTag);
     document.body.appendChild(ui.menuContainerTag);
     ui.showTitle();
 
@@ -111,9 +124,12 @@ function setupGame() {
         resize();
     });
 }
+
+let splash;
 window.addEventListener("DOMContentLoaded", () => {
-    let splash = document.querySelector('.splash');
+    splash = document.querySelector('.splash');
     if (!splash) return setupGame();
+    splash.innerHTML = strs.splash.prompt;
     let handler = () => splash && (splash.remove(), splash = null, setupGame());
     splash.onclick = handler;
 });
