@@ -300,10 +300,9 @@ canvas {
 }
 .btn span  {
     position: absolute;
-    top: 80%;
+    bottom: 1rem;
     left: 1rem;
     right: 1rem;
-    margin-top: -1.5rem;
 }
 .btn:disabled {
     background: none;
@@ -536,13 +535,12 @@ canvas {
     flex-wrap: wrap;
     left: 0;
     right: 0;
-    top: 10%;
-    padding: 0 1rem;
+    top: 0;
+    padding: 0.5em;
     font-size: 2.5rem;
     line-height: 2.5rem;
     align-items: center;
-    justify-content: center;
-    gap: 1rem;
+    justify-content: space-between;
 }
 
 .btns:not(.show-tooltips) .tooltip,
@@ -557,10 +555,11 @@ canvas {
 
 .binding__key {
     display: inline-block;
-    padding: 0.2em 0.6em;
-    line-height: 1.5em;
+    padding: 2px calc(4px + 0.2em);
+    padding-bottom: 4px;
+    line-height: 1.2em;
     box-sizing: border-box;
-    font-size: 1.75rem;
+    font-size: 2rem;
     color: white;
     text-shadow: none;
     text-align: center;
@@ -568,6 +567,10 @@ canvas {
     text-transform: uppercase;
     background: var(--binding_background, rgba(0, 0, 0, 0.3));
     border-radius: 1.5em;
+    box-shadow: inset 0px -2px rgba(0, 0, 0, 0.5);
+
+    -webkit-text-stroke: 1px rgba(0, 0, 0, 0.5);
+    paint-order: stroke fill;
 }
 
 .binding__key--face-red {
