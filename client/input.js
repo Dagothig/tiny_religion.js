@@ -40,8 +40,8 @@ const knownGamepads = [
         buttonFaces: {
             0: { text: "a", color: "green" },
             1: { text: "b", color: "red" },
-            2: { text: "y", color: "yellow" },
-            3: { text: "x", color: "blue" },
+            2: { text: "x", color: "blue" },
+            3: { text: "y", color: "yellow" },
             4: { text: "lb" },
             5: { text: "rb" },
             9: { text: "☰" },
