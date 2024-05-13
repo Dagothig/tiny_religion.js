@@ -3,7 +3,7 @@ const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 
 module.exports = {
   packagerConfig: {
-    asar: false,
+    asar: true,
     ignore: /android/i,
   },
   rebuildConfig: {},
