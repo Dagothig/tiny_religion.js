@@ -16,6 +16,9 @@ let settingsEx = settings(strat, {
 */
 let settings = ((strat, confs) => Object.keys(confs).reduce((settings, key) => {
     var conf = confs[key];
+    if (!conf) {
+        return settings;
+    }
 
     settings.all.push(key);
     settings[conf[2]].push(key);
@@ -108,5 +111,24 @@ let settings = ((strat, confs) => Object.keys(confs).reduce((settings, key) => {
         medium: 12000,
         long: 24000
     }],
-    fps: [false, 'bool', 'usr']
+    fps: [false, 'bool', 'usr'],
+    fullscreen: window.electron && [window.electron.fullscreen, 'bool', 'usr']
 });
+
+if (window.electron) {
+    settings.fullscreen = window.electron.isFullscreen;
+    settings.bind("fullscreen", fs => window.electron.setFullscreen(fs));
+}
+/*
+addEventListener("fullscreenChange", () => settings.fullscreen = !!document.fullscreenElement);
+window.addEventListener("DOMContentLoaded", function () {
+    settings.bind("fullscreen", fs => {
+        if (!!fs !== !!document.fullscreenElement) {
+            if (fs)
+                document.body.requestFullscreen().catch(() => settings.fullscreen = false);
+            else
+                document.exitFullscreen();
+        }
+    });
+});
+*/

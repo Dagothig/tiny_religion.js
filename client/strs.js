@@ -96,6 +96,7 @@ let strs = {
         music: "music",
         sound: "sound",
         fps: "fps",
+        fullscreen: "fullscreen",
         new: "new",
         save: "save",
         restore: "restore",

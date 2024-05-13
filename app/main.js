@@ -5,15 +5,15 @@ const { app, BrowserWindow, shell, ipcMain } = require("electron/main");
     await app.whenReady();
     const win = new BrowserWindow({
         title: "Tiny Religion",
-        width: 800,
-        height: 600,
+        fullScreenable: true,
+        resizable: true,
+        width: 640,
+        height: 480,
         webPreferences: {
             preload: path.join(app.getAppPath(), "app/page.js")
         }
     });
-    win.removeMenu();
-
-
+    //win.removeMenu();
 
     win.webContents.setWindowOpenHandler(function({ url }) {
         shell.openExternal(url);
