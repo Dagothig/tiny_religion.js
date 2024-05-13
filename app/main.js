@@ -1,6 +1,12 @@
 const path = require("path");
 const { app, BrowserWindow, shell, ipcMain } = require("electron/main");
 
+// https://www.electronforge.io/config/makers/squirrel.windows
+if (require('electron-squirrel-startup')) {
+    app.quit();
+    return;
+}
+
 (async () => {
     await app.whenReady();
     const win = new BrowserWindow({

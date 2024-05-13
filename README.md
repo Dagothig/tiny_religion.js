@@ -12,7 +12,7 @@ There is a version running on my [server](http://tiny-religion.dagothig.com/), a
 It's just a small god-reversal-game about trying to please a god with mood swings. Overall the game really isn't very good at being self explanatory, but there is a bit of tutorial thing.
 
 ## Building & running
-Running npm install and `gulp client` should be all that is needed. Do note however that you will need at least gulp 4 to build. For running you can use `gulp server`. You can also run the default gulp task to watch the client files and serve them at the same time (handy when working on changes).
+Plop some http server in front of the root folder and you're done.
 
 ## Technical overview
 Rendering is done by pixi.js and it is the only library used by the client:
