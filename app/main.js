@@ -8,15 +8,19 @@ const { app, BrowserWindow, shell, ipcMain } = require("electron/main");
         resizable: true,
         width: 640,
         height: 480,
-        backgroundColor: "#484848",
+        icon: path.join(app.getAppPath(), "favicon.png"),
+        backgroundColor: "black",
+        show: false,
         webPreferences: {
             preload: path.join(app.getAppPath(), "app/page.js")
         }
     });
     win.removeMenu();
 
-    win.webContents.executeJavaScript("({ ...localStorage })", true).then(localStorage =>
-        win.fullScreen = localStorage.fullscreen ?? true);
+    win.webContents.executeJavaScript("({ ...localStorage })", true).then(localStorage => {
+        win.fullScreen = localStorage.fullscreen !== "false";
+        win.show()
+    });
 
     win.webContents.setWindowOpenHandler(function({ url }) {
         shell.openExternal(url);

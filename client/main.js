@@ -129,7 +129,7 @@ let splash;
 window.addEventListener("DOMContentLoaded", () => {
     splash = document.querySelector('.splash');
     if (!splash) return setupGame();
-    splash.innerHTML = strs.splash.prompt;
+    splash.appendChild(dom("span", {}, strs.splash.prompt));
     let handler = () => splash && (splash.remove(), splash = null, setupGame());
     splash.onclick = handler;
 });
