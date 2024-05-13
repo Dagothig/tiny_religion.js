@@ -7,6 +7,10 @@ if (require('electron-squirrel-startup')) {
     return;
 }
 
+const steamworks = require('steamworks.js')
+const client = steamworks.init(480);
+console.log(client);
+
 (async () => {
     await app.whenReady();
     const win = new BrowserWindow({
@@ -21,7 +25,7 @@ if (require('electron-squirrel-startup')) {
             preload: path.join(app.getAppPath(), "app/page.js")
         }
     });
-    win.removeMenu();
+    //win.removeMenu();
 
     win.webContents.executeJavaScript("({ ...localStorage })", true).then(localStorage => {
         win.fullScreen = localStorage.fullscreen !== "false";

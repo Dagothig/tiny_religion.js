@@ -118,16 +118,3 @@ let settings = ((strat, confs) => Object.keys(confs).reduce((settings, key) => {
 if (window.app && window.app.setFullscreen) {
     settings.bind("fullscreen", fs => window.app.setFullscreen(fs));
 }
-/*
-addEventListener("fullscreenChange", () => settings.fullscreen = !!document.fullscreenElement);
-window.addEventListener("DOMContentLoaded", function () {
-    settings.bind("fullscreen", fs => {
-        if (!!fs !== !!document.fullscreenElement) {
-            if (fs)
-                document.body.requestFullscreen().catch(() => settings.fullscreen = false);
-            else
-                document.exitFullscreen();
-        }
-    });
-});
-*/

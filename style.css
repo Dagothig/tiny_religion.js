@@ -141,11 +141,16 @@ canvas {
 }
 .menu-container * { pointer-events: all; }
 .menu-container .check {
-    display: inline-block;
-    width: 8rem;
-    height: 8rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 8rem;
+    padding: 1rem;
+    padding-top: 8rem;
     opacity: 0.5;
-    background-size: cover;
+    background-size: 8rem 8rem;
+    background-position: center 0px;
+    background-repeat: no-repeat;
     image-rendering: crisp-edges;
     image-rendering: pixelated;
 }
@@ -551,8 +556,10 @@ canvas {
     justify-content: space-between;
 }
 
-.btns:not(.show-tooltips) .tooltip,
-.btns:not(.show-tooltips) .binding {
+body:not(.show-tooltips) .tooltip,
+body:not(.show-tooltips) .binding,
+body:not(.show-tooltips).input--keyboard .menu-container .check,
+body:not(.show-tooltips).input--gamepad .menu-container .check {
     display: none;
 }
 

@@ -23,3 +23,5 @@ The game is defined as an extension on a pixi container and it's the same concep
 The main file defines save/loading, builds the base html (for the ui and game) and handles looping and resizing.
 The ui is defined as a group of badly defined functions that build html elements.
 The game itself handles scrolling and orchestrating the various actors. It also handles the island generation and cloud starts and ends.
+
+* https://github.com/hmlendea/gfn-electron/issues/105

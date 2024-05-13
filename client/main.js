@@ -1,8 +1,15 @@
 PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
+if (window.app && window.app.exit) {
+    window.exit = function exit() {
+        saveTemp();
+        app.exit();
+    };
+}
+
 let scaling = 1;
 let container = dom('div', { id: 'container' });
-let ui = new UI(container, () => newGame());
+let ui = new UI(container, () => restoreTemp() || newGame());
 let renderer, game;
 
 let paused = 0;
@@ -65,6 +72,7 @@ function restoreTemp() {
     let tempState = JSON.parse(localStorage.getItem('saveTemp'));
     localStorage.removeItem('saveTemp');
     tempState && newGame(tempState);
+    return !!tempState;
 }
 
 function setupGame() {
@@ -127,6 +135,9 @@ function setupGame() {
 
 let splash;
 window.addEventListener("DOMContentLoaded", () => {
+    settings.bind('tooltips', t =>
+        document.body.classList[t ? 'add' : 'remove']('show-tooltips'));
+
     splash = document.querySelector('.splash');
     if (!splash) return setupGame();
     splash.appendChild(dom("span", {}, strs.splash.prompt));

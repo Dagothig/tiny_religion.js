@@ -12,9 +12,6 @@ class UI {
             this.groupSelectTag = dom('div', { class: 'group-select' }),
             this.groupsTag = dom('div', { class: 'groups' }));
 
-        settings.bind('tooltips', t =>
-            this.btnsTag.classList[t ? 'add' : 'remove']('show-tooltips'));
-
         this.groups = [];
         this.menus = [];
 
@@ -125,8 +122,8 @@ class UI {
                         href: 'https://github.com/Dagothig/tiny_religion.js/',
                         target: 'blank'
                     }, strs.menu.source)),
-                window.app && window.app.exit && dom('div', {},
-                    dom('a', { href: 'javascript:app.exit()' }, strs.menu.exit))));
+                window.exit && dom('div', {},
+                    dom('a', { href: 'javascript:exit()' }, strs.menu.exit))));
 
         this.tips = {};
         this.tipsQueue = [];
@@ -198,6 +195,7 @@ class UI {
         return obj;
     }
     menuBtn(name, change) {
+        let binding;
         const nodes = [
             dom('input', {
                 id: name,
@@ -209,11 +207,12 @@ class UI {
             dom('label', {
                 class: 'check',
                 htmlFor: name
-            })
+            }, binding = dom('span', { class: 'binding' }))
         ];
 
         nodes.input = nodes[0];
         nodes.label = nodes[1];
+        nodes.binding = binding;
         nodes.action = name;
         nodes.trigger = () => nodes.input.click();
         this.menus.add(nodes);
@@ -353,7 +352,7 @@ class UI {
         this._shownBindings = bindings;
         this._shownKnownInfo = knownInfo;
 
-        document.body.classList.add(knownInfo && knownInfo.class || "input--keyboard");
+        knownInfo && knownInfo.class && document.body.classList.add(knownInfo.class);
         const faces = knownInfo && knownInfo.buttonFaces;
 
         this.tipOkBindingTag.replaceChildren(...this.contentForAction(bindings, faces, "ok"));
@@ -365,6 +364,8 @@ class UI {
                 btn.binding.replaceChildren(...this.contentForAction(bindings, faces, btn.action));
             }
         }
+
+        this.menu.binding.replaceChildren(...this.contentForAction(bindings, faces, this.menu.action));
     }
     onGodChangePersonality(game) {
         this.updateToGodColor(game);

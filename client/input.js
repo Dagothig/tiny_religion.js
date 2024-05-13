@@ -37,6 +37,13 @@ const axesbindings = {
     0: ["camera"]
 };
 
+const keyboardInfo = {
+    class: "input--keyboard",
+    buttonFaces: {
+        "escape": { text: "esc" }
+    }
+}
+
 const knownGamepads = [
     {
         class: "input--gamepad",
@@ -157,13 +164,11 @@ function handleAxis(actions, value) {
     }
 }
 
-addEventListener("mousedown", () => ui.updateToBindings(keybindings));
-
 addEventListener("keydown", ev => {
     const action = keybindings[ev.key.toLowerCase()];
     action && handlePress(Array.isArray(action) ? action : [action]);
 
-    ui.updateToBindings(keybindings);
+    ui.updateToBindings(keybindings, keyboardInfo);
 });
 
 addEventListener("keyup", ev => {
