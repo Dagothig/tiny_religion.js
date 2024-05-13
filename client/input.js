@@ -15,8 +15,8 @@ const keybindings = {
     "l": ["action:6"],
     "arrowup": ["up"],
     "arrowdown": ["down"],
-    "arrowleft": ["left"],
-    "arrowright": ["right"],
+    "arrowleft": ["left", "camera:left"],
+    "arrowright": ["right", "camera:right"],
 }
 
 const buttonbindings = {
@@ -32,6 +32,10 @@ const buttonbindings = {
     14: ["group:build", "left"],
     15: ["group:do", "right"],
 }
+
+const axesbindings = {
+    0: ["camera"]
+};
 
 const knownGamepads = [
     {
@@ -55,7 +59,12 @@ const knownGamepads = [
 
 const selectableSelector = "input, a, select";
 
+const pressed = {};
+
 function handlePress(actions) {
+    for (const action of actions) {
+        pressed[action] = true;
+    }
     for (const action of actions) {
         if (splash) {
             splash.click();
@@ -116,6 +125,38 @@ function handlePress(actions) {
     }
 }
 
+function handleRelease(actions) {
+    for (const action of actions) {
+        delete pressed[action];
+    }
+}
+
+function handleDown() {
+    for (const action in pressed) {
+        if (!ui.menu.input.checked && game) {
+            switch (action) {
+                case "camera:left":
+                    game.x += 5 + game.islands.length;
+                    return;
+                case "camera:right":
+                    game.x -= 5 + game.islands.length;
+                    return;
+            }
+        }
+    }
+}
+
+function handleAxis(actions, value) {
+    for (const action of actions) {
+        if (!ui.menu.input.checked && game) {
+            if (action === "camera") {
+                game.x += value * -(5 + game.islands.length);
+                return;
+            }
+        }
+    }
+}
+
 addEventListener("mousedown", () => ui.updateToBindings(keybindings));
 
 addEventListener("keydown", ev => {
@@ -123,6 +164,11 @@ addEventListener("keydown", ev => {
     action && handlePress(Array.isArray(action) ? action : [action]);
 
     ui.updateToBindings(keybindings);
+});
+
+addEventListener("keyup", ev => {
+    const action = keybindings[ev.key.toLowerCase()];
+    action && handleRelease(Array.isArray(action) ? action : [action]);
 });
 
 function onButtonDown(button, framesPressed, knownInfo) {
@@ -134,9 +180,14 @@ function onButtonDown(button, framesPressed, knownInfo) {
     }
 }
 
+function onButtonUp(button, framesPressed, knownInfo) {
+    const action = buttonbindings[button];
+    action && handleRelease(Array.isArray(action) ? action : [action]);
+}
+
 const gamepadEntries = {};
 
-(function pollGamepads() {
+(function pollInput() {
     for (const gamepad of navigator.getGamepads()) {
         if (!gamepad) {
             continue;
@@ -151,10 +202,20 @@ const gamepadEntries = {};
                 onButtonDown(buttonId, lastState[buttonId], entry.knownInfo);
                 lastState[buttonId] = (lastState[buttonId] || 0) + 1;
             } else {
+                onButtonUp(buttonId, lastState[buttonId], entry.knownInfo);
                 delete lastState[buttonId];
             }
         }
+
+        for (const axisId in gamepad.axes) {
+            let value = gamepad.axes[axisId];
+            value = Math.abs(value) < 0.2 ? 0 : value;
+            const action = axesbindings[axisId];
+            action && value && handleAxis(action, value);
+        }
     }
 
-    requestAnimationFrame(pollGamepads);
+    handleDown();
+
+    requestAnimationFrame(pollInput);
 })();

@@ -119,8 +119,6 @@ class Game extends PIXI.Container {
         // Positions & limits
         let width = renderer.width, height = renderer.height;
         if (this.down) this.updateDown(delta);
-        if (this.events.keys[37]) this.x += 5 + this.islands.length;
-        if (this.events.keys[39]) this.x -= 5 + this.islands.length;
         let totalWidth = this.islandsWidth;
         let target;
         if (this.islands.length === 1 || width > totalWidth) {
@@ -275,9 +273,6 @@ class Game extends PIXI.Container {
             this.events.mouseup = ev => this.finishDown();
             this.events.touchend = this.events.mouseup;
             this.events.mousewheel = ev => this.x -= ev.deltaX;
-            this.events.keys = [];
-            this.events.keydown = ev => this.events.keys[ev.keyCode] = true;
-            this.events.keyup = ev => this.events.keys[ev.keyCode] = false;
         }
         this.container = container;
 
@@ -288,8 +283,6 @@ class Game extends PIXI.Container {
         window.addEventListener('touchend', this.events.touchend);
         window.addEventListener('mouseup', this.events.mouseup);
         container.addEventListener('mousewheel', this.events.mousewheel);
-        document.addEventListener('keydown', this.events.keydown);
-        window.addEventListener('keyup', this.events.keyup);
     }
     detachEvents() {
         this.container.removeEventListener('mousedown', this.events.mousedown);
@@ -299,8 +292,6 @@ class Game extends PIXI.Container {
         window.removeEventListener('mouseup', this.events.mouseup);
         window.removeEventListener('touchend', this.events.touchend);
         this.container.removeEventListener('mousewheel', this.events.mousewheel);
-        document.removeEventListener('keydown', this.events.keydown);
-        window.removeEventListener('keyup', this.events.keyup);
         this.container = null;
     }
 

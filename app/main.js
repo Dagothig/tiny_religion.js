@@ -11,7 +11,7 @@ const { app, BrowserWindow, shell, ipcMain } = require("electron/main");
             preload: path.join(app.getAppPath(), "app/page.js")
         }
     });
-    //win.removeMenu();
+    win.removeMenu();
 
 
 
