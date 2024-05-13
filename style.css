@@ -81,7 +81,6 @@ canvas {
 .splash {
     background-color: #484848;
     color: white;
-    line-height: 0;
     opacity: 0;
     animation: fadein 0.5s ease-in-out 0.1s 1 forwards;
 }
