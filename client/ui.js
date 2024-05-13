@@ -125,8 +125,8 @@ class UI {
                         href: 'https://github.com/Dagothig/tiny_religion.js/',
                         target: 'blank'
                     }, strs.menu.source)),
-                window.electron && dom('div', {},
-                    dom('a', { href: 'javascript:electron.exit()' }, strs.menu.exit))));
+                window.app && window.app.exit && dom('div', {},
+                    dom('a', { href: 'javascript:app.exit()' }, strs.menu.exit))));
 
         this.tips = {};
         this.tipsQueue = [];
@@ -264,7 +264,7 @@ class UI {
                 this.titleTag.classList.add('lost');
             }
         } else sounds.titleScreen.play();
-        if (window.android) android.updateStatusTint(0x193bcb);
+        if (window.app) app.updateStatusTint(0x193bcb);
         this.tipTag.classList.add('hidden');
     }
     hideTitle() {
@@ -329,7 +329,7 @@ class UI {
     updateToGodColor(game) {
         this.btnsTag.style.backgroundColor =
             '#' + game.god.offTint.toString('16').padStart(6, '0');
-        if (window.android) android.updateStatusTint(game.god.offTint);
+        if (window.app) app.updateStatusTint(game.god.offTint);
     }
     contentForAction(bindings, faces, action) {
         const result = [];

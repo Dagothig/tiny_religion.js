@@ -112,11 +112,11 @@ let settings = ((strat, confs) => Object.keys(confs).reduce((settings, key) => {
         long: 24000
     }],
     fps: [false, 'bool', 'usr'],
-    fullscreen: window.electron && [true, 'bool', 'usr']
+    fullscreen: window.app && window.app.setFullscreen && [true, 'bool', 'usr']
 });
 
-if (window.electron) {
-    settings.bind("fullscreen", fs => window.electron.setFullscreen(fs));
+if (window.app && window.app.setFullscreen) {
+    settings.bind("fullscreen", fs => window.app.setFullscreen(fs));
 }
 /*
 addEventListener("fullscreenChange", () => settings.fullscreen = !!document.fullscreenElement);
