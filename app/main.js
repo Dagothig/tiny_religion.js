@@ -7,9 +7,30 @@ if (require('electron-squirrel-startup')) {
     return;
 }
 
-const steamworks = require('steamworks.js')
+const steamworks = require('steamworks.js');
+steamworks.electronEnableSteamOverlay();
 const client = steamworks.init(480);
-console.log(client);
+
+let save;
+try {
+    save = JSON.parse(client.cloud.readFile("gamesave") || "{}") || {};
+} catch (err) {
+    console.log("Could not read cloud save");
+    console.log(err);
+    save = {};
+}
+
+const setSave = ((key, value) => {
+    save[key] = value;
+    if (!client.cloud.writeFile("gamesave", JSON.stringify(save)))
+        console.log("Could not write cloud save");
+});
+
+const removeSave = (key => {
+    delete save[key];
+    if (!client.cloud.writeFile("gamesave", JSON.stringify(save)))
+        console.log("Could not write cloud save");
+});
 
 (async () => {
     await app.whenReady();
@@ -27,8 +48,8 @@ console.log(client);
     });
     //win.removeMenu();
 
-    win.webContents.executeJavaScript("({ ...localStorage })", true).then(localStorage => {
-        win.fullScreen = localStorage.fullscreen !== "false";
+    win.webContents.executeJavaScript("localStorage.fullscreen", true).then(fs => {
+        win.fullScreen = fs !== "false";
         win.show()
     });
 
@@ -42,6 +63,10 @@ console.log(client);
 
     ipcMain.on("fullscreen", (_, fs) =>
         win.fullScreen = fs);
+
+    win.webContents.send("readSave", save);
+    ipcMain.on("setSave", (_, key, value) => setSave(key, value));
+    ipcMain.on("removeSave", (_, key) => removeSave(key));
 
     app.on('window-all-closed', () =>
         app.quit());

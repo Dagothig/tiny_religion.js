@@ -6,6 +6,9 @@ if (window.app && window.app.exit) {
         app.exit();
     };
 }
+if (!window.saveStorage) {
+    window.saveStorage = localStorage;
+}
 
 let scaling = 1;
 let container = dom('div', { id: 'container' });
@@ -53,10 +56,10 @@ function newGame(state = undefined) {
     });
 }
 
-let state = JSON.parse(localStorage.getItem('save'));
+let state = JSON.parse(saveStorage.getItem('save'));
 function save() {
     if (!game) return;
-    localStorage.setItem('save', JSON.stringify(state = game.outputState()));
+    saveStorage.setItem('save', JSON.stringify(state = game.outputState()));
     ui.notify('saved');
 }
 function restore() {
@@ -66,11 +69,11 @@ function restore() {
 
 function saveTemp() {
     if (!game) return;
-    localStorage.setItem('saveTemp', JSON.stringify(game.outputState()));
+    saveStorage.setItem('saveTemp', JSON.stringify(game.outputState()));
 }
 function restoreTemp() {
-    let tempState = JSON.parse(localStorage.getItem('saveTemp'));
-    localStorage.removeItem('saveTemp');
+    let tempState = JSON.parse(saveStorage.getItem('saveTemp'));
+    saveStorage.removeItem('saveTemp');
     tempState && newGame(tempState);
     return !!tempState;
 }

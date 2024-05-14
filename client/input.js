@@ -165,6 +165,8 @@ function handleAxis(actions, value) {
 }
 
 addEventListener("keydown", ev => {
+    ev.preventDefault();
+
     const action = keybindings[ev.key.toLowerCase()];
     action && handlePress(Array.isArray(action) ? action : [action]);
 
@@ -172,6 +174,8 @@ addEventListener("keydown", ev => {
 });
 
 addEventListener("keyup", ev => {
+    ev.preventDefault();
+
     const action = keybindings[ev.key.toLowerCase()];
     action && handleRelease(Array.isArray(action) ? action : [action]);
 });
