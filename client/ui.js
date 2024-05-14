@@ -133,7 +133,7 @@ class UI {
                 {
                     click: () => {
                         this.dequeueTip();
-                        sounds.beep2.play();
+                        sounds.beep1.play();
                     }
                 },
                 strs.tipsOk,
@@ -297,7 +297,7 @@ class UI {
         }
     }
     menuOffset(offset) {
-        sounds.beep1.play();
+        sounds.beep2.play();
         const selectable = this.menuTag.querySelectorAll(selectableSelector);
         const activeSelectable = document.activeElement.closest(selectableSelector);
         const activeIdx = Array.prototype.indexOf.call(selectable, activeSelectable);
@@ -305,7 +305,7 @@ class UI {
         selectable[newIdx].focus();
     }
     menuOK() {
-        sounds.beep2.play();
+        sounds.beep1.play();
         const activeSelectable = document.activeElement.closest(selectableSelector);
         if (activeSelectable) {
             if (activeSelectable.nodeName.toLowerCase() === "select") {
