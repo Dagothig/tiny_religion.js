@@ -69,7 +69,12 @@ let sounds = {
 
     new: new Sound('sounds/New.mp3'),
     loss: new Sound('sounds/Loss.mp3'),
-    win: new Sound('sounds/Win.mp3')
+    win: new Sound('sounds/Win.mp3'),
+
+    beep1: new Sound("sounds/Beep1.mp3"),
+    beep2: new Sound("sounds/Beep2.mp3"),
+    beep3: new Sound("sounds/Beep3.mp3"),
+    beep4: new Sound("sounds/Beep4.mp3"),
 };
 
 let Music = {

@@ -10,6 +10,7 @@ if (require('electron-squirrel-startup')) {
 const steamworks = require('steamworks.js');
 steamworks.electronEnableSteamOverlay();
 const client = steamworks.init(480);
+console.log(client.apps.currentGameLanguage());
 
 let save;
 try {

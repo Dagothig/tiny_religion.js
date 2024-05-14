@@ -130,8 +130,13 @@ class UI {
         this.tipTag = dom('div', { class: 'tip initial' },
             this.tipTextTag = dom('div', { class: 'text' }),
             this.tipOkTag = dom('button',
-                { click: () => this.dequeueTip() },
-                'gotcha',
+                {
+                    click: () => {
+                        this.dequeueTip();
+                        sounds.beep2.play();
+                    }
+                },
+                strs.tipsOk,
                 this.tipOkBindingTag = dom('span', { class: 'binding' })));
         this.gameContainer.appendChild(this.tipTag);
 
@@ -214,7 +219,10 @@ class UI {
         nodes.label = nodes[1];
         nodes.binding = binding;
         nodes.action = name;
-        nodes.trigger = () => nodes.input.click();
+        nodes.trigger = () => {
+            nodes.input.checked ? sounds.beep3.play() : sounds.beep1.play();
+            nodes.input.click();
+        };
         this.menus.add(nodes);
 
         addEventListener(name, () => nodes.input.click());
@@ -289,6 +297,7 @@ class UI {
         }
     }
     menuOffset(offset) {
+        sounds.beep1.play();
         const selectable = this.menuTag.querySelectorAll(selectableSelector);
         const activeSelectable = document.activeElement.closest(selectableSelector);
         const activeIdx = Array.prototype.indexOf.call(selectable, activeSelectable);
@@ -296,9 +305,10 @@ class UI {
         selectable[newIdx].focus();
     }
     menuOK() {
+        sounds.beep2.play();
         const activeSelectable = document.activeElement.closest(selectableSelector);
         if (activeSelectable) {
-            if (activeSelectable.nodeName.toLowerCase() ==="select") {
+            if (activeSelectable.nodeName.toLowerCase() === "select") {
                 activeSelectable.value = activeSelectable.options[(activeSelectable.selectedIndex + 1) % activeSelectable.options.length].value;
             } else {
                 activeSelectable.click();
