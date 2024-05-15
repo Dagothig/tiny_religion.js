@@ -1,13 +1,18 @@
 const { contextBridge, ipcRenderer } = require("electron/renderer");
 
+const steamworks = require('steamworks.js');
+const client = steamworks.init(480);
+const steamLangs = { english: "en", french: "fr" };
+const language = steamLangs[client.apps.currentGameLanguage()] || "en";
+
 contextBridge.exposeInMainWorld("app", {
     exit: () => ipcRenderer.send("exit"),
     setFullscreen: (value) => ipcRenderer.send("fullscreen", value),
-    updateStatusTint: () => {}
+    updateStatusTint: () => {},
+    language
 });
 
 ipcRenderer.on("readSave", (_, save) => {
-    console.log(save);
     for (const key in save) {
         localStorage.setItem(key, save[key]);
     }

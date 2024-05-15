@@ -10,7 +10,6 @@ if (require('electron-squirrel-startup')) {
 const steamworks = require('steamworks.js');
 steamworks.electronEnableSteamOverlay();
 const client = steamworks.init(480);
-console.log(client.apps.currentGameLanguage());
 
 let save;
 try {
@@ -44,10 +43,11 @@ const removeSave = (key => {
         backgroundColor: "black",
         show: false,
         webPreferences: {
+            nodeIntegration: true,
             preload: path.join(app.getAppPath(), "app/page.js")
         }
     });
-    //win.removeMenu();
+    win.removeMenu();
 
     win.webContents.executeJavaScript("localStorage.fullscreen", true).then(fs => {
         win.fullScreen = fs !== "false";

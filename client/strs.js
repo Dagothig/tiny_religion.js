@@ -1,5 +1,6 @@
 const translatedStrs = {
-    english: {
+    en: {
+        language: "english",
         tips: {
             jobs:
                 `villagers make babies and cut trees
@@ -99,8 +100,9 @@ const translatedStrs = {
             sound: "sound",
             fps: "fps",
             fullscreen: "fullscreen",
-            new: "new",
+            new: "new game",
             save: "save",
+            lang: "language",
             restore: "restore",
             source: "source",
             exit: "exit"
@@ -145,7 +147,157 @@ const translatedStrs = {
             convert: "convert",
             retreat: "retreat"
         }
+    },
+    fr: {
+        language: "français",
+        tips: {
+            jobs:
+                `les villageois font des bébés et coupes les arbres
+                les prêtes invoquent et convertissent
+                les guerriers se battent
+                les artisans batissent`,
+            buildings:
+                `les maisons augmentent la limite de popuplation
+                les barraques rendent les guerriers plus forts
+                les temples augmentent la limite d'invocations
+                et rendent les prêtres plus forts
+                les jardins augmentes la limite de plants
+                les ponts découvrent de nouvelles îles`,
+            color:
+                `Dieu a changé de couleur!
+                Est-ce que Dieu est le même?`,
+            please:
+                `Dieu exige d'être contenté!
+                Trouvez ce qui plaît à Dieu!`
+        },
+        tipsOk: "oué",
+        msgs: {
+            noSpot: {
+                message: 'aucun emplacement valide trouvé',
+                extra: "essayez à nouveau ou dégagez de l'espace"
+            },
+
+            builded: {
+                message: 'limite de projets atteinte',
+                extra: "attendez que les projets actuels soient complétés, ou conquérez plus d'îles"
+            },
+            noIsland: 'île non conquise',
+            building: type => `construction de ${type.name}`,
+
+            growed: {
+                message: 'limite de plants atteinte',
+                extra: 'attendez ou bâtissez plus de jardins'
+            },
+            planting: 'arbre planté',
+
+            noTree: {
+                message: 'aucun arbre à couper',
+                extra: "plantez plus d'arbres"
+            },
+            treeNotFound: {
+                message: 'aucun arbre trouvé',
+                extra: "essayez à nouveau ou plantez plus d'arbres"
+            },
+            treeFelled: 'arbre coupé',
+
+            trained: job => `${job.name} formé`,
+            villagerNotFound: 'aucun villageois trouvé',
+
+            untrained: job => `${job.name} abruti`,
+            jobNotFound: job => `aucun ${job.name} trouvé`,
+
+            housed: {
+                message: 'limite de population atteinte',
+                extra: 'bâtissez des maisons, plantez des arbres, conquérez des îles ou tuez votre populace'
+            },
+            babyMade: 'bébé créé',
+            babyAttempted: {
+                message: 'bébé tenté',
+                extra: 'donnez plus de temps à vos villageois ou créez plus de villageois'
+            },
+
+            templed: {
+                message: "limite d'invocations atteinte",
+                extra: 'bâtissez plus de temples'
+            },
+            summonDone: 'invocation réussie',
+            summonAttempted: {
+                message: 'invocation échouée',
+                extra: 'donnez plus de temps à vos prêtres ou formez plus de prêtres'
+            },
+
+            praying: 'prière',
+
+            noEnemy: 'aucun enemi',
+            attacking: 'guerriers envoyés',
+            converting: 'prêtres envoyés',
+
+            noRetreat: 'personne à faire fuir',
+            retreating: 'fuite',
+
+            noSacrifice: 'personne à sacrifier',
+            sacrificing: 'boom!'
+        },
+        splash: {
+            prompt: "Pesez n'importe quelle touche pour commencer"
+        },
+        menu: {
+            resume: "résumer",
+            tips: "tutoriel",
+            tooltips: "infobulles",
+            pauseOnFocusLoss: "perte de focus pause",
+            music: "musique",
+            sound: "son",
+            fps: "fps",
+            fullscreen: "plein écran",
+            new: "nouvelle partie",
+            save: "sauvegarder",
+            lang: "langue",
+            restore: "charger",
+            source: "source",
+            exit: "quitter"
+        },
+        choices: {
+            goal: {
+                tiny: "mini",
+                short: "courte",
+                medium: "medium",
+                long: "longue"
+            }
+        },
+        groups: {
+            train: "former",
+            build: "bâtir",
+            do: "faire",
+            move: "bouger"
+        },
+        jobs: {
+            builder: "artisan",
+            warrior: "guerrier",
+            priest: "prêtre"
+        },
+        buildings: {
+            house: "maison",
+            barracks: "barraque",
+            workshop: "atelier",
+            temple: "temple",
+            greenHouse: "jardin",
+            bridge: "pont"
+        },
+        do: {
+            forestate: "planter",
+            deforest: "couper",
+            sacrifice: "sacrifier",
+            baby: "bébé",
+            summon: "invoquer",
+            pray: "prier"
+        },
+        send: {
+            attack: "attaquer",
+            convert: "convertir",
+            retreat: "fuire"
+        }
     }
 };
 
-const strs = translatedStrs.english;
+let strs = translatedStrs[window.app && window.app.language || "en"];

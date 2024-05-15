@@ -66,7 +66,8 @@ let settings = ((strat, confs) => Object.keys(confs).reduce((settings, key) => {
         bool: name => dom('input', { type: 'checkbox', checked: settings[name] }),
         choice: (name, conf) => dom('select',
             { selectedIndex: settings._index(name, conf) },
-            Object.entries(conf[3]).map(x => dom('option', { value: x[1] }, strs.choices[name][x[0]])))
+            Object.entries(conf[3]).map(x => dom('option', { value: x[1] },
+                strs.choices[name] && strs.choices[name][x[0]] || x[0])))
     },
     inputFor: function(name) {
         let conf = this['_' + name + 'Conf'];
@@ -112,9 +113,16 @@ let settings = ((strat, confs) => Object.keys(confs).reduce((settings, key) => {
         long: 24000
     }],
     fps: [false, 'bool', 'usr'],
-    fullscreen: window.app && window.app.setFullscreen && [true, 'bool', 'usr']
+    fullscreen: window.app && window.app.setFullscreen && [true, 'bool', 'usr'],
+    lang: !window.app && !window.app.language && ["en", "choice", "usr", Object
+        .keys(translatedStrs)
+        .toObject(lang => [translatedStrs[lang].language, lang])],
 });
 
 if (window.app && window.app.setFullscreen) {
     settings.bind("fullscreen", fs => window.app.setFullscreen(fs));
+}
+
+if (!window.app && !window.app.language) {
+    settings.bind("lang", lang => strs = (translatedStrs[lang] || translatedStrs.en));
 }
