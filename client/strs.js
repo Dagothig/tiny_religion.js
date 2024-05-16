@@ -300,4 +300,6 @@ const translatedStrs = {
     }
 };
 
-let strs = translatedStrs[window.app && window.app.language || "en"];
+const languages = Object.keys(translatedStrs);
+const defaultLanguage = languages.find(lang => lang === (window.app && window.app.language || "en"));
+let strs = translatedStrs[defaultLanguage];
