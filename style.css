@@ -611,10 +611,9 @@ body:not(.show-tooltips).input--gamepad .menu-container .check {
     top: 50%;
     left: 0;
     right: 0;
-    transform: translateY(-50%);
     box-sizing: border-box;
     background: rgba(0, 0, 0, 0.3);
-    box-shadow: 0 0 1rem 1rem rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 4rem 4rem rgba(0, 0, 0, 0.3);
     text-align: center;
     z-index: 1;
     user-select: none;
@@ -622,15 +621,15 @@ body:not(.show-tooltips).input--gamepad .menu-container .check {
 }
 @keyframes fade-in {
     0% { opacity: 0; }
-    75% { transform: translateY(calc(-50% + 2rem)); opacity: 0; }
-    100% { transform: translateY(-50%); opacity: 1; }
+    75% { transform: translateY(2rem); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
 }
 .tip.hidden {
     animation: fade-out 0.25s;
 }
 @keyframes fade-out {
-    0% { transform: translateY(-50%); opacity: 1; visibility: visible; }
-    100% { transform: translateY(calc(-50% - 2rem)); opacity: 0; visibility: visible; }
+    0% { transform: translateY(0); opacity: 1; visibility: visible; }
+    100% { transform: translateY(-2rem); opacity: 0; visibility: visible; }
 }
 .tip.initial { animation: none; }
 .tip > * {
@@ -653,13 +652,14 @@ body:not(.show-tooltips).input--gamepad .menu-container .check {
     align-items: center;
     justify-content: center;
     gap: 1rem;
+    transition: box-shadow 0.25s, background 0.25s;
 }
 .tip button:hover, .tip button:focus {
-    box-shadow: 0 0 1rem 1rem rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 4rem 4rem rgba(0, 0, 0, 0.1);
     background-color: rgba(0, 0, 0, 0.1);
 }
 .tip button:active {
-    box-shadow: 0 0 1rem 1rem rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 4rem 4rem rgba(0, 0, 0, 0.2);
     background-color: rgba(0, 0, 0, 0.2);
 }
 .tip button:focus { outline: none; }
