@@ -114,7 +114,7 @@ let settings = ((strat, confs) => Object.keys(confs).reduce((settings, key) => {
     }],
     fps: [false, 'bool', 'usr'],
     fullscreen: window.app && window.app.setFullscreen && [true, 'bool', 'usr'],
-    lang: !window.app && !window.app.language && ["en", "choice", "usr", Object
+    lang: (!window.app || !window.app.language) && ["en", "choice", "usr", Object
         .keys(translatedStrs)
         .toObject(lang => [translatedStrs[lang].language, lang])],
 });
@@ -123,6 +123,6 @@ if (window.app && window.app.setFullscreen) {
     settings.bind("fullscreen", fs => window.app.setFullscreen(fs));
 }
 
-if (!window.app && !window.app.language) {
+if (!window.app || !window.app.language) {
     settings.bind("lang", lang => strs = (translatedStrs[lang] || translatedStrs.en));
 }

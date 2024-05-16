@@ -152,7 +152,7 @@ const translatedStrs = {
         language: "français",
         tips: {
             jobs:
-                `les villageois font des bébés et coupes les arbres
+                `les villageois bébéisent et coupent les arbres
                 les prêtes invoquent et convertissent
                 les guerriers se battent
                 les artisans batissent`,

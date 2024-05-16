@@ -32,7 +32,7 @@ a {
 *:focus {
     outline: none;
 }
-.hidden { visibility: hidden !important; }
+.hidden { visibility: hidden; }
 .checked {
     position: absolute;
     width: 0;
@@ -180,7 +180,7 @@ canvas {
 
 .menu div {
     width: 100%;
-    max-width: 300px;
+    max-width: 62rem;
     flex-shrink: 0;
     display: flex;
     flex-flow: row;
@@ -607,11 +607,14 @@ body:not(.show-tooltips).input--gamepad .menu-container .check {
 .tip {
     position: absolute;
     display: flex;
-    bottom: 0;
+    flex-direction: column;
+    top: 50%;
     left: 0;
     right: 0;
+    transform: translateY(-50%);
     box-sizing: border-box;
     background: rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 1rem 1rem rgba(0, 0, 0, 0.3);
     text-align: center;
     z-index: 1;
     user-select: none;
@@ -619,26 +622,17 @@ body:not(.show-tooltips).input--gamepad .menu-container .check {
 }
 @keyframes fade-in {
     0% { opacity: 0; }
-    75% { transform: translateY(2rem); opacity: 0; }
-    100% { transform: translateY(0); opacity: 1; }
+    75% { transform: translateY(calc(-50% + 2rem)); opacity: 0; }
+    100% { transform: translateY(-50%); opacity: 1; }
 }
 .tip.hidden {
     animation: fade-out 0.25s;
 }
 @keyframes fade-out {
-    0% { transform: translateY(0); opacity: 1; visibility: visible; }
-    100% { transform: translateY(-2rem); opacity: 0; visibility: visible; }
+    0% { transform: translateY(-50%); opacity: 1; visibility: visible; }
+    100% { transform: translateY(calc(-50% - 2rem)); opacity: 0; visibility: visible; }
 }
 .tip.initial { animation: none; }
-@media (max-aspect-ratio: 4/3) {
-    .tip { flex-direction: column; }
-    .tip .text { padding-bottom: 0; }
-}
-@media (min-aspect-ratio: 4/3) {
-    .tip { flex-direction: row; }
-    /* Gotta set the padding bottom in case we are exactly 4/3 */
-    .tip .text { padding-bottom: 4rem; padding-right: 0; }
-}
 .tip > * {
     text-transform: uppercase;
     text-shadow: 0 1px black;
@@ -661,9 +655,11 @@ body:not(.show-tooltips).input--gamepad .menu-container .check {
     gap: 1rem;
 }
 .tip button:hover, .tip button:focus {
+    box-shadow: 0 0 1rem 1rem rgba(0, 0, 0, 0.1);
     background-color: rgba(0, 0, 0, 0.1);
 }
 .tip button:active {
+    box-shadow: 0 0 1rem 1rem rgba(0, 0, 0, 0.2);
     background-color: rgba(0, 0, 0, 0.2);
 }
 .tip button:focus { outline: none; }
@@ -785,8 +781,6 @@ body:not(.show-tooltips).input--gamepad .menu-container .check {
 }
 
 @media (max-width: 380px), (max-height: 380px) {
-    .tip button { font-size: 3.5rem; }
-    .tip .text { font-size: 2.5rem; }
     .tooltip {
         flex-direction: column;
     }

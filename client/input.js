@@ -27,10 +27,10 @@ const buttonbindings = {
     4: ["action:5"],
     5: ["action:6"],
     9: ["menu"],
-    12: ["group:train", "up"],
-    13: ["group:move", "down"],
-    14: ["group:build", "left"],
-    15: ["group:do", "right"],
+    12: ["group:previous", "up"],
+    13: ["group:next", "down"],
+    14: ["group:previous", "left"],
+    15: ["group:next", "right"],
 }
 
 const axesbindings = {
@@ -108,12 +108,23 @@ function handlePress(actions) {
                 ui.tipOkTag.click();
                 return;
             }
-            for (const group of ui.groups) {
+            for (let i = 0; i < ui.groups.length; i++) {
+                const group = ui.groups[i];
                 if (group.action === action) {
                     group.trigger();
                     return;
                 }
                 if (group.radio.checked) {
+                    if (action === "group:previous") {
+                        i = (i - 1 + ui.groups.length) % ui.groups.length;
+                        ui.groups[i].trigger();
+                        return;
+                    }
+                    if (action === "group:next") {
+                        i = (i + 1) % ui.groups.length;
+                        ui.groups[i].trigger();
+                        return;
+                    }
                     for (const btn of group.btns) {
                         if (!btn.disabled && btn.action === action) {
                             btn.trigger();
