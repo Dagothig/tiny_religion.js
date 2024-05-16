@@ -61,7 +61,7 @@ class Building extends PIXI.TiledSprite {
     }
     notifyCompletion() {
         if (this.type.notifyCompletion) this.type.notifyCompletion.call(this);
-        else ui.notify(this.type.name + ' built');
+        else ui.notify(strs.msgs.built(this.type.name));
     }
     explode(game) {
         if (this.exploded) return;
@@ -320,7 +320,7 @@ Tree = new BuildingType({
         if (this.scale.x < 1 || this.grow < 1)
             this.scale.x = this.scale.y = this.grow;
     },
-    notifyCompletion() { ui.notify('tree grown') }
+    notifyCompletion() { ui.notify(strs.msgs.treeGrown) }
 }),
 FallingTree = new BuildingType({
     name: 'fallingTree',
@@ -347,7 +347,7 @@ FallingTree = new BuildingType({
     },
 
     onFinished() { this.shouldRemove = true; },
-    notifyCompletion() { ui.notify('stump removed') }
+    notifyCompletion() { ui.notify(strs.msgs.stumpRemoved) }
 }),
 BigTree = new BuildingType({
     name: 'bigTree',

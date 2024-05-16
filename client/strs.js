@@ -22,6 +22,9 @@ const translatedStrs = {
         },
         tipsOk: "gotcha",
         msgs: {
+            saved: "saved",
+            restored: "restored",
+
             noSpot: {
                 message: 'no suitable spot found',
                 extra: 'try again or make room'
@@ -32,7 +35,8 @@ const translatedStrs = {
                 extra: 'wait for current projects to complete or conquer more islands'
             },
             noIsland: 'island not owned',
-            building: type => `building ${type.name}`,
+            building: type => `building ${strs.buildings[type.name]}`,
+            built: type => `${strs.buildings[type.name]} built`,
 
             growed: {
                 message: 'sapling limit reached',
@@ -49,12 +53,14 @@ const translatedStrs = {
                 extra: 'try again or plant more trees'
             },
             treeFelled: 'tree felled',
+            stumpRemoved: "stump removed",
+            treeGrown: "tree grown",
 
-            trained: job => `${job.name} trained`,
+            trained: job => `${strs.jobs[job.name]} trained`,
             villagerNotFound: 'no villager found',
 
-            untrained: job => `${job.name} untrained`,
-            jobNotFound: job => `no ${job.name} untrained`,
+            untrained: job => `${strs.jobs[job.name]} untrained`,
+            jobNotFound: job => `no ${strs.jobs[job.name]} untrained`,
 
             housed: {
                 message: 'pop limit reached',
@@ -172,6 +178,9 @@ const translatedStrs = {
         },
         tipsOk: "oué",
         msgs: {
+            saved: "sauvegardé",
+            restored: "chargé",
+
             noSpot: {
                 message: 'aucun emplacement valide trouvé',
                 extra: "essayez à nouveau ou dégagez de l'espace"
@@ -182,7 +191,8 @@ const translatedStrs = {
                 extra: "attendez que les projets actuels soient complétés, ou conquérez plus d'îles"
             },
             noIsland: 'île non conquise',
-            building: type => `construction de ${type.name}`,
+            building: type => `construction de ${strs.buildings[type.name]}`,
+            built: type => `${strs.buildings[type.name]} construit`,
 
             growed: {
                 message: 'limite de plants atteinte',
@@ -199,12 +209,14 @@ const translatedStrs = {
                 extra: "essayez à nouveau ou plantez plus d'arbres"
             },
             treeFelled: 'arbre coupé',
+            stumpRemoved: "souche arrachée",
+            treeGrown: "arbre poussé",
 
-            trained: job => `${job.name} formé`,
+            trained: job => `${strs.jobs[job.name]} formé`,
             villagerNotFound: 'aucun villageois trouvé',
 
-            untrained: job => `${job.name} abruti`,
-            jobNotFound: job => `aucun ${job.name} trouvé`,
+            untrained: job => `${strs.jobs[job.name]} abruti`,
+            jobNotFound: job => `aucun ${strs.jobs[job.name]} trouvé`,
 
             housed: {
                 message: 'limite de population atteinte',

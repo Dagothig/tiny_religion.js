@@ -63,10 +63,6 @@ canvas {
     image-rendering: crisp-edges;
     image-rendering: pixelated;
 }
-.paused canvas,
-.tip:not(.hidden) ~ canvas {
-    filter: blur(4px);
-}
 
 .splash, .title {
     position: absolute;
@@ -158,7 +154,7 @@ canvas {
     image-rendering: crisp-edges;
     image-rendering: pixelated;
 }
-.menu-container .checked:focus+.check { opacity: 1; }
+.menu-container .checked:active+.check { opacity: 1; }
 .menu-btn+.check { background-image: url('images/Settings.png'); }
 .menu-btn:checked+.check { background-image: url('images/Close.png'); }
 
@@ -294,7 +290,7 @@ canvas {
 .group-select>.checked:checked+.check {
     background-color: rgba(255, 255, 255, 0.2);
 }
-.group-select>.checked:focus+.check {
+.group-select>.checked:active+.check {
     background-color: rgba(255, 255, 255, 0.3);
 }
 .group.hidden { display: none; }
@@ -326,8 +322,7 @@ canvas {
     filter: brightness(0.6) grayscale(1) !important;
 }
 .btn:disabled:after, .btn:disabled:before { animation-duration: 1000000s; }
-.btn:hover, .btn:focus { filter: brightness(1) grayscale(0); }
-.btn:focus { outline: none; }
+.btn:hover, .btn:active { filter: brightness(1) grayscale(0); }
 
 .btn:after,
 .train:before, .untrain:before,
@@ -658,7 +653,7 @@ body:not(.show-tooltips).input--gamepad .menu-container .check {
     gap: 1rem;
     transition: box-shadow 0.25s, background 0.25s;
 }
-.tip button:hover, .tip button:focus {
+.tip button:hover {
     box-shadow: 0 0 4rem 4rem rgba(0, 0, 0, 0.1);
     background-color: rgba(0, 0, 0, 0.1);
 }
@@ -666,7 +661,6 @@ body:not(.show-tooltips).input--gamepad .menu-container .check {
     box-shadow: 0 0 4rem 4rem rgba(0, 0, 0, 0.2);
     background-color: rgba(0, 0, 0, 0.2);
 }
-.tip button:focus { outline: none; }
 
 .notify {
     position: absolute;

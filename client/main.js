@@ -60,11 +60,11 @@ let state = JSON.parse(saveStorage.getItem('save'));
 function save() {
     if (!game) return;
     saveStorage.setItem('save', JSON.stringify(state = game.outputState()));
-    ui.notify('saved');
+    ui.notify(strs.msgs.saved);
 }
 function restore() {
     state && newGame(state);
-    ui.notify('restored');
+    ui.notify(strs.msgs.restored);
 }
 
 function saveTemp() {
