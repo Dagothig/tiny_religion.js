@@ -220,6 +220,7 @@ let Misc = {
     wrap(f1, f2) { return (...args) => f2(f1.apply(this, args)); }
 };
 
+const translatedNodes = [];
 function dom(name, attributes, ...children) {
     let el = document.createElement(name);
     Object.entries(attributes)
@@ -230,10 +231,18 @@ function dom(name, attributes, ...children) {
     return el;
 }
 function appendChildren(el, children) {
-    children.filter(x => x).forEach(x =>
-        x instanceof Array ? appendChildren(el, x) :
-        x instanceof HTMLElement ? el.appendChild(x) :
-        el.appendChild(document.createTextNode(x)));
+    children = children.filter(x => x);
+    if (children.some(child => typeof child === "function")) {
+        translatedNodes.push([el, children]);
+    }
+    el.replaceChildren.apply(el, children.flatMap(getChildren));
+}
+function getChildren(child) {
+    return (
+        child instanceof Array ? child.flatMap(getChildren) :
+        typeof child === "function" ? getChildren(child()) :
+        child instanceof HTMLElement ? [child] :
+        [document.createTextNode(child)]);
 }
 dom.eventHandlers = ['click', 'animationend', 'change']
     .reduce((n, x) => (n[x] = true, n), {});

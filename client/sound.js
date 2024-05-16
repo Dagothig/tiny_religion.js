@@ -9,6 +9,7 @@ let fetchSound = (src) => {
 
 class Sound {
     constructor(...paths) {
+        this.maxCount = typeof paths[paths.length - 1] === "number" ? paths.pop() : 5;
         this.paths = paths;
         this.sounds = paths.map((p, i) => {
             let snd = fetchSound(p);
@@ -22,7 +23,7 @@ class Sound {
         if (Sound.mute) return;
         let i = this.sounds.rand_i();
         let sound = this.available[i].pop();
-        if (!sound && this.available[i].total < 5) {
+        if (!sound && this.available[i].total < this.maxCount) {
             let base = this.sounds[i];
             sound = base.cloneNode();
             sound.onended = base.onended;
@@ -72,7 +73,7 @@ let sounds = {
     win: new Sound('sounds/Win.mp3'),
 
     beep1: new Sound("sounds/Beep1.mp3"),
-    beep2: new Sound("sounds/Beep2.mp3"),
+    beep2: new Sound("sounds/Beep2.mp3", 10),
     beep3: new Sound("sounds/Beep3.mp3"),
     beep4: new Sound("sounds/Beep4.mp3"),
 };

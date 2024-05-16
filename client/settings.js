@@ -67,7 +67,7 @@ let settings = ((strat, confs) => Object.keys(confs).reduce((settings, key) => {
         choice: (name, conf) => dom('select',
             { selectedIndex: settings._index(name, conf) },
             Object.entries(conf[3]).map(x => dom('option', { value: x[1] },
-                strs.choices[name] && strs.choices[name][x[0]] || x[0])))
+                () => strs.choices[name] && strs.choices[name][x[0]] || x[0])))
     },
     inputFor: function(name) {
         let conf = this['_' + name + 'Conf'];
@@ -124,5 +124,12 @@ if (window.app && window.app.setFullscreen) {
 }
 
 if (!window.app || !window.app.language) {
-    settings.bind("lang", lang => strs = (translatedStrs[lang] || translatedStrs.en));
+    settings.bind("lang", lang => {
+        strs = (translatedStrs[lang] || translatedStrs.en);
+        for (const entry of translatedNodes) {
+            const el = entry[0];
+            const children = entry[1];
+            el.replaceChildren.apply(el, children.flatMap(getChildren));
+        }
+    });
 }

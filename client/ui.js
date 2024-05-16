@@ -36,66 +36,66 @@ class UI {
                 () => act === 'train' ?
                     [this.game.player.villagerCount, this.game.player[job.name + 'Count']] :
                     [this.game.player[job.name + 'Count'], this.game.player.villagerCount],
-                strs.jobs[job.name],
+                () => strs.jobs[job.name],
                 act, job.name)))
         .concat([House, Barracks, Workshop, Temple, GreenHouse].map(type =>
             this.createBtn(this.buildGroup,
                 () => this.game.player.build(this.game, type),
                 () => this.game.player[type.name + 'Count'],
-                strs.buildings[type.name],
+                () => strs.buildings[type.name],
                 'build', type.name)))
         .concat([
             this.createBtn(this.buildGroup,
                 () => this.game.player.buildBridge(this.game),
                 null,
-                strs.buildings.bridge,
+                () => strs.buildings.bridge,
                 'build', 'bridge'),
             this.createBtn(this.doGroup,
                 () => this.game.player.forestate(this.game),
                 () => this.game.player.treeCount + this.game.player.bigTreeCount,
-                strs.do.forestate,
+                () => strs.do.forestate,
                 'forestate'),
             this.createBtn(this.doGroup,
                 () => this.game.player.deforest(this.game),
                 null,
-                strs.do.deforest,
+                () => strs.do.deforest,
                 'deforest'),
             this.createBtn(this.doGroup,
                 () => this.game.god.doSacrifice(this.game),
                 null,
-                strs.do.sacrifice,
+                () => strs.do.sacrifice,
                 'sacrifice'),
             this.createBtn(this.doGroup,
                 () => this.game.player.doBaby(this.game),
                 () => this.game.player.peopleCount + '/'
                     + this.game.player.maxPop,
-                strs.do.baby,
+                () => strs.do.baby,
                 'baby'),
             this.createBtn(this.doGroup,
                 () => this.game.player.attemptSummon(this.game),
                 () => this.game.player.summonCount + '/'
                     + this.game.player.maxSummon,
-                strs.do.summon,
+                () => strs.do.summon,
                 'summon'),
             this.createBtn(this.doGroup,
                 () => this.game.player.pray(this.game),
                 null,
-                strs.do.pray,
+                () => strs.do.pray,
                 'pray'),
             this.createBtn(this.moveGroup,
                 () => this.game.player.sendAttack(this.game),
                 null,
-                strs.send.attack,
+                () => strs.send.attack,
                 'attack'),
             this.createBtn(this.moveGroup,
                 () => this.game.player.sendConvert(this.game),
                 null,
-                strs.send.convert,
+                () => strs.send.convert,
                 'convert'),
             this.createBtn(this.moveGroup,
                 () => this.game.player.sendRetreat(this.game),
                 null,
-                strs.send.retreat,
+                () => strs.send.retreat,
                 'retreat')
         ]);
 
@@ -105,17 +105,17 @@ class UI {
                 (resume("menu"), document.body.focus())),
             this.menuTag = dom('div', { class: 'menu', tabIndex: 0 },
                 dom('div', { class: "resume-btn" },
-                    dom('a', { href: 'javascript:ui.closeMenu()' }, strs.menu.resume)),
+                    dom('a', { href: 'javascript:ui.closeMenu()' }, () => strs.menu.resume)),
                 dom('div', {},
-                    dom('a', { href: 'javascript:save()' }, strs.menu.save)),
+                    dom('a', { href: 'javascript:save()' }, () => strs.menu.save)),
                 dom('div', {},
-                    dom('a', { href: 'javascript:restore()' }, strs.menu.restore)),
+                    dom('a', { href: 'javascript:restore()' }, () => strs.menu.restore)),
                 dom('div', {},
-                    dom('a', { href: 'javascript:newGame()'}, strs.menu.new),
+                    dom('a', { href: 'javascript:newGame()'}, () => strs.menu.new),
                     settings.inputFor('goal')),
                 settings.usr.map(n =>
                     dom('div', {},
-                        dom('label', { textContent: strs.menu[n], htmlFor: n }),
+                        dom('label', { htmlFor: n }, () => strs.menu[n]),
                         settings.inputFor(n))),
                 dom('div', {},
                     dom('a', {
@@ -123,7 +123,7 @@ class UI {
                         target: 'blank'
                     }, strs.menu.source)),
                 window.exit && dom('div', {},
-                    dom('a', { href: 'javascript:exit()' }, strs.menu.exit))));
+                    dom('a', { href: 'javascript:exit()' }, () => strs.menu.exit))));
 
         this.tips = {};
         this.tipsQueue = [];
@@ -136,7 +136,7 @@ class UI {
                         sounds.beep1.play();
                     }
                 },
-                strs.tipsOk,
+                () => strs.tipsOk,
                 this.tipOkBindingTag = dom('span', { class: 'binding' })));
         this.gameContainer.appendChild(this.tipTag);
 
@@ -160,7 +160,7 @@ class UI {
             change: () => this.show(group)
         });
         group.nameTag = dom('label', { class: 'check', htmlFor: name },
-            group.nameContent = dom('span', { class: 'group-name' }, strs.groups[name],
+            group.nameContent = dom('span', { class: 'group-name' }, () => strs.groups[name],
                 group.binding = dom('span', { class: 'binding' })));
         group.children = dom('div', { class: 'group' });
         group.btns = [];
@@ -310,6 +310,7 @@ class UI {
         if (activeSelectable) {
             if (activeSelectable.nodeName.toLowerCase() === "select") {
                 activeSelectable.value = activeSelectable.options[(activeSelectable.selectedIndex + 1) % activeSelectable.options.length].value;
+                activeSelectable.dispatchEvent(new Event("change"));
             } else {
                 activeSelectable.click();
             }
