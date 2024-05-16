@@ -1,8 +1,10 @@
 class Overlay extends PIXI.Sprite {
-    constructor(texture = PIXI.whitePixel) {
-        super(texture);
+    constructor(z) {
+        super(PIXI.whitePixel);
         this.nonCullable = true;
+        this.z = z;
         this.flashes = [];
+        this.fadeIns = [];
     }
     render(delta, game, renderer) {
         this.x = -game.x;
@@ -17,12 +19,21 @@ class Overlay extends PIXI.Sprite {
             flash.time--;
             if (!flash.time) this.flashes.splice(i, 1);
         }
-        this.alpha = alpha;
+        for (const fadeIn of this.fadeIns) {
+            alpha = Math.max((fadeIn.duration - fadeIn.time) / fadeIn.duration, alpha);
+            fadeIn.time--;
+            if (fadeIn.time < -10) {
+                fadeIn.onEnd();
+            }
+        }
+        this.alpha = Math.pow(alpha, 2);
     }
     flash(duration) {
         this.flashes.push({time: duration, duration: duration});
     }
-    get z() { return -250; }
+    fadeIn(duration, onEnd) {
+        this.fadeIns.push({ time: duration, duration, onEnd });
+    }
     outputState() {
         return {
             alpha: this.alpha,
@@ -30,8 +41,8 @@ class Overlay extends PIXI.Sprite {
         };
     }
 }
-Overlay.fromState = function(state, game) {
-    let overlay = new Overlay();
+Overlay.fromState = function(state, z, game) {
+    let overlay = new Overlay(z);
     overlay.alpha = state.alpha;
     overlay.flashes = state.flashes;
     return overlay;

@@ -7,13 +7,18 @@ if (require('electron-squirrel-startup')) {
     return;
 }
 
-const steamworks = require('steamworks.js');
-steamworks.electronEnableSteamOverlay();
-const client = steamworks.init(480);
+let client;
+try {
+    const steamworks = require('steamworks.js');
+    steamworks.electronEnableSteamOverlay();
+    client = steamworks.init(480);
+} catch (err) {
+    console.error(err);
+}
 
 let save;
 try {
-    save = JSON.parse(client.cloud.readFile("gamesave") || "{}") || {};
+    save = JSON.parse(client?.cloud.readFile("gamesave") || "{}") || {};
 } catch (err) {
     console.log("Could not read cloud save");
     console.log(err);
@@ -22,13 +27,13 @@ try {
 
 const setSave = ((key, value) => {
     save[key] = value;
-    if (!client.cloud.writeFile("gamesave", JSON.stringify(save)))
+    if (!client?.cloud.writeFile("gamesave", JSON.stringify(save)))
         console.log("Could not write cloud save");
 });
 
 const removeSave = (key => {
     delete save[key];
-    if (!client.cloud.writeFile("gamesave", JSON.stringify(save)))
+    if (!client?.cloud.writeFile("gamesave", JSON.stringify(save)))
         console.log("Could not write cloud save");
 });
 

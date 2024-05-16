@@ -3,6 +3,7 @@
 class God extends PIXI.Container {
     constructor() {
         super();
+        this.z = -200;
         this.mood = this.overallMood = 0;
         this.lookAtX = this.lookAtY = 0;
 
@@ -70,7 +71,6 @@ class God extends PIXI.Container {
         this.changePersonality(true);
         this.birds = [];
     }
-    get z() { return -200; }
     set tint(val) {
         this.head.tint
         = this.mouth.tint

@@ -1,9 +1,14 @@
 const { contextBridge, ipcRenderer } = require("electron/renderer");
 
-const steamworks = require('steamworks.js');
-const client = steamworks.init(480);
-const steamLangs = { english: "en", french: "fr" };
-const language = steamLangs[client.apps.currentGameLanguage()] || "en";
+let language;
+try {
+    const steamworks = require('steamworks.js');
+    const client = steamworks.init(480);
+    const steamLangs = { english: "en", french: "fr" };
+    language = steamLangs[client.apps.currentGameLanguage()] || "en";
+} catch (err) {
+    console.error(err);
+}
 
 contextBridge.exposeInMainWorld("app", {
     exit: () => ipcRenderer.send("exit"),

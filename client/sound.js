@@ -65,6 +65,7 @@ let sounds = {
     islandLose: new Sound('sounds/IslandLose.mp3'),
     islandWin: new Sound('sounds/IslandWin.mp3'),
 
+    end: new Sound(('sounds/End.mp3')),
     angry: new Sound('sounds/Angry.mp3'),
     happy: new Sound('sounds/Happy.mp3'),
 

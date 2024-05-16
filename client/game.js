@@ -13,7 +13,9 @@ let darkSkyColor = 0x28162f,
     goodGlobalColor = 0xfff0dd,
 
     cloudBackCycle = 8000,
-    cloudFrontCycle = 6100;
+    cloudFrontCycle = 6100,
+
+    titleBlue = 0x193bcb;
 
 class Game extends PIXI.Container {
     constructor(onFinished, state = { x: 0, y: 0, goal: settings.goal }) {
@@ -86,12 +88,16 @@ class Game extends PIXI.Container {
         this.cloudFrontY = 4;
 
         // Overlay
-        if (state.overlay) this.overlay = Overlay.fromState(state.overlay, this);
+        if (state.overlay) this.overlay = Overlay.fromState(state.overlay, -250, this);
         else {
-            this.overlay = new Overlay();
-            this.overlay.flash(60);
+            this.overlay = new Overlay(-250);
         }
         this.addChild(this.overlay);
+
+        this.frontOverlay = new Overlay(1000);
+        this.frontOverlay.tint = titleBlue;
+        this.frontOverlay.flash(60);
+        this.addChild(this.frontOverlay);
     }
 
     get islandsWidth() {
@@ -172,10 +178,15 @@ class Game extends PIXI.Container {
         this.children = children;
     }
     checkForEnd() {
-        if (!this.player.peopleCount && !this.player.summonCount)
-            this.onFinished(false);
-        else if (this.god.overallMood > this.goal)
-            this.onFinished(true);
+        if (!this.markedEnd && (
+                (!this.player.peopleCount && !this.player.summonCount) ||
+                (this.god.overallMood > this.goal))
+        ) {
+            sounds.end.play();
+            this.markedEnd = "fadein";
+            this.god.z = this.frontOverlay.z + 1;
+            this.frontOverlay.fadeIn(120, () => this.onFinished(this.god.overallMood > this.goal));
+        }
     }
 
     addIsland(island) {

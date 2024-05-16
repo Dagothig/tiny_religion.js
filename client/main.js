@@ -123,8 +123,8 @@ function setupGame() {
 
             if (game) {
                 if (!paused) game.update(delta, renderer.width, renderer.height);
-                game.render(delta, renderer);
-                if (!paused) game.checkForEnd();
+                if (game) game.render(delta, renderer);
+                if (!paused && game) game.checkForEnd();
             }
             ui.update(delta, game);
 
