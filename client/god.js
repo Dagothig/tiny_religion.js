@@ -102,6 +102,14 @@ class God extends PIXI.Container {
         this.overallMood += this.mood;
         this.mood /= 1.01;
         if (Math.abs(this.mood) < 0.01) this.mood = 0;
+        switch (game.markedEnd) {
+            case "win":
+                this.mood += 0.1;
+                return;
+            case "lost":
+                this.mood -= 0.1;
+                return;
+        }
 
         // Birds
         if (Math.random() < 0.01)
@@ -278,7 +286,10 @@ class God extends PIXI.Container {
     }
 
     changePersonality(base, game) {
-        if (game) game.overlay.flash(60);
+        if (game) {
+            game.overlay.flash(60);
+            game.shake(60, 10, 0);
+        }
         sounds.new.play();
         this.sincePersonality = 0;
         this.mood = 0;

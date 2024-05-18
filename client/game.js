@@ -195,14 +195,15 @@ class Game extends PIXI.Container {
     }
     checkForEnd() {
         if (!this.markedEnd && (
-                (!this.player.peopleCount && !this.player.summonCount) ||
-                (this.god.overallMood > this.goal))
+            (!this.player.peopleCount && !this.player.summonCount) ||
+            (this.god.overallMood > this.goal))
         ) {
             sounds.end.play();
-            this.markedEnd = "fadein";
+            const win = this.god.overallMood > this.goal;
+            this.markedEnd = win ? "win" : "lost";
             this.god.z = this.frontOverlay.z + 1;
-            this.shake(120, 1, 10);
-            this.frontOverlay.fadeIn(120, () => this.onFinished(this.god.overallMood > this.goal));
+            this.shake(120, 0, 10);
+            this.frontOverlay.fadeIn(120, () => this.onFinished(win));
         }
     }
 
