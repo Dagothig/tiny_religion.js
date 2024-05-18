@@ -225,8 +225,6 @@ class UI {
         };
         this.menus.add(nodes);
 
-        addEventListener(name, () => nodes.input.click());
-
         return nodes;
     }
 

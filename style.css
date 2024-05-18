@@ -558,7 +558,6 @@ canvas {
 
 body:not(.show-tooltips) .tooltip,
 body:not(.show-tooltips) .binding,
-body:not(.show-tooltips).input--keyboard .menu-container .check,
 body:not(.show-tooltips).input--gamepad .menu-container .check {
     display: none;
 }
