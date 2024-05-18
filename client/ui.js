@@ -125,7 +125,7 @@ class UI {
                 window.exit && dom('div', {},
                     dom('a', { href: 'javascript:exit()' }, () => strs.menu.exit))));
 
-        this.tips = {};
+        this.tips = JSON.parse(localStorage.getItem("tipsShown") || "{}");
         this.tipsQueue = [];
         this.tipTag = dom('div', { class: 'tip initial' },
             this.tipTextTag = dom('div', { class: 'text' }),
@@ -141,8 +141,12 @@ class UI {
         this.gameContainer.appendChild(this.tipTag);
 
         settings.bind('tips', t => {
-            if (t) return;
+            if (t) {
+                this.game && this.tip('please');
+                return;
+            }
             this.tips = {};
+            localStorage.removeItem("tipsShown");
             this.tipsQueue = [];
             this.tipTag.classList.add('hidden');
         });
@@ -282,6 +286,7 @@ class UI {
     tip(id, text = strs.tips[id]) {
         if (!settings.tips || this.tips[id]) return;
         this.tips[id] = true;
+        localStorage.setItem("tipsShown", JSON.stringify(this.tips));
         this.tipsQueue.push({ id: id, text: text });
         if (this.tipTag.classList.contains('hidden')) this.dequeueTip();
     }
