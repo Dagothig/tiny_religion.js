@@ -202,6 +202,7 @@ class God extends PIXI.Container {
         game.addChild(new SFX(dude.x, dude.y, Lightning));
         sounds.lightning.play();
         game.overlay.flash(8);
+        game.shake(30, 4, 0);
         dude.die(game);
         return strs.msgs.sacrificing;
     }

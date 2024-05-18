@@ -98,6 +98,8 @@ class Game extends PIXI.Container {
         this.frontOverlay.tint = titleBlue;
         this.frontOverlay.flash(60);
         this.addChild(this.frontOverlay);
+
+        this.shakes = [];
     }
 
     get islandsWidth() {
@@ -120,6 +122,12 @@ class Game extends PIXI.Container {
 
         if (this.player.linkedTo(this, this.ai)) Music.switchTo(musics.combat);
         else Music.switchTo(musics.regular);
+
+        for (let i = this.shakes.length - 1; i >= 0; i--) {
+            if (!(--this.shakes[i].remaining)) {
+                this.shakes.splice(i, 1);
+            }
+        }
     }
     render(delta, renderer) {
         // Positions & limits
@@ -133,8 +141,16 @@ class Game extends PIXI.Container {
             target = Math.bounded(this.x,
                 -(this.islBnds.left + totalWidth - width),
                 -this.islBnds.left);
-        this.x = target * 0.05 + this.x * 0.95;
-        this.y = height - this.islBnds.bottom;
+
+        let shakePower = 0;
+        for (const shake of this.shakes) {
+            shakePower = Math.max(
+                shakePower,
+                shake.startPower + (1 - shake.remaining / shake.duration) * shake.powerDelta);
+        }
+
+        this.x = target * 0.05 + this.x * 0.95 + Math.randRange(-shakePower, shakePower);
+        this.y = height - this.islBnds.bottom + Math.randRange(-shakePower, shakePower);
         this.god.x = -this.x + width / 2;
         this.god.y = -this.y;
 
@@ -185,6 +201,7 @@ class Game extends PIXI.Container {
             sounds.end.play();
             this.markedEnd = "fadein";
             this.god.z = this.frontOverlay.z + 1;
+            this.shake(120, 1, 10);
             this.frontOverlay.fadeIn(120, () => this.onFinished(this.god.overallMood > this.goal));
         }
     }
@@ -265,6 +282,15 @@ class Game extends PIXI.Container {
         if (Math.random() < 0.5) island.generatePlain();
         else island.generateForest();
         this.addIsland(island);
+    }
+
+    shake(duration, startPower, endPower = startPower) {
+        this.shakes.push({
+            remaining: duration,
+            duration,
+            startPower,
+            powerDelta: endPower - startPower
+        });
     }
 
     attachEvents(container) {
