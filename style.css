@@ -552,7 +552,8 @@ canvas {
     font-size: 2.5rem;
     line-height: 2.5rem;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
+    gap: 1rem;
 }
 
 body:not(.show-tooltips) .tooltip,
@@ -778,11 +779,6 @@ body:not(.show-tooltips).input--gamepad .menu-container .check {
     }
 }
 
-@media (max-width: 380px), (max-height: 380px) {
-    .tooltip {
-        flex-direction: column;
-    }
-}
 @media (min-width: 600px) and (min-height: 600px) {
     html { font-size: 5px; }
 }
