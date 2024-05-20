@@ -101,8 +101,8 @@ class UI {
 
         this.menuContainerTag = dom('div', { class: 'menu-container' },
             this.menu = this.menuBtn('menu', ev => ev.target.checked ?
-                (pause("menu"), this.menuTag.querySelector(selectableSelector).focus()) :
-                (resume("menu"), document.body.focus())),
+                (pause(menuPause)) :
+                (resume(menuPause), document.body.focus())),
             this.menuTag = dom('div', { class: 'menu', tabIndex: 0 },
                 dom('div', { class: "resume-btn" },
                     dom('a', { href: 'javascript:ui.closeMenu()' }, () => strs.menu.resume)),

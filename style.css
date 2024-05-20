@@ -327,7 +327,7 @@ canvas {
 .btn:after,
 .train:before, .untrain:before,
 .baby:before, .summon:before,
-.attack:before, .convert:before {
+.attack:before, .convert:before, .retreat:before {
     content: "";
     display: block;
     position: absolute;
@@ -343,6 +343,11 @@ canvas {
     background-repeat: no-repeat;
     background-position: center;
 }
+.retreat {
+    background-image: url('images/ArrowFlipped.png');
+    background-repeat: no-repeat;
+    background-position: calc(50% - 16px) 50%;
+}
 .train span:first-child, .untrain span:first-child {
     padding-right: 32px;
 }
@@ -353,7 +358,8 @@ canvas {
 .baby:before, .summon:before,
 .attack:before, .convert:before,
 .train:after, .untrain:after,
-.attack:after, .convert:after {
+.attack:after, .convert:after,
+.retreat:before, .retreat:after {
     width: 8px;
     height: 12px;
     margin-top: -10px;
@@ -364,10 +370,6 @@ canvas {
         hue-rotate(180deg)
         saturate(10);
 }
-.attack:before, .convert:before,
-.attack:after, .convert:after {
-    margin-top: -6px;
-}
 @keyframes jobAnim {
     0% { background-position: 0px 36px; }
     33% { background-position: 8px 36px; }
@@ -377,15 +379,18 @@ canvas {
 .attack:before, .convert:before {
     margin-left: -20px;
 }
+.retreat:before {
+    margin-left: -4px;
+}
 .train:after, .untrain:after,
-.attack:after, .convert:after {
+.attack:after, .convert:after, .retreat:after {
     margin-left: 12px;
 }
 
-.warrior:before, .warrior:after, .attack:before {
+.warrior:before, .warrior:after, .attack:before, .retreat:before {
     background-image: url('images/Warrior.png');
 }
-.priest:before, .priest:after, .convert:before {
+.priest:before, .priest:after, .convert:before, .retreat:after {
     background-image: url('images/Priest.png');
 }
 .builder:before, .builder:after {
@@ -528,16 +533,6 @@ canvas {
     0% { background-position: 0px 48px; }
     33% { background-position: 8px 48px; }
     66% { background-position: 16px 48px; }
-}
-
-.retreat:after {
-    content: "RETREAT";
-    color: white;
-    width: 100%;
-    left: 0;
-    top: 50%;
-    text-align: center;
-    line-height: 0;
 }
 
 .tooltip {

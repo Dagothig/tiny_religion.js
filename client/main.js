@@ -16,31 +16,43 @@ let ui = new UI(container, () => restoreTemp() || newGame());
 let renderer, game;
 
 let paused = 0;
-let pausedCounters = new Map();
+const pausedCounters = [];
+const focusPause = 0, menuPause = 1;
 function resume(key) {
-    pausedCounters.delete(key);
+    pausedCounters[key] = 0;
     checkPause();
 }
 function pause(key) {
-    pausedCounters.set(key, true);
+    pausedCounters[key] = 1;
     checkPause();
 }
 function checkPause() {
-    paused = !pausedCounters.entries().next().done;
-    if (paused) {
+    let wasPaused = !!paused;
+    paused = 0;
+    for (let key = 0; key < pausedCounters.length; key++) {
+        const value = pausedCounters[key];
+        switch (key) {
+            case focusPause:
+                paused += settings.pauseOnFocusLoss ? value : 0;
+                break;
+            default:
+                paused += value;
+                break;
+        }
+    }
+    if (paused && !wasPaused) {
         container.classList.add('paused');
         Music.pause();
         ui.pause();
-    } else {
+    }
+    if (!paused && wasPaused) {
         container.classList.remove('paused');
         Music.resume();
         ui.resume();
     }
 }
 
-addEventListener("blur", () => settings.pauseOnFocusLoss && pause("focus"));
-addEventListener("focus", () => settings.pauseOnFocusLoss && resume("focus"));
-setInterval(() => document.hasFocus() ? resume("focus") : pause("focus"), 100);
+setInterval(() => document.hasFocus() ? resume(focusPause) : pause(focusPause), 100);
 
 function newGame(state = undefined) {
     Game.onLoad(() => {
