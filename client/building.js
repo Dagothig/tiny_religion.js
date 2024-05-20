@@ -61,7 +61,7 @@ class Building extends PIXI.TiledSprite {
     }
     notifyCompletion() {
         if (this.type.notifyCompletion) this.type.notifyCompletion.call(this);
-        else ui.notify(strs.msgs.built(this.type.name));
+        else ui.notify(strs.msgs.built(this.type));
     }
     explode(game) {
         if (this.exploded) return;
