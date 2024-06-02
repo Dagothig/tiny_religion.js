@@ -1,6 +1,6 @@
 PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
-if (window.app && window.app.exit) {
+if (window.app.exit) {
     window.exit = function exit() {
         saveTemp();
         app.exit();
@@ -154,8 +154,12 @@ window.addEventListener("DOMContentLoaded", () => {
         document.body.classList[t ? 'add' : 'remove']('show-tooltips'));
 
     splash = document.querySelector('.splash');
+    if (splash && window.app.shouldSplash && !window.app.shouldSplash()) {
+        splash.remove();
+        splash = null;
+    }
     if (!splash) return setupGame();
-    splash.appendChild(dom("span", {}, strs.splash.prompt));
+    splash.appendChild(dom("span", {}, navigator.maxTouchPoints > 0 ? strs.splash.promptTouch :  strs.splash.prompt));
     let handler = () => splash && (splash.remove(), splash = null, setupGame());
     splash.onclick = handler;
 });

@@ -14,7 +14,7 @@ contextBridge.exposeInMainWorld("app", {
     exit: () => ipcRenderer.send("exit"),
     setFullscreen: (value) => ipcRenderer.send("fullscreen", value),
     updateStatusTint: () => {},
-    language
+    getLanguage: () => language
 });
 
 ipcRenderer.on("readSave", (_, save) => {

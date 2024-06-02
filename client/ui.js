@@ -6,7 +6,8 @@ class UI {
         this.gameContainer.classList.add('hidden');
         this.onTitle = onTitle;
 
-        this.titleTag = dom('div', { class: 'hidden title', click: this.onTitle });
+        const shouldSplash = window.app.shouldSplash ? window.app.shouldSplash() : true;
+        this.titleTag = dom('div', { class: 'hidden title' + (!shouldSplash ? " title--no-splash" : ""), click: this.onTitle });
 
         this.btnsTag = dom('div', { class: 'hidden btns' },
             this.groupSelectTag = dom('div', { class: 'group-select' }),
@@ -103,7 +104,12 @@ class UI {
             this.menu = this.menuBtn('menu', ev => ev.target.checked ?
                 (pause(menuPause), this.menuTag.querySelector(selectableSelector).focus()) :
                 (resume(menuPause), document.body.focus())),
-            this.menuTag = dom('div', { class: 'menu', tabIndex: 0 },
+            this.menuTag = dom('div',
+                {
+                    class: 'menu',
+                    tabIndex: 0,
+                    onclick: e => { e.target.classList.contains("menu") && this.closeMenu(); }
+                },
                 dom('div', { class: "resume-btn" },
                     dom('a', { href: 'javascript:ui.closeMenu()' }, () => strs.menu.resume)),
                 dom('div', {},
@@ -273,7 +279,7 @@ class UI {
                 this.titleTag.classList.add('lost');
             }
         } else sounds.titleScreen.play();
-        if (window.app) app.updateStatusTint(0x193bcb);
+        if (window.app.updateStatusTint) app.updateStatusTint(0x193bcb);
         this.tipTag.classList.add('hidden');
     }
     hideTitle() {
@@ -342,7 +348,7 @@ class UI {
     updateToGodColor(game) {
         this.btnsTag.style.backgroundColor =
             '#' + game.god.offTint.toString('16').padStart(6, '0');
-        if (window.app) app.updateStatusTint(game.god.offTint);
+        if (window.app.updateStatusTint) app.updateStatusTint(game.god.offTint);
     }
     contentForAction(bindings, faces, action) {
         const result = [];

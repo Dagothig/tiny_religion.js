@@ -1,3 +1,5 @@
+window.app = window.app || {};
+
 const translatedStrs = {
     en: {
         language: "english",
@@ -95,7 +97,8 @@ const translatedStrs = {
             sacrificing: 'boom!'
         },
         splash: {
-            prompt: "Press any key to start"
+            prompt: "Press any key to start",
+            promptTouch: "Touch to start"
         },
         menu: {
             resume: "resume",
@@ -251,7 +254,8 @@ const translatedStrs = {
             sacrificing: 'boom!'
         },
         splash: {
-            prompt: "Pesez n'importe quelle touche pour commencer"
+            prompt: "Pesez n'importe quelle touche pour commencer",
+            promptTouch: "Touchez pour commencer"
         },
         menu: {
             resume: "résumer",
@@ -313,5 +317,6 @@ const translatedStrs = {
 };
 
 const languages = Object.keys(translatedStrs);
-const defaultLanguage = languages.find(lang => lang === (window.app && window.app.language || "en"));
+const requestedLanguage = window.app.getLanguage && window.app.getLanguage() || "en";
+const defaultLanguage = languages.find(lang => lang === requestedLanguage);
 let strs = translatedStrs[defaultLanguage];

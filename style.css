@@ -1,3 +1,7 @@
+:root {
+    --menu_check_size: 8rem;
+}
+
 html, body {
     margin: 0;
     padding: 0;
@@ -31,6 +35,9 @@ a {
 }
 *:focus {
     outline: none;
+}
+* {
+    -webkit-tap-highlight-color: transparent;
 }
 .hidden { visibility: hidden; }
 .checked {
@@ -112,6 +119,10 @@ canvas {
     max-width: 100%;
     max-height: 100%;
 }
+.title--no-splash:before, .title--no-splash:after {
+    opacity: 0;
+    animation: fadein 0.5s ease-in-out 0.1s 1 forwards;
+}
 .title:before {
     width: 640px;
     height: 480px;
@@ -131,24 +142,26 @@ canvas {
 
 .menu-container {
     position: absolute;
-    top: 0;
-    bottom: 0;
-    right: 0;
+    top: var(--safe_margin_top, 0px);
+    bottom: var(--safe_margin_bottom, 0px);
+    right: var(--safe_margin_right, 0px);
     text-align: right;
     user-select: none;
     z-index: 1;
     pointer-events: none;
+    opacity: 0;
+    animation: fadein 0.5s ease-in-out 0.1s 1 forwards;
 }
 .menu-container * { pointer-events: all; }
 .menu-container .check {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 8rem;
+    min-width: var(--menu_check_size);
     padding: 1rem;
-    padding-top: 8rem;
+    padding-top: var(--menu_check_size);
     opacity: 0.5;
-    background-size: 8rem 8rem;
+    background-size: var(--menu_check_size) var(--menu_check_size);
     background-position: center 0px;
     background-repeat: no-repeat;
     image-rendering: crisp-edges;
@@ -157,6 +170,12 @@ canvas {
 .menu-container .checked:active+.check { opacity: 1; }
 .menu-btn+.check { background-image: url('images/Settings.png'); }
 .menu-btn:checked+.check { background-image: url('images/Close.png'); }
+
+@media (hover: none) {
+    :root {
+        --menu_check_size: 10rem;
+    }
+}
 
 .menu {
     display: none;
@@ -172,7 +191,10 @@ canvas {
     left: 0;
     right: 0;
     bottom: 0;
-    padding: 2rem 3rem;
+    padding-left: calc(3rem + var(--safe_margin_left, 0px));
+    padding-top: calc(2rem + var(--safe_margin_top, 0px));
+    padding-right: calc(3rem + var(--safe_margin_right, 0px));
+    padding-bottom: calc(2rem + var(--safe_margin_bottom, 0px));
     flex-direction: column;
     align-items: center;
 }
@@ -187,6 +209,7 @@ canvas {
     align-items: center;
     position: relative;
     overflow: hidden;
+    border-bottom: solid 1px #01041d;
 }
 .menu > *:first-child {
     border-top-left-radius: 3rem;
@@ -198,12 +221,22 @@ canvas {
     border-bottom-right-radius: 3rem;
     margin-bottom: auto;
 }
-.menu div:hover label,
-.menu a:hover,
-.menu select:hover,
-.menu div:focus-within label,
-.menu div a:focus,
-.menu div select:focus {
+@media (hover: hover) {
+    .menu div:hover label,
+    .menu a:hover,
+    .menu select:hover {
+        background: #193bcb;
+    }
+}
+.menu div:active label,
+.menu a:active,
+.menu select:active,
+.input--keyboard .menu div:focus-within label,
+.input--keyboard .menu div a:focus,
+.input--keyboard .menu div select:focus,
+.input--gamepad .menu div:focus-within label,
+.input--gamepad .menu div a:focus,
+.input--gamepad .menu div select:focus {
     background: #193bcb;
 }
 .menu label, .menu a, .menu select {
@@ -244,9 +277,11 @@ canvas {
 
 .btns {
     position: relative;
-    width: 100%;
     display: flex;
     flex-direction: column-reverse;
+    padding-left: var(--safe_margin_left, 0px);
+    padding-right: var(--safe_margin_right, 0px);
+    padding-bottom: var(--safe_margin_bottom, 0px);
 }
 .group-select, .group {
     padding-top: 1px;
@@ -284,8 +319,10 @@ canvas {
     justify-content: center;
     gap: 1rem;
 }
-.group-select>.check:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+@media (hover: hover) {
+    .group-select>.check:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
 }
 .group-select>.checked:checked+.check {
     background-color: rgba(255, 255, 255, 0.2);
@@ -322,7 +359,10 @@ canvas {
     filter: brightness(0.6) grayscale(1) !important;
 }
 .btn:disabled:after, .btn:disabled:before { animation-duration: 1000000s; }
-.btn:hover, .btn:active { filter: brightness(1) grayscale(0); }
+@media (hover: hover) {
+    .btn:hover { filter: brightness(1) grayscale(0); }
+}
+.btn:active { filter: brightness(1) grayscale(0); }
 
 .btn:after,
 .train:before, .untrain:before,
@@ -648,9 +688,11 @@ body:not(.show-tooltips).input--gamepad .menu-container .check {
     gap: 1rem;
     transition: box-shadow 0.25s, background 0.25s;
 }
-.tip button:hover {
-    box-shadow: 0 0 4rem 4rem rgba(0, 0, 0, 0.1);
-    background-color: rgba(0, 0, 0, 0.1);
+@media (hover: hover) {
+    .tip button:hover {
+        box-shadow: 0 0 4rem 4rem rgba(0, 0, 0, 0.1);
+        background-color: rgba(0, 0, 0, 0.1);
+    }
 }
 .tip button:active {
     box-shadow: 0 0 4rem 4rem rgba(0, 0, 0, 0.2);
@@ -735,9 +777,9 @@ body:not(.show-tooltips).input--gamepad .menu-container .check {
         flex-direction: row-reverse;
     }
     .btns {
-        width: auto;
-        height: 100%;
         flex-direction: row;
+        padding-top: var(--safe_margin_top, 0px);
+        padding-right: 0px;
     }
     .group-select, .groups, .group {
         width: auto;
@@ -823,4 +865,10 @@ body:not(.show-tooltips).input--gamepad .menu-container .check {
 @media (max-aspect-ratio: 4/3) and (min-height: 800px) {
     .group-select>.check { height: 14rem; }
     .btn { min-height: 22rem; }
+}
+
+@media (pointer:coarse) {
+    .menu label, .menu a, .menu select {
+        line-height: 30px;
+    }
 }
