@@ -93,7 +93,7 @@ let Music = {
     },
     toggle(play) {
         this.play = play;
-        if (this.music) {
+        if (this.music && !this.paused) {
             if (this.play) this.music.play();
             else this.music.pause();
         }
@@ -109,10 +109,12 @@ let Music = {
         this.music = null;
     },
     resume() {
+        this.paused = false;
         if (!this.music || !this.play) return;
         this.music.play();
     },
     pause() {
+        this.paused = true;
         if (!this.music) return;
         this.music.pause();
     }
