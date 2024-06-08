@@ -122,12 +122,6 @@ class Game extends PIXI.Container {
 
         if (this.player.linkedTo(this, this.ai)) Music.switchTo(musics.combat);
         else Music.switchTo(musics.regular);
-
-        for (let i = this.shakes.length - 1; i >= 0; i--) {
-            if (!(--this.shakes[i].remaining)) {
-                this.shakes.splice(i, 1);
-            }
-        }
     }
     render(delta, renderer) {
         // Positions & limits
@@ -143,14 +137,18 @@ class Game extends PIXI.Container {
                 -this.islBnds.left);
 
         let shakePower = 0;
-        for (const shake of this.shakes) {
+        for (let i = this.shakes.length - 1; i >= 0; i--) {
+            const shake = this.shakes[i];
+            if (!(--shake.remaining)) {
+                this.shakes.splice(i, 1);
+            }
             shakePower = Math.max(
                 shakePower,
                 shake.startPower + (1 - shake.remaining / shake.duration) * shake.powerDelta);
         }
 
         this.x = target * 0.05 + this.x * 0.95 + Math.randRange(-shakePower, shakePower);
-        this.y = height - this.islBnds.bottom + Math.randRange(-shakePower, shakePower);
+        this.y = height - this.islBnds.bottom + Math.randRange(0, shakePower);
         this.god.x = -this.x + width / 2;
         this.god.y = -this.y;
 
@@ -403,4 +401,7 @@ Game.onLoad = function(handler) {
     if (Game.loaded) handler();
     else Game.loadedHandlers.push(handler);
 }
-PIXI.loader.load(() => Game.loaded = true);
+PIXI.loader.load(() => {
+    Game.loaded = true;
+    console.log("Loaded");
+});

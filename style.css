@@ -1,5 +1,7 @@
 :root {
     --menu_check_size: 8rem;
+    --settings_check_size: 8rem;
+    --range_indicator_width: calc(var(--settings_check_size) * 2);
 }
 
 html, body {
@@ -225,7 +227,7 @@ canvas {
     .menu div:hover label,
     .menu a:hover,
     .menu select:hover {
-        background: #193bcb;
+        background: #3f5566;
     }
 }
 .menu div:active label,
@@ -237,10 +239,10 @@ canvas {
 .input--gamepad .menu div:focus-within label,
 .input--gamepad .menu div a:focus,
 .input--gamepad .menu div select:focus {
-    background: #193bcb;
+    background: #3f5566;
 }
 .menu label, .menu a, .menu select {
-    background: #0b1e70;
+    background: #26333d;
 }
 .menu label, .menu a {
     padding: 2rem 3rem;
@@ -250,16 +252,76 @@ canvas {
     cursor: pointer;
 }
 .menu input { margin: 0; }
+
 .menu input[type=checkbox] {
     position: absolute;
     right: 3rem;
+    appearance: none;
 }
+.checkbox__indicator,
+.range__indicator {
+    position: absolute;
+    right: 3rem;
+    height: calc(var(--settings_check_size) * 0.8);
+    border-radius: var(--settings_check_size);
+    background-color: #171f25;
+    pointer-events: none;
+}
+.checkbox__indicator::after,
+.range__indicator::after {
+    display: block;
+    content: "";
+    position: absolute;
+    top: 50%;
+    margin-top: calc(var(--settings_check_size) / -2);
+    width: var(--settings_check_size);
+    height: var(--settings_check_size);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    transition: 0.25s;
+}
+.checkbox__indicator {
+    width: calc(var(--settings_check_size) * 1.4);
+}
+[type=checkbox]:not(:checked) ~ .checkbox__indicator::after {
+    left: calc(var(--settings_check_size) * -0.1);
+    filter: grayscale(0.75);
+    background-image: url('images/PictoGodSad.png');
+}
+[type=checkbox]:checked ~ .checkbox__indicator::after {
+    left: calc(100% - var(--settings_check_size) * 0.9);
+    transform: rotate(360deg);
+    background-image: url('images/PictoGodHappy.png');
+}
+
+.menu input[type=range] {
+    position: absolute;
+    right: 3rem;
+    height: 100%;
+    opacity: 0;
+    --range_indicator_width: calc(var(--settings_check_size) * 2);
+}
+.range__indicator {
+    width: calc(var(--range_indicator_width) + var(--settings_check_size) * 0.8);
+}
+.range__indicator::after {
+    left: calc(var(--settings_check_size) * -0.1 + var(--range_percent) * var(--range_indicator_width));
+    transform: rotate(calc(var(--range_percent) * 360deg));
+    filter: grayscale(calc((1 - var(--range_percent)) * 0.75));
+    background-image: url('images/PictoGodHappy.png');
+}
+.range__indicator--zero::after {
+    background-image: url('images/PictoGodSad.png');
+}
+
 .menu select {
     padding: 0;
     height: 100%;
     cursor: pointer;
     color: white;
     text-shadow: 0 1px black;
+    text-align: right;
     font-size: 3.5rem;
     text-transform: uppercase;
     border: none;

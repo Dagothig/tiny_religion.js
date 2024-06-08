@@ -206,6 +206,16 @@ Object.merge(Array.prototype, {
     }
 });
 
+Object.merge(Array, {
+    gen(n, map) {
+        const arr = new Array(n);
+        for (let i = 0; i < n; i++) {
+            arr[i] = map(i);
+        }
+        return arr;
+    }
+});
+
 let Misc = {
     touchToMouseEv(ev) {
         let newEv = Array.from(ev.touches).reduce((obj, touch) => {
@@ -244,6 +254,33 @@ function getChildren(child) {
         child instanceof HTMLElement ? [child] :
         [document.createTextNode(child)]);
 }
-dom.eventHandlers = ['click', 'animationend', 'change']
+dom.eventHandlers = ['click', 'animationend', 'change', 'step']
     .reduce((n, x) => (n[x] = true, n), {});
 dom.nameMap = { 'class': 'className' };
+
+Object.merge(Node.prototype, {
+    $one(selector) {
+        return this.matches(selector) ? this : this.querySelector(selector);
+    },
+    $all(selector) {
+        const all = Array.from(this.querySelectorAll(selector));
+        if (this.matches(selector))
+            all.unshift(this);
+        return all;
+    }
+});
+
+Object.merge(Array.prototype, {
+    $one(selector) {
+        for (const node of this) {
+            const result = node.$one(selector);
+            if (result) {
+                return result;
+            }
+        }
+        return null;
+    },
+    $all(selector) {
+        return this.flatMap(n => n.$all(selector));
+    }
+})

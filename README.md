@@ -26,6 +26,4 @@ The game itself handles scrolling and orchestrating the various actors. It also 
 
 ## TODO
 
-Sound files:
-* End.mp3
 * Achievements

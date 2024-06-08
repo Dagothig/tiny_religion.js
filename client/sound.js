@@ -8,8 +8,9 @@ let fetchSound = (src) => {
 }
 
 class Sound {
-    constructor(...paths) {
-        this.maxCount = typeof paths[paths.length - 1] === "number" ? paths.pop() : 5;
+    constructor(paths, maxCount = 5, baseVolume = 1) {
+        paths = !Array.isArray(paths) ? [paths] : paths;
+        this.maxCount = maxCount;
         this.paths = paths;
         this.sounds = paths.map((p, i) => {
             let snd = fetchSound(p);
@@ -18,9 +19,11 @@ class Sound {
             return snd;
         });
         this.available = this.sounds.map(s => Object.merge([s], { total: 1 }));
+        this.baseVolume = baseVolume;
     }
     play(onended, volume = 1) {
-        if (Sound.mute) return;
+        volume *= this.baseVolume * Sound.volume;
+        if (!Sound.volume) return;
         let i = this.sounds.rand_i();
         let sound = this.available[i].pop();
         if (!sound && this.available[i].total < this.maxCount) {
@@ -41,7 +44,7 @@ class Sound {
         sound.play();
     }
 }
-settings.bind('sound', m => Sound.mute = !m);
+settings.bind('sound', v => Sound.volume = v / 100);
 let sounds = {
     titleScreen: new Sound('sounds/TitleScreen.mp3'),
 
@@ -57,7 +60,7 @@ let sounds = {
     summon: new Sound('sounds/Summon.mp3'),
     pray: new Sound('sounds/Pray.mp3'),
 
-    hit: new Sound('sounds/Hit1.mp3', 'sounds/Hit2.mp3', 'sounds/Hit3.mp3'),
+    hit: new Sound(['sounds/Hit1.mp3', 'sounds/Hit2.mp3', 'sounds/Hit3.mp3']),
     convert: new Sound('sounds/Convert.mp3'),
     death: new Sound('sounds/Death.mp3'),
     lightning: new Sound('sounds/Lightning.mp3'),
@@ -76,7 +79,7 @@ let sounds = {
     beep1: new Sound("sounds/Beep1.mp3"),
     beep2: new Sound("sounds/Beep2.mp3", 10),
     beep3: new Sound("sounds/Beep3.mp3"),
-    beep4: new Sound("sounds/Beep4.mp3"),
+    beep4: new Sound("sounds/Beep4.mp3", 10, 0.5),
 };
 
 let Music = {
@@ -95,6 +98,11 @@ let Music = {
             else this.music.pause();
         }
     },
+    setVolume(volume) {
+        volume /= 100;
+        this.music && (this.music.volume = volume);
+        this.toggle(!!volume);
+    },
     stop() {
         if (!this.music) return;
         this.music.pause();
@@ -109,7 +117,7 @@ let Music = {
         this.music.pause();
     }
 }
-settings.bind('music', p => Music.toggle(p));
+settings.bind('music', v => Music.setVolume(v));
 let musics = {
     regular: fetchSound('sounds/Music1.ogg'),
     combat: fetchSound('sounds/Music2.ogg')

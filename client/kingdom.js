@@ -78,7 +78,10 @@ class Kingdom {
     }
 
     build(game, type, skipChecks = false) {
-        if (!skipChecks && this.builded) return strs.msgs.builded;
+        if (!skipChecks && this.builded) {
+            sounds.beep4.play();
+            return strs.msgs.builded;
+        }
         let isls = game.islands.slice(0).sort(() => Math.random() - 0.5);
         for (let i = 0; i < isls.length; i++) {
             let isl = isls[i];
@@ -98,14 +101,21 @@ class Kingdom {
             }
             return strs.msgs.building(type);
         }
+        sounds.beep4.play();
         return strs.msgs.noSpot;
     }
 
     buildBridge(game, skipChecks = false) {
-        if (!skipChecks && this.builded) return strs.msgs.builded;
+        if (!skipChecks && this.builded) {
+            sounds.beep4.play();
+            return strs.msgs.builded;
+        }
         let index = game.islands.findIndex(i => !i.bridge && i.kingdom === this);
         let island = game.islands[index];
-        if (!island) return strs.msgs.noIsland;
+        if (!island) {
+            sounds.beep4.play();
+            return strs.msgs.noIsland;
+        }
 
         let bridge = island.generateBridge(false);
         game.addChild(bridge);
@@ -125,7 +135,10 @@ class Kingdom {
     }
 
     forestate(game, skipChecks = false) {
-        if (!skipChecks && this.growed) return strs.msgs.growed;
+        if (!skipChecks && this.growed) {
+            sounds.beep4.play();
+            return strs.msgs.growed;
+        }
         for (let i = 0; i < game.islands.length * 3; i++) {
             let island = game.islands.rand();
             if (island.kingdom !== this) continue;
@@ -138,6 +151,7 @@ class Kingdom {
             }
             return strs.msgs.planting;
         }
+        sounds.beep4.play();
         return strs.msgs.noSpot;
     }
     deforest(game) {
@@ -147,9 +161,15 @@ class Kingdom {
         while (!trees || !trees.length) {
             island = islands[(Math.random() * islands.length)|0];
             trees = island.buildings.filter(b => b.type === Tree && b.finished);
-            if (!maxTries--) return strs.msgs.treeNotFound;
+            if (!maxTries--) {
+                sounds.beep4.play();
+                return strs.msgs.treeNotFound;
+            }
         }
-        if (!trees || !trees.length) return strs.msgs.treeNotFound;
+        if (!trees || !trees.length) {
+            sounds.beep4.play();
+            return strs.msgs.treeNotFound;
+        }
         let tree = trees[(Math.random() * trees.length)|0];
         tree.shouldRemove = true;
         let felled = new Building(tree.x, tree.y, FallingTree, this, island);
@@ -172,11 +192,15 @@ class Kingdom {
             }
             return strs.msgs.trained(job);
         }
+        sounds.beep4.play();
         return strs.msgs.villagerNotFound;
     }
     untrain(game, job) {
         let person = this.findOfJob(game, job);
-        if (!person) return strs.msgs.jobNotFound(job);
+        if (!person) {
+            sounds.beep4.play();
+            return strs.msgs.jobNotFound(job);
+        }
 
         game.addChild(new SFX(person.x, person.y, Summon));
         person.changeJob(Villager);
@@ -197,6 +221,7 @@ class Kingdom {
             sounds.baby.play();
             return strs.msgs.babyMade;
         }
+        sounds.beep4.play();
         return strs.msgs.babyAttempted;
     }
     attemptSummon(game, skipChecks = false) {
@@ -210,6 +235,7 @@ class Kingdom {
             sounds.summon.play();
             return strs.msgs.summonDone;
         }
+        sounds.beep4.play();
         return strs.msgs.summonAttempted;
     }
     pray(game) {
@@ -231,7 +257,10 @@ class Kingdom {
     }
     sendAttack(game) {
         let mean = game.islands.filter(isl => isl.kingdom !== this).rand();
-        if (!mean) return strs.msgs.noEnemy;
+        if (!mean) {
+            sounds.beep4.play();
+            return strs.msgs.noEnemy;
+        }
         game.islands.forEach(island =>
             island.kingdom === this &&
             island.people.forEach(person =>
@@ -242,7 +271,10 @@ class Kingdom {
     }
     sendConvert(game) {
         let mean = game.islands.filter(isl => isl.kingdom !== this).rand();
-        if (!mean) return strs.msgs.noEnemy;
+        if (!mean) {
+            sounds.beep4.play();
+            return strs.msgs.noEnemy;
+        }
         game.islands.forEach(island =>
             island.kingdom === this &&
             island.people.forEach(person =>
@@ -253,7 +285,10 @@ class Kingdom {
     }
     sendRetreat(game) {
         let ally = game.islands.filter(isl => isl.kingdom === this).rand();
-        if (!ally) return strs.msgs.noRetreat;
+        if (!ally) {
+            sounds.beep4.play();
+            return strs.msgs.noRetreat;
+        }
         game.islands.forEach(island =>
             island.kingdom !== this &&
             island.people.forEach(person =>

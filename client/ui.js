@@ -320,6 +320,8 @@ class UI {
             if (activeSelectable.nodeName.toLowerCase() === "select") {
                 activeSelectable.value = activeSelectable.options[(activeSelectable.selectedIndex + 1) % activeSelectable.options.length].value;
                 activeSelectable.dispatchEvent(new Event("change"));
+            } else if (activeSelectable.type === "range") {
+                activeSelectable.dispatchEvent(new Event("step"));
             } else {
                 activeSelectable.click();
             }

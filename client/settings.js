@@ -62,26 +62,61 @@ let settings = ((strat, confs) => Object.keys(confs).reduce((settings, key) => {
     },
     _inputFor: {
         str: name => dom('input', { type: 'text', value: settings[name] }),
-        num: name => dom('input', { type: 'numeric', value: settings[name] }),
-        bool: name => dom('input', { type: 'checkbox', checked: settings[name] }),
+        num: (name, conf) => {
+            const c = conf[3];
+            let input;
+            const node = [
+                dom('input', {
+                    type: 'range',
+                    min: c.min,
+                    max: c.max,
+                    step: c.step,
+                    value: settings[name],
+                    step() {
+                        settings[name] = (settings[name] + c.step) % (c.max + c.step);
+                    }
+                }),
+                input = dom('span', { class: 'range__indicator' })];
+            settings.bind(name, value => {
+                const partial = ((value - c.min) % c.step);
+                const roundedValue = value - partial + (partial < c.step / 2 ? 0 : c.step);
+                if (roundedValue !== value) {
+                    settings[name] = roundedValue;
+                    return;
+                }
+                input.style.setProperty("--range_percent", (value - c.min) / (c.max - c.min));
+                input.classList[value ? "remove" : "add"]("range__indicator--zero");
+            });
+            return node;
+        },
+        bool: name => [
+            dom('input', { type: 'checkbox', checked: settings[name] }),
+            dom('span', { class: 'checkbox__indicator' })],
         choice: (name, conf) => dom('select',
             { selectedIndex: settings._index(name, conf) },
             Object.entries(conf[3]).map(x => dom('option', { value: x[1] },
                 () => strs.choices[name] && strs.choices[name][x[0]] || x[0])))
     },
     inputFor: function(name) {
-        let conf = this['_' + name + 'Conf'];
-        let input = this._inputFor[conf[1]](name, conf);
+        const conf = this['_' + name + 'Conf'];
+        const node = this._inputFor[conf[1]](name, conf);
+        const input = node.$one("input,select")
         input.id = input.name = name;
         input.onchange = conf[1] === 'bool' ?
             () => this[name] = input.checked :
             () => this[name] = input.value;
         this.bind(name, t => input.value = input.checked = t);
-        return input;
+        return node;
     }
 }))(/* local storage strat */{
     str: { toStr: str => (str + ''), fromStr: str => str },
-    num: { toStr: num => (num + ''), fromStr: str => new Number(str).valueOf() },
+    num: {
+        toStr: num => (num + ''),
+        fromStr: (str, conf) => {
+            const value = Math.bounded(new Number(str).valueOf(), conf[3].min, conf[3].max);
+            return isNaN(value) ? conf[3].default : value;
+        }
+    },
     bool: { toStr: val => val ? 'true' : 'false', fromStr: str => str === 'true' },
     choice: {
         toStr: (val, conf) => // Fuzzy equality
@@ -104,8 +139,8 @@ let settings = ((strat, confs) => Object.keys(confs).reduce((settings, key) => {
     tips: [true, 'bool', 'usr'],
     tooltips: [true, 'bool', 'usr'],
     pauseOnFocusLoss: [true, 'bool', 'usr'],
-    music: [true, 'bool', 'usr'],
-    sound: [true, 'bool', 'usr'],
+    music: [true, 'num', 'usr', { min: 0, max: 100, default: 100, step: 20 }],
+    sound: [true, 'num', 'usr', { min: 0, max: 100, default: 100, step: 20 }],
     goal: [12000, 'choice', 'sys', {
         tiny: 3000,
         short: 6000,

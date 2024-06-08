@@ -240,6 +240,7 @@
                     `${m ? m + 'else' : ''} if (y == ${j} && thresholdMatrix[${i}][${j}] > alpha) gl_FragColor = vec4(0);`,
                     '')}}`,
             '');
+
     let fragShader =
         `precision mediump float;
 

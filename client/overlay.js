@@ -5,6 +5,7 @@ class Overlay extends PIXI.Sprite {
         this.z = z;
         this.flashes = [];
         this.fadeIns = [];
+        this.filters = [this.ditherFilter = new PIXI.filters.DitherFilter()];
     }
     render(delta, game, renderer) {
         this.x = -game.x;
@@ -26,7 +27,7 @@ class Overlay extends PIXI.Sprite {
                 fadeIn.onEnd();
             }
         }
-        this.alpha = Math.pow(alpha, 2);
+        this.ditherFilter.render(Math.pow(alpha, 2));
     }
     flash(duration) {
         this.flashes.push({time: duration, duration: duration});
