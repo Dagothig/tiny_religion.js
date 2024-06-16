@@ -60,6 +60,16 @@ let settings = ((strat, confs) => Object.keys(confs).reduce((settings, key) => {
     _index: function(name, conf) { // Fuzzy search
         return Object.values(conf[3]).findIndex(e => e.value == settings[name]);
     },
+    _labelFor: {
+        num(name, conf) {
+            return dom("label",
+            {
+                htmlFor: name,
+                click: () => document.querySelector("#" + name).dispatchEvent(new CustomEvent("step"))
+            },
+            () => strs.menu[name]);
+        }
+    },
     _inputFor: {
         str: name => dom('input', { type: 'text', value: settings[name] }),
         num: (name, conf) => {
@@ -96,6 +106,14 @@ let settings = ((strat, confs) => Object.keys(confs).reduce((settings, key) => {
             { selectedIndex: settings._index(name, conf) },
             Object.entries(conf[3]).map(x => dom('option', { value: x[1] },
                 () => strs.choices[name] && strs.choices[name][x[0]] || x[0])))
+    },
+    labelFor(name) {
+        const conf = this['_' + name + 'Conf'];
+        const labelFor = this._labelFor[conf[1]];
+        const label = labelFor ?
+            labelFor(name, conf) :
+            dom('label', { htmlFor: name }, () => strs.menu[name]);
+        return label;
     },
     inputFor: function(name) {
         const conf = this['_' + name + 'Conf'];
@@ -138,6 +156,7 @@ let settings = ((strat, confs) => Object.keys(confs).reduce((settings, key) => {
 }, {
     tips: [true, 'bool', 'usr'],
     tooltips: [true, 'bool', 'usr'],
+    notifications: [true, 'bool', 'usr'],
     pauseOnFocusLoss: [true, 'bool', 'usr'],
     music: [true, 'num', 'usr', { min: 0, max: 100, default: 100, step: 20 }],
     sound: [true, 'num', 'usr', { min: 0, max: 100, default: 100, step: 20 }],

@@ -121,7 +121,7 @@ class UI {
                     settings.inputFor('goal')),
                 settings.usr.map(n =>
                     dom('div', {},
-                        dom('label', { htmlFor: n }, () => strs.menu[n]),
+                        settings.labelFor(n),
                         settings.inputFor(n))),
                 dom('div', {},
                     dom('a', {
@@ -159,6 +159,7 @@ class UI {
 
         this.notifyTag = dom('div', { class: 'notify' });
         this.gameContainer.appendChild(this.notifyTag);
+        settings.bind('notifications', t => this.notifyTag.classList[t ? "remove" : "add"]("hidden"));
 
         this.fpsCounter = new FPSCounter();
         this.gameContainer.appendChild(this.fpsCounter.tag);
@@ -314,7 +315,6 @@ class UI {
         selectable[newIdx].focus();
     }
     menuOK() {
-        sounds.beep1.play();
         const activeSelectable = document.activeElement.closest(selectableSelector);
         if (activeSelectable) {
             if (activeSelectable.nodeName.toLowerCase() === "select") {
@@ -326,6 +326,7 @@ class UI {
                 activeSelectable.click();
             }
         }
+        sounds.beep1.play();
     }
     notify(msg) {
         let notif = dom('div', {
